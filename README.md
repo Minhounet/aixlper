@@ -39,27 +39,29 @@ Claude Code picks these up on the next session; each skill is invoked as
 `/java-tdd-baby-steps` or `/java-clean-architecture`, or triggers
 automatically based on its `description`.
 
-### Gemini CLI — quick, local (works today)
+### Gemini CLI — one-line install
 
 ```bash
-git clone https://github.com/minhounet/aixlper.git
-gemini extensions link ./aixlper
+gemini extensions install https://github.com/Minhounet/aixlper --auto-update
 ```
 
-`link` symlinks the extension in for local development — changes in this
-repo are reflected immediately without reinstalling.
+This requires `git` on your machine (Gemini CLI's own requirement for
+installing from GitHub) but no manual clone step — Gemini CLI clones it
+internally. `--auto-update` keeps it in sync with the repo.
 
-### Marketplace / extension distribution (optional, not set up)
+> This repo's [`gemini-extension.json`](gemini-extension.json) manifest
+> hasn't been verified against a live Gemini CLI install yet (see
+> [`CLAUDE.md`](CLAUDE.md) — no automated Gemini check runs here). If this
+> command doesn't work as expected, please open an issue.
+
+### Marketplace distribution (optional, not set up)
 
 Claude Code also supports a plugin-marketplace mechanism
 (`.claude-plugin/marketplace.json` + `plugin.json`, installed with
-`/plugin marketplace add minhounet/aixlper`) and Gemini CLI a published
-extension manifest (`gemini-extension.json`, installed with
-`gemini extensions install <repo-url> --auto-update`). Neither is set up
-in this repo — the install methods above already cover "install easily"
-without that extra machinery, which mainly pays off if this ever needs
-versioned releases or install/update/uninstall commands for a wider
-audience.
+`/plugin marketplace add minhounet/aixlper`). It isn't set up in this
+repo — the curl install above already covers "install easily" without
+that extra machinery, which mainly pays off if this ever needs versioned
+releases or install/update/uninstall commands for a wider audience.
 
 ## Repo layout
 
