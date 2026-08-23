@@ -46,7 +46,12 @@ Converting tests to `@ParameterizedTest` during refactor requires warning
 the author first, never done silently. Author's preferences captured so
 far: in-memory repositories over real adapters when the task allows it,
 Mockito with `@ExtendWith(MockitoExtension.class)` (`lenient()` freely
-allowed), Vavr in implementation code, avoid side effects.
+allowed), Vavr in implementation code, avoid side effects. Build the
+class under test in `@BeforeEach`, never as a field initializer — a
+field initializer that reads a `@Mock` field captures `null`, since
+`MockitoExtension` populates `@Mock` fields only after construction
+(found live while dogfooding, see below); `@InjectMocks` is a narrower
+alternative, only when every dependency is a genuine mock/spy.
 
 **`skills/java-clean-architecture/`** — dependency inversion via
 interfaces is the one rule everything else follows from. Constructor
@@ -69,6 +74,24 @@ interface.
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
+
+**Testing method: dogfood via kata.** Beyond `make validate`/`make eval`,
+these two skills are pressure-tested by actually using them: pick a small
+kata, set it up in a throwaway scratch directory (not committed — a
+one-off smoke test, not a project artifact), and solve it while following
+the target skill's rules literally and verbatim, showing real command
+output at every red/green checkpoint rather than asserting it worked.
+Choose the kata to fit whichever skill is under test: something with many
+small, naturally incremental cases (numeric conversions, parsers, small
+calculators) exercises `java-tdd-baby-steps`; something shaped like a
+real use case with real collaborators (a repository, a service, a
+logger) exercises `java-clean-architecture`'s DIP/constructor-injection/
+seam rules. Treat any friction — an ambiguous rule, a step that doesn't
+produce the right behavior, a bug the rules should have caught but didn't
+— as a direct signal to fix the SKILL.md, not just the kata code. First
+run: the roman-numeral kata (int → roman numeral, wrapped in a use case
+with an injected repository and logger) surfaced the `@Mock`
+field-initializer trap now documented in `java-tdd-baby-steps`.
 
 ## Layout
 
