@@ -17,6 +17,82 @@ Portability rules for every skill in this repo:
   a specific client's tool names, unless a step genuinely differs per
   client (call that out explicitly).
 
+## Active work: java-tdd-baby-steps and java-clean-architecture
+
+These two skills are being designed iteratively, directly with the repo's
+author, across many sessions — they are **not** finished/stable in the way
+the rest of this file is. Each `SKILL.md` is the source of truth; this
+section is a status snapshot so a fresh session doesn't lose the thread
+and re-litigate settled decisions. Keep this section in sync whenever
+either skill changes in a way that affects the summary below.
+
+They're deliberately kept as two separate skills: TDD governs *how you
+write code over time* (the workflow), Clean Architecture governs *how the
+code is structured* (the dependency rule) — orthogonal, composable, and
+you shouldn't have to pull in architecture rules just to fix a bug in an
+unstructured script.
+
+**`skills/java-tdd-baby-steps/`** — one-test-per-step TDD, framed for an
+AI specifically: baby steps exist for *containment* (capping the blast
+radius of a confidently-wrong diff), not *design-discovery* (the usual
+human justification, which is weak for an AI that often already sees the
+full solution). Settled, non-negotiable rules: one test per step, real
+red before any production code, minimal-only implementation, a mandatory
+(checklist-bounded, not "if warranted") refactor pass every cycle,
+test-scoped builds during the loop with a full build only once at the
+end, `should<ExpectedResult>_when<Condition>` naming, and never sourcing a
+test's expected value from the implementation (e.g. a shared constant).
+Converting tests to `@ParameterizedTest` during refactor requires warning
+the author first, never done silently. Author's preferences captured so
+far: in-memory repositories over real adapters when the task allows it,
+Mockito with `@ExtendWith(MockitoExtension.class)` (`lenient()` freely
+allowed), Vavr in implementation code, avoid side effects. Build the
+class under test in `@BeforeEach`, never as a field initializer — a
+field initializer that reads a `@Mock` field captures `null`, since
+`MockitoExtension` populates `@Mock` fields only after construction
+(found live while dogfooding, see below); `@InjectMocks` is a narrower
+alternative, only when every dependency is a genuine mock/spy.
+
+**`skills/java-clean-architecture/`** — dependency inversion via
+interfaces is the one rule everything else follows from. Constructor
+injection always (setter injection is a narrow, seam-scoped exception for
+legacy framework wiring that genuinely blocks the constructor path, not a
+general option). From scratch, the use case is the entry point, taking
+its repository/service/logger interfaces via the constructor; on legacy
+code where the entry point isn't owned, dependency inversion still
+applies at whatever seam *is* owned rather than being skipped wholesale.
+Spring guidance: no framework annotations in core classes by
+default, wiring via `@Configuration`/`@Bean` at the composition root
+(with a "reality check" that an already-annotated legacy project gets the
+same seam treatment, not a forced rewrite); the logger is bound to its
+declaring class via a prototype-scoped `InjectionPoint` bean rather than
+one shared logger. One open assumption not yet explicitly confirmed by
+the author: the `Logger` interface is taken to mean SLF4J's
+`Logger`/`LoggerFactory` (log4j2 as the binding), not a hand-rolled
+interface.
+
+Expect both files to keep growing with more rules, examples, and
+preferences from ongoing conversation — don't treat either as complete,
+and don't remove or "clean up" sections without the author asking.
+
+**Testing method: dogfood via kata.** Beyond `make validate`/`make eval`,
+these two skills are pressure-tested by actually using them: pick a small
+kata, set it up in a throwaway scratch directory (not committed — a
+one-off smoke test, not a project artifact), and solve it while following
+the target skill's rules literally and verbatim, showing real command
+output at every red/green checkpoint rather than asserting it worked.
+Choose the kata to fit whichever skill is under test: something with many
+small, naturally incremental cases (numeric conversions, parsers, small
+calculators) exercises `java-tdd-baby-steps`; something shaped like a
+real use case with real collaborators (a repository, a service, a
+logger) exercises `java-clean-architecture`'s DIP/constructor-injection/
+seam rules. Treat any friction — an ambiguous rule, a step that doesn't
+produce the right behavior, a bug the rules should have caught but didn't
+— as a direct signal to fix the SKILL.md, not just the kata code. First
+run: the roman-numeral kata (int → roman numeral, wrapped in a use case
+with an injected repository and logger) surfaced the `@Mock`
+field-initializer trap now documented in `java-tdd-baby-steps`.
+
 ## Layout
 
 ```
