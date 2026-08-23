@@ -29,17 +29,27 @@ simulate ignorance you don't have.
    writing tests. Never write two or more test methods before implementing
    anything. If you catch yourself thinking "and I'll also need a test
    for...", write that thought down for the *next* step and drop it for now.
-2. **Test-first is not up for debate.** No production code is written or
+2. **Test naming**: `should<ExpectedResult>_when<Condition>()`, e.g.
+   `shouldReturnFullName_whenFirstAndLastNameProvided()`,
+   `shouldThrowIllegalArgumentException_whenIdIsNull()`.
+3. **No implementation dependency in the test.** A test's expected value
+   must never be sourced from the implementation (e.g. importing and
+   reusing a constant declared in the production class). Write the
+   expected value independently in the test, even if that means
+   duplicating a literal — otherwise the test can never fail on a wrong
+   value, only on a compile error. This applies to any value the test
+   asserts on, not just constants.
+4. **Test-first is not up for debate.** No production code is written or
    modified until the one test for this step exists and has been run and
    has been shown to fail — and it must fail for the expected reason (a
    compile error because the API doesn't exist yet is not a valid red; get
    it compiling against a stub, then see it fail on the assertion).
-3. **Minimal implementation only.** Write only the code required to make
+5. **Minimal implementation only.** Write only the code required to make
    that single test pass. Do not implement behavior no current test
    requires, even if you know a later step will need it. A hardcoded or
    degenerate return value is an acceptable, even expected, way to pass a
    test — the next test is what should force generalization.
-4. **Refactor is mandatory, every cycle, not "if warranted."** After green,
+6. **Refactor is mandatory, every cycle, not "if warranted."** After green,
    always run this checklist against the code you just touched:
    - Did this step introduce duplication with existing code?
    - Is there a name (variable, method) that doesn't say what it means?
@@ -47,14 +57,19 @@ simulate ignorance you don't have.
    - Is there now a guard clause / early return that would remove nesting?
    - Does the current structure fight the next behavior you already know
      is coming?
-   If one or more apply, fix them now, then re-run the scoped test and show
+   - Could this test now be merged with an existing one into a
+     `@ParameterizedTest`? If yes, **do not do it silently** — stop and
+     warn the author first, naming the tests you'd merge, and only merge
+     after they confirm.
+   If one or more apply (besides parameterization, which always needs
+   confirmation first), fix them now, then re-run the scoped test and show
    it's still green. If genuinely none apply, say so explicitly ("refactor
    checklist: nothing applies") — do not silently skip the step.
-5. **Build scope is never negotiable.** During the cycle (steps 1-4), build
+7. **Build scope is never negotiable.** During the cycle (steps 1-4), build
    and run **only the single test class** you're working on — never the
    whole project. The full project build runs **exactly once, at the very
    end**, after the last cycle of the task. See commands below.
-6. **Never claim green (or red) without having actually run it.** Show the
+8. **Never claim green (or red) without having actually run it.** Show the
    command and its output at every red/green checkpoint. No exceptions for
    "this is obviously going to pass."
 
@@ -109,4 +124,17 @@ non-negotiable regardless.
   `@Mock` / `@InjectMocks`. `lenient()` may be used freely — no need to
   justify each use.
 
-<!-- Add further preferences here as they come up. -->
+<!-- Add further testing preferences here as they come up. -->
+
+## Code style
+
+- **Vavr** in implementation code: prefer `Option`, `Either`, `Try`, and
+  Vavr's persistent collections over nulls, thrown exceptions for control
+  flow, and mutable Java collections, where they fit the problem.
+- **Avoid side effects.** Prefer pure functions and immutable data in the
+  implementation — a function's output should depend only on its inputs,
+  with no mutation of shared state and no hidden I/O buried inside logic
+  that doesn't need it. Push unavoidable side effects (I/O, mutation) to
+  the edges rather than scattering them through the logic being tested.
+
+<!-- Add further code style preferences here as they come up. -->
