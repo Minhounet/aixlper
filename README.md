@@ -19,17 +19,20 @@ tool — no per-client fork.
 
 ## Installing
 
-### Claude Code — quick, local (works today)
-
-Skills load automatically from a `skills/` folder Claude Code already
-watches — no manifest, no marketplace, nothing to publish first:
+### Claude Code — one-line install (works today)
 
 ```bash
-git clone https://github.com/minhounet/aixlper.git
-# personal, available in every project:
-cp -r aixlper/skills/* ~/.claude/skills/
-# — or, project-scoped, from inside a specific project:
-cp -r aixlper/skills/* .claude/skills/
+curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install.sh | bash
+```
+
+This copies every skill into `~/.claude/skills/` — no manifest, no
+marketplace, nothing to publish first. Re-run the same command any time to
+update to the latest version. To install into a single project instead of
+personally, or to pin a branch/tag:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install.sh | AIXLPER_TARGET=.claude/skills bash
+curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install.sh | AIXLPER_REF=some-branch bash
 ```
 
 Claude Code picks these up on the next session; each skill is invoked as
@@ -46,16 +49,17 @@ gemini extensions link ./aixlper
 `link` symlinks the extension in for local development — changes in this
 repo are reflected immediately without reinstalling.
 
-### Marketplace / extension distribution (not published yet)
+### Marketplace / extension distribution (optional, not set up)
 
-The longer-term plan is to publish this repo as a proper **Claude Code
-plugin marketplace** (`.claude-plugin/marketplace.json` + `plugin.json`,
-installed with `/plugin marketplace add minhounet/aixlper`) and a
-**Gemini CLI extension** (`gemini-extension.json`, installed with
-`gemini extensions install https://github.com/minhounet/aixlper --auto-update`).
-
-Those manifest files don't exist in the repo yet, so those commands aren't
-usable yet — use the local install steps above in the meantime.
+Claude Code also supports a plugin-marketplace mechanism
+(`.claude-plugin/marketplace.json` + `plugin.json`, installed with
+`/plugin marketplace add minhounet/aixlper`) and Gemini CLI a published
+extension manifest (`gemini-extension.json`, installed with
+`gemini extensions install <repo-url> --auto-update`). Neither is set up
+in this repo — the install methods above already cover "install easily"
+without that extra machinery, which mainly pays off if this ever needs
+versioned releases or install/update/uninstall commands for a wider
+audience.
 
 ## Repo layout
 
