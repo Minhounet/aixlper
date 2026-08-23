@@ -121,8 +121,37 @@ non-negotiable regardless.
   port/interface a real adapter would, and keeps tests fast without mocking
   out persistence.
 - **Mocking**: Mockito, with `@ExtendWith(MockitoExtension.class)` and
-  `@Mock` / `@InjectMocks`. `lenient()` may be used freely — no need to
-  justify each use.
+  `@Mock`. `lenient()` may be used freely — no need to justify each use.
+- **Build the class under test in `@BeforeEach`, never as a field
+  initializer.** `@Mock` fields are only populated by `MockitoExtension`
+  *after* the test instance is constructed — a field initializer that
+  passes a `@Mock` field into the constructor (e.g.
+  `private final Foo foo = new Foo(myMock, ...);`) silently captures
+  `null` instead, since it runs before that injection happens. It won't
+  fail loudly: if nothing calls the null collaborator yet, tests keep
+  passing until some later step does, at which point every test using
+  that field breaks at once with a `NullPointerException` that looks
+  unrelated to whatever you just changed. Always wire the system under
+  test in a `@BeforeEach` method instead, after mocks exist:
+  ```java
+  @Mock
+  private Foo foo;
+
+  private Bar bar;
+
+  @BeforeEach
+  void setUp() {
+      bar = new Bar(foo, ...);
+  }
+  ```
+  `@InjectMocks` is Mockito's own way to sidestep this (it builds the
+  instance itself, after its mocks exist), but only use it when *every*
+  constructor dependency is a genuine `@Mock`/`@Spy` — it silently
+  resolves any dependency it can't match to `null` rather than erroring,
+  and it has no sane way to wire in a plain in-memory implementation like
+  the repository preference below. Prefer explicit `@BeforeEach` wiring
+  whenever a mix of mocked and real (e.g. in-memory) collaborators is
+  involved.
 
 <!-- Add further testing preferences here as they come up. -->
 
