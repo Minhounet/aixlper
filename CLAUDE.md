@@ -113,7 +113,14 @@ declaring class via a prototype-scoped `InjectionPoint` bean rather than
 one shared logger. One open assumption not yet explicitly confirmed by
 the author: the `Logger` interface is taken to mean SLF4J's
 `Logger`/`LoggerFactory` (log4j2 as the binding), not a hand-rolled
-interface.
+interface. Latest addition: needing to mock a static method is treated as
+a design smell, not a testing inconvenience — it means the code reached
+for a static dependency directly instead of an interface, same violation
+as the constructor-injection rule, just spotted from the test side. Fix is
+to wrap it behind an owned interface and inject an adapter, mirrored as a
+mocking-preference note in `java-tdd-baby-steps`. Exception: a static you
+don't own (JDK, a third-party library) where wrapping is out of scope —
+mocking it is an accepted last resort there.
 
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,

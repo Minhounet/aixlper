@@ -165,6 +165,23 @@ codebase.
 
 ## Author's preferences
 
+- **Needing to mock a static method is a design smell, not a testing
+  problem.** It means the code reached for a static dependency directly
+  (`SomeStaticFactory.get()`, a static utility with real behavior to fake)
+  instead of depending on an interface — the same violation "Constructor
+  injection, always" already names, just discovered from the test side
+  instead of the code side. The fix is to wrap the static behind an
+  interface you own and inject an adapter implementing it, same as any
+  other infrastructure dependency — not to reach for a static-mocking tool
+  to work around it.
+- **Exception: a static you don't own and can't wrap out of scope.** A
+  JDK or third-party static (`Math`, a library's static factory) can't be
+  redesigned, and wrapping it is sometimes a bigger change than the task
+  at hand. There, mocking the static is an accepted last resort — but
+  still prefer introducing a thin owned interface around it when it's
+  practical, rather than defaulting to static mocking every time the
+  dependency recurs.
+
 <!-- Add further architecture preferences here as they come up. -->
 
 ## When this skill doesn't cover the case

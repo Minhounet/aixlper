@@ -256,6 +256,13 @@ non-negotiable regardless.
   Repositories are the one exception: prefer the in-memory fake above
   instead of mocking them. `lenient()` may be used freely — no need to
   justify each use.
+- **No static mocking (`mockStatic`, PowerMock) as a default move.**
+  Needing one is a signal the production code depends on a static
+  directly — see java-clean-architecture's "Author's preferences" for the
+  design fix (wrap it behind an owned interface, inject that instead).
+  Only reach for static mocking when the static belongs to a class you
+  don't own and wrapping it is genuinely out of scope for the current
+  task.
 - **Build the class under test in `@BeforeEach`, always — never as a
   field initializer, and never inline as `new Foo(...)` repeated inside
   each `@Test` method.** This holds even when the class has zero
