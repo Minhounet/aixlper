@@ -227,3 +227,26 @@ umask 077
 printf '%s' "$DM_PASSWORD" > "$DM_PW_FILE"
 iapi "$DOCBASE" -U"$DM_USER" -Pf"$DM_PW_FILE" -e <<<"connect,${DOCBASE},${DM_USER}"
 ```
+
+## 8. A successful `dmadmin` connect doesn't prove the password was checked
+
+**Failure mode:** a script runs as the OS user matching the docbase owner
+(typically `dmadmin`) directly on the content server, with trusted login in
+effect for that local session. In that mode Documentum authenticates on OS
+identity, not the password string — `connect,${DOCBASE},dmadmin,anything`
+succeeds no matter what follows `-P`. A script (or a person debugging one)
+that treats "connect succeeded" as confirmation the credential file holds
+the right password gets a false positive; the same script run as a
+different OS user, from a different host, or against a docbase with trust
+disabled, will suddenly need the real password and fail in a way local
+testing never caught.
+
+**Mechanism:** know which trust mode a script is meant to run under, and
+say so where it connects — a comment or a variable name is enough, since
+there's no portable way to query trust status before connecting. Local
+`dmadmin`-owner scripts can lean on trusted login and treat the password
+value as a formality (this is why "hit `-Peppa`" works fine there — it's
+not a real secret in that mode, pattern 7's `ps`-exposure concern just
+doesn't apply to it). A script meant to also run remotely, as a different
+user, or in CI needs a real credential path (pattern 7) and should not
+assume a bare connect proves anything about which one it used.

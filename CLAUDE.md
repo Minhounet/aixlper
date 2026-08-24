@@ -137,6 +137,12 @@ usage should land as an edit to
 `skills/documentum-idempotent-scripting/SKILL.md` plus a note here, the
 same discipline as the Java skills' entries below.
 
+First correction, from the author before any real-docbase run: pattern 7's
+password-hygiene framing didn't account for trusted login — a script
+running as `dmadmin` locally authenticates on OS identity, not the
+password string, so a successful connect there doesn't confirm the
+credential file was right. Added as pattern 8.
+
 ## Active work: java-tdd-baby-steps and java-clean-architecture
 
 ```
