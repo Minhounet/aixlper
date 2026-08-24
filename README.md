@@ -16,6 +16,8 @@ tool — no per-client fork.
 |---|---|
 | [`java-tdd-baby-steps`](skills/java-tdd-baby-steps/SKILL.md) | One-test-at-a-time TDD for Java: never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle. |
 | [`java-clean-architecture`](skills/java-clean-architecture/SKILL.md) | Dependency inversion via interfaces and constructor injection for Java: the use case as entry point, depending only on repository/service interfaces. |
+| [`bash-cli-patterns`](skills/bash-cli-patterns/SKILL.md) | Ten hardening patterns for robust, interactive bash CLI tools: keybinding dispatch, atomic writes, strict mode, framework-free testing, and more. |
+| [`documentum-idempotent-scripting`](skills/documentum-idempotent-scripting/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
 
 ## Installing
 
