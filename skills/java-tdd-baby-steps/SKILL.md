@@ -23,6 +23,70 @@ that something works.
 Read every rule below through that lens: it exists to contain you, not to
 simulate ignorance you don't have.
 
+## Red, Super Green, Refining Refactor — not Red, Green (dirty), Refactor
+
+The classic "make it work, then make it right" framing assumes green is
+allowed to be ugly, because a human still discovering the design needs a
+crude first version to think against. That tradeoff doesn't exist for you —
+you already see the shape of the solution, so writing it badly on purpose
+buys nothing. It only creates a mess that a later refactor step now has to
+notice, justify, and fix, which is more surface area to get wrong or quietly
+skip. For you, green is already the clean, minimal answer to the one test in
+front of you. Refactor exists to refine structure across cycles, not to mop
+up dirt you introduced on purpose.
+
+**Example — same test, two ways to reach green.** Step 1 already made
+`add("")` return `0`. This is the next test:
+
+```java
+@Test
+void shouldReturnNumber_whenSingleNumber() {
+    assertEquals(5, calculator.add("5"));
+}
+```
+
+Bad — human-style dirty green (over-built *and* sloppy, because "I already
+know where this is going"):
+
+```java
+public int add(String s) {
+    if (s.length() == 0) {
+        return 0;
+    } else {
+        String[] a = s.split(",");
+        int t = 0;
+        for (int i = 0; i < a.length; i++) {
+            t = t + Integer.parseInt(a[i]);
+        }
+        return t;
+    }
+}
+```
+
+This passes the test, but it implements comma-splitting and summation that
+no test has asked for yet (violates rule 5 below), and it's sloppy on top of
+that — `s`, `a`, `t`, a manual loop where the single-number case needs none
+of it. Two problems to find in "refactor," neither of which the test forced
+you to notice.
+
+Good — AI-style super green (minimal *and* already clean):
+
+```java
+public int add(String numbers) {
+    if (numbers.isEmpty()) {
+        return 0;
+    }
+    return Integer.parseInt(numbers);
+}
+```
+
+It handles exactly what's tested — empty string, single number — with clear
+names and no structure the tests didn't ask for. The refactor checklist
+still runs, but honestly finds nothing yet. When a later test forces
+multiple numbers, *that's* what earns the split-and-sum logic — and refactor
+is where you'd notice something like duplicated parsing between branches,
+not where you clean up code you should never have written.
+
 ## The rules (absolute — no exceptions, no judgment calls)
 
 1. **One test per step.** Write exactly one new test method, then stop
