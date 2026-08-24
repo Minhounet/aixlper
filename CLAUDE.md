@@ -120,7 +120,12 @@ as the constructor-injection rule, just spotted from the test side. Fix is
 to wrap it behind an owned interface and inject an adapter, mirrored as a
 mocking-preference note in `java-tdd-baby-steps`. Exception: a static you
 don't own (JDK, a third-party library) where wrapping is out of scope —
-mocking it is an accepted last resort there.
+mocking it is an accepted last resort there. Sharpened further: the actual
+line isn't "static," it's determinism — a pure static (`Math.max`,
+`Collections.emptyList`) is fine to call directly, but a non-deterministic
+one (`Instant.now()`, `UUID.randomUUID()`, `Math.random()`) always needs
+wrapping behind an owned interface (`Clock`, `IdGenerator`), since a test
+can never pin an expected value on a call that isn't repeatable.
 
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,

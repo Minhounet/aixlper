@@ -181,6 +181,18 @@ codebase.
   still prefer introducing a thin owned interface around it when it's
   practical, rather than defaulting to static mocking every time the
   dependency recurs.
+- **The line isn't "static," it's determinism.** A pure static call — same
+  input always gives the same output, no hidden state, no side effect
+  (`Math.max(a, b)`, `Collections.emptyList()`, `String.valueOf(x)`) — is
+  fine to call directly. Nothing to inject: a test can assert on it like
+  any other expression. The static calls that actually need wrapping are
+  the ones that can return a different result for the same input —
+  `Instant.now()`, `System.currentTimeMillis()`, `UUID.randomUUID()`,
+  `Math.random()`, an env-var read. Those are the always-applicable case
+  of the rule above: wrap each behind an owned interface (`Clock`,
+  `IdGenerator`) and inject it, the same as any other collaborator — not
+  because it's static, but because a test can never pin down an expected
+  value for a call that isn't deterministic.
 
 <!-- Add further architecture preferences here as they come up. -->
 
