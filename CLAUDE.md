@@ -42,8 +42,11 @@ red before any production code, minimal-only implementation, a mandatory
 test-scoped builds during the loop with a full build only once at the
 end, `should<ExpectedResult>_when<Condition>` naming, and never sourcing a
 test's expected value from the implementation (e.g. a shared constant).
-Converting tests to `@ParameterizedTest` during refactor requires warning
-the author first, never done silently. The refactor step also always
+Converting tests to `@ParameterizedTest` during refactor is allowed without
+asking first, but must never be silent — it's traced in the cycle's
+refactor summary (tests merged, named before/after), the same requirement
+that applies to any other refactor that changes test code itself rather
+than production code. The refactor step also always
 applies a fixed set of mechanical syntax refactorings (stream
 `.toList()`, lambda brace/return cleanup, method references, `var`,
 diamond operator, pattern-matching `instanceof`) — these are not
