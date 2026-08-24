@@ -150,17 +150,29 @@ non-negotiable regardless.
   Repositories are the one exception: prefer the in-memory fake above
   instead of mocking them. `lenient()` may be used freely — no need to
   justify each use.
-- **Build the class under test in `@BeforeEach`, never as a field
-  initializer.** `@Mock` fields are only populated by `MockitoExtension`
-  *after* the test instance is constructed — a field initializer that
-  passes a `@Mock` field into the constructor (e.g.
-  `private final Foo foo = new Foo(myMock, ...);`) silently captures
-  `null` instead, since it runs before that injection happens. It won't
-  fail loudly: if nothing calls the null collaborator yet, tests keep
-  passing until some later step does, at which point every test using
-  that field breaks at once with a `NullPointerException` that looks
-  unrelated to whatever you just changed. Always wire the system under
-  test in a `@BeforeEach` method instead, after mocks exist:
+- **Build the class under test in `@BeforeEach`, always — never as a
+  field initializer, and never inline as `new Foo(...)` repeated inside
+  each `@Test` method.** This holds even when the class has zero
+  collaborators (a plain calculator kata, say): don't read the
+  `@Mock`-null danger below as the *only* reason for this rule, or a
+  mock-free class will quietly slide back to a fresh instance per test
+  method. Two independent reasons it's the default regardless of mocks:
+  - **Single source of truth.** One `@BeforeEach` wiring means a later
+    constructor-signature change touches one place, not every test
+    method.
+  - **The `@Mock`-null trap**, whenever the class *does* have
+    collaborators: `@Mock` fields are only populated by
+    `MockitoExtension` *after* the test instance is constructed — a
+    field initializer that passes a `@Mock` field into the constructor
+    (e.g. `private final Foo foo = new Foo(myMock, ...);`) silently
+    captures `null` instead, since it runs before that injection
+    happens. It won't fail loudly: if nothing calls the null
+    collaborator yet, tests keep passing until some later step does, at
+    which point every test using that field breaks at once with a
+    `NullPointerException` that looks unrelated to whatever you just
+    changed.
+
+  With collaborators:
   ```java
   @Mock
   private Foo foo;
@@ -172,14 +184,23 @@ non-negotiable regardless.
       bar = new Bar(foo, ...);
   }
   ```
-  `@InjectMocks` is Mockito's own way to sidestep this (it builds the
-  instance itself, after its mocks exist), but only use it when *every*
-  constructor dependency is a genuine `@Mock`/`@Spy` — it silently
-  resolves any dependency it can't match to `null` rather than erroring,
-  and it has no sane way to wire in a plain in-memory implementation like
-  the repository preference below. Prefer explicit `@BeforeEach` wiring
-  whenever a mix of mocked and real (e.g. in-memory) collaborators is
-  involved.
+  With none — the rule still applies:
+  ```java
+  private StringCalculator calculator;
+
+  @BeforeEach
+  void setUp() {
+      calculator = new StringCalculator();
+  }
+  ```
+  `@InjectMocks` is Mockito's own way to sidestep the mock-null case (it
+  builds the instance itself, after its mocks exist), but only use it
+  when *every* constructor dependency is a genuine `@Mock`/`@Spy` — it
+  silently resolves any dependency it can't match to `null` rather than
+  erroring, and it has no sane way to wire in a plain in-memory
+  implementation like the repository preference below. Prefer explicit
+  `@BeforeEach` wiring whenever a mix of mocked and real (e.g. in-memory)
+  collaborators is involved.
 
 <!-- Add further testing preferences here as they come up. -->
 

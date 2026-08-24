@@ -100,7 +100,15 @@ produce the right behavior, a bug the rules should have caught but didn't
 — as a direct signal to fix the SKILL.md, not just the kata code. First
 run: the roman-numeral kata (int → roman numeral, wrapped in a use case
 with an injected repository and logger) surfaced the `@Mock`
-field-initializer trap now documented in `java-tdd-baby-steps`.
+field-initializer trap now documented in `java-tdd-baby-steps`. Second
+run: the String Calculator kata (no collaborators at all), solved under
+Gemini CLI, surfaced that the `@BeforeEach`-construction rule read as
+conditional on mocks being present — a mock-free class quietly reverted
+to `new StringCalculator()` inline per test method. The rule in
+`java-tdd-baby-steps` was broadened to state `@BeforeEach` construction
+as the unconditional default (single source of truth for wiring the
+SUT), with the `@Mock`-null trap kept as one reason among others rather
+than the only one.
 
 ## Layout
 
