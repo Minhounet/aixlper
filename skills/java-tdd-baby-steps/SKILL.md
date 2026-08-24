@@ -65,6 +65,23 @@ simulate ignorance you don't have.
    confirmation first), fix them now, then re-run the scoped test and show
    it's still green. If genuinely none apply, say so explicitly ("refactor
    checklist: nothing applies") — do not silently skip the step.
+
+   Independently of that checklist, also apply these syntax-level
+   refactorings wherever they appear in code you touch — they're
+   mechanical, not judgment calls, so no "if warranted" applies to them:
+   - `.stream()...collect(Collectors.toList())` → `.stream()...toList()`
+   - a lambda with `{ }` braces around a single expression → drop the
+     braces (and the `return`, if any):
+     `s -> { System.out.println(s); }` → `s -> System.out.println(s)`
+   - a lambda that only calls one method on its argument → a method
+     reference: `s -> System.out.println(s)` → `System.out::println`
+   - a local variable whose type is already obvious from its initializer
+     → `var`
+   - a generic constructor call already inferable from a `var` or field
+     declaration → the diamond operator: `new Foo<Bar>()` → `new Foo<>()`
+   - `instanceof` followed by a manual cast → pattern-matching
+     `instanceof`: `if (o instanceof String) { String s = (String) o; }`
+     → `if (o instanceof String s) { ... }`
 7. **Build scope is never negotiable.** During the cycle (steps 1-4), build
    and run **only the single test class** you're working on — never the
    whole project. The full project build runs **exactly once, at the very
@@ -121,7 +138,10 @@ non-negotiable regardless.
   port/interface a real adapter would, and keeps tests fast without mocking
   out persistence.
 - **Mocking**: Mockito, with `@ExtendWith(MockitoExtension.class)` and
-  `@Mock`. `lenient()` may be used freely — no need to justify each use.
+  `@Mock`, for collaborators you don't own — services, gateways, clients.
+  Repositories are the one exception: prefer the in-memory fake above
+  instead of mocking them. `lenient()` may be used freely — no need to
+  justify each use.
 - **Build the class under test in `@BeforeEach`, never as a field
   initializer.** `@Mock` fields are only populated by `MockitoExtension`
   *after* the test instance is constructed — a field initializer that
