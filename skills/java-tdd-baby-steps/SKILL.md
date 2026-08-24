@@ -113,6 +113,11 @@ not where you clean up code you should never have written.
    requires, even if you know a later step will need it. A hardcoded or
    degenerate return value is an acceptable, even expected, way to pass a
    test — the next test is what should force generalization.
+   **Triangulate before generalizing**: never introduce a loop, recursion,
+   or a general/abstracted branch on the strength of a single test, even
+   one you're confident implies it. Wait until a second test exists that a
+   hardcoded/single-branch implementation genuinely cannot satisfy — that
+   second failure is the evidence, not your own foresight.
 6. **Refactor is mandatory, every cycle, not "if warranted."** After green,
    always run this checklist against the code you just touched:
    - Did this step introduce duplication with existing code?
@@ -137,6 +142,39 @@ not where you clean up code you should never have written.
    the resulting method(s) after. Production-only refactors (extracting a
    method, renaming a variable, removing duplication in implementation
    code) don't need this — only changes to the tests themselves do.
+
+   **Advanced refinement — triggered, not anticipated.** Design-pattern-
+   level moves (replacing a conditional with polymorphism, promoting a
+   primitive to a value object, extracting a Strategy, splitting a class on
+   SRP) are powerful and easy to reach for too early. Reaching for one on
+   your own judgment repeats the exact anticipation problem rule 5 exists
+   to prevent, just at a higher altitude. Apply one only when a concrete
+   trigger below is actually met by the code in front of you:
+   - The same conditional/type-check on a value appears for the 3rd time
+     across the codebase → consider polymorphism.
+   - The same validation rule (format, range, non-null, non-empty) is
+     duplicated across 2+ call sites for one primitive → consider a value
+     object.
+   - A class has grown a 3rd reason to change (a 3rd unrelated collaborator
+     or concern) → consider splitting it.
+   - A conditional chain (`if`/`else if` or `switch`) has grown to 3+
+     branches driven by the same discriminant → consider extracting a
+     Strategy per branch.
+   These thresholds are defaults, not final — the author may adjust or add
+   to them over time, the same way "Author's preferences" below has grown.
+
+   If you notice a genuine candidate for an advanced refactor that **no**
+   trigger above covers, do not apply it on your own judgment — and do not
+   stop the cycle to ask either. **Log it and keep going**: add one line to
+   that cycle's refactor summary naming what you noticed and why you
+   didn't apply it (e.g. "noticed possible Value Object for the
+   phone-number string in `Customer`, not applying — no trigger met yet").
+   Collect these across the whole task; when the final full build runs at
+   the end (see "The cycle" below), print them together as a single
+   "Deferred refinement notes" list, so they can be reviewed and decided
+   on all at once instead of scattered through the session. If nothing was
+   logged, say so explicitly ("deferred refinement notes: none") rather
+   than omitting the list.
 
    Independently of that checklist, also apply these syntax-level
    refactorings wherever they appear in code you touch — they're
@@ -175,7 +213,9 @@ Repeat for each new behavior, one at a time:
 4. Go back to step 1 for the next behavior.
 
 When there are no more behaviors left for the current task, run the full
-project build once as the final step.
+project build once as the final step, then print the "Deferred refinement
+notes" list accumulated during the task (see the Advanced refinement rule
+above) — explicitly say "none" if nothing was logged.
 
 ## Build commands — scoped during the cycle, full only at the end
 

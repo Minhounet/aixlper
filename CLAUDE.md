@@ -62,6 +62,29 @@ field initializer that reads a `@Mock` field captures `null`, since
 (found live while dogfooding, see below); `@InjectMocks` is a narrower
 alternative, only when every dependency is a genuine mock/spy.
 
+Latest addition (this session): reframed the cycle as Red / **Super
+Green** / **Refining Refactor**, not the classic Red / Green(dirty)
+/ Refactor — for an AI, "green" should already be minimal *and* clean, since
+writing it dirty on purpose has no design payoff (it only creates mess a
+later step must notice and might quietly skip) and refactor becomes
+refinement of structure across cycles, not cleanup. Concretely this added:
+(1) a "triangulate before generalizing" clause on the minimal-implementation
+rule — never introduce a loop/recursion/abstraction on one test's strength;
+wait for a second test that a hardcoded/single-branch implementation
+genuinely can't satisfy; (2) an "advanced refinement" tier on top of the
+existing refactor checklist, gated by concrete trigger thresholds (3rd
+same-type conditional → polymorphism, duplicated validation across 2+ call
+sites → value object, 3rd reason-to-change on a class → split it, 3+
+branches on the same discriminant → Strategy) rather than left to
+open-ended judgment, since open-ended judgment repeats the same
+anticipation problem one altitude up; (3) a "log, don't ask" rule for a
+refactor candidate that hits no trigger — noted inline in that cycle's
+refactor summary (not applied, not asked about), then rolled up into a
+single "Deferred refinement notes" list printed once at the end of the task
+alongside the one-time full build, so judgment calls are visible without
+interrupting the cycle. Trigger thresholds are defaults the author can
+tune, the same way the preferences above have grown over sessions.
+
 **`skills/java-clean-architecture/`** — dependency inversion via
 interfaces is the one rule everything else follows from. Constructor
 injection always (setter injection is a narrow, seam-scoped exception for
