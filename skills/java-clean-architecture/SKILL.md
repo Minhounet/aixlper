@@ -166,3 +166,24 @@ codebase.
 ## Author's preferences
 
 <!-- Add further architecture preferences here as they come up. -->
+
+## When this skill doesn't cover the case
+
+If you hit a situation these rules don't clearly address — an ambiguous
+seam, a framework pattern not covered above, a structure where dependency
+inversion isn't obviously applicable — don't silently improvise a one-off
+judgment call and move on. Make the best call you can for the situation at
+hand, then flag the gap explicitly, in this format, so it can be reviewed
+and folded back into this file later:
+
+```
+## Skill improvement proposal
+- Skill: java-clean-architecture
+- Situation: <what you were doing>
+- Gap: <what these rules don't cover, or got wrong>
+- Proposed rule: <the addition, worded as a rule, ready to paste in>
+- Suggested location: <the section of this file it belongs in>
+```
+
+This is for gaps in the rules themselves, not violations of them — a rule
+you understood but chose to break is not a gap.
