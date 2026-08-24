@@ -159,7 +159,9 @@ not where you clean up code you should never have written.
      or concern) → consider splitting it.
    - A conditional chain (`if`/`else if` or `switch`) has grown to 3+
      branches driven by the same discriminant → consider extracting a
-     Strategy per branch.
+     Strategy per branch (see "Code style" below — this author defaults to
+     a lambda for the varying part, not a full Strategy class, unless a
+     branch needs more than one method or its own state).
    These thresholds are defaults, not final — the author may adjust or add
    to them over time, the same way "Author's preferences" below has grown.
 
@@ -313,6 +315,27 @@ non-negotiable regardless.
 - **Vavr** in implementation code: prefer `Option`, `Either`, `Try`, and
   Vavr's persistent collections over nulls, thrown exceptions for control
   flow, and mutable Java collections, where they fit the problem.
+- **No `null`, ever, in code the author writes.** `Option` is the default
+  representation for a value that may be absent — not `null`, and not
+  `java.util.Optional`. A `null` appearing in implementation code is a
+  refactor candidate on sight, not something to wait on a trigger for.
+- **`flatMap` for dependent steps, `Applicative` for independent ones.**
+  Chain with `flatMap` when a later computation genuinely needs the result
+  of an earlier one (sequential/monadic composition). When two or more
+  values are computed independently of each other and only need combining
+  at the end, don't force them into an artificial `flatMap` chain just to
+  wire them together — use Vavr's applicative style instead (e.g.
+  `Option`/`Validation`'s `combine(...).ap(...)`), since it says "these
+  don't depend on each other" directly instead of implying a false
+  dependency.
+- **Extract the varying part as a lambda before reaching for a Strategy
+  class.** When the Strategy trigger in the Advanced refinement rule above
+  fires, default to a function value (a `Function`/`Map<Discriminant,
+  Function<...>>`/lambda parameter) for the part that changes, not a full
+  Strategy interface with one implementing class per branch. Reach for the
+  interface-and-implementations form only when a branch needs more than
+  one method or carries its own state — a single-method seam doesn't
+  justify a class.
 - **Avoid side effects.** Prefer pure functions and immutable data in the
   implementation — a function's output should depend only on its inputs,
   with no mutation of shared state and no hidden I/O buried inside logic

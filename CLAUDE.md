@@ -85,6 +85,18 @@ alongside the one-time full build, so judgment calls are visible without
 interrupting the cycle. Trigger thresholds are defaults the author can
 tune, the same way the preferences above have grown over sessions.
 
+Also added, code-style preferences (functional-programming-flavored):
+`null` is disallowed outright in author-written code — `Option` is the
+default for an absent value, not `null` or `java.util.Optional`, and a
+`null` is a refactor candidate on sight rather than something to wait on a
+trigger for; `flatMap` is for genuinely dependent/sequential steps, while
+independent values that just need combining should use Vavr's applicative
+style (`combine(...).ap(...)`) instead of a forced `flatMap` chain; and
+when the Strategy trigger fires, default to extracting the varying part as
+a lambda/function value rather than a full Strategy interface with one
+implementing class per branch — reach for the class form only when a
+branch needs more than one method or its own state.
+
 **`skills/java-clean-architecture/`** — dependency inversion via
 interfaces is the one rule everything else follows from. Constructor
 injection always (setter injection is a narrow, seam-scoped exception for
