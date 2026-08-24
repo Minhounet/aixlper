@@ -165,6 +165,35 @@ codebase.
 
 ## Author's preferences
 
+- **Needing to mock a static method is a design smell, not a testing
+  problem.** It means the code reached for a static dependency directly
+  (`SomeStaticFactory.get()`, a static utility with real behavior to fake)
+  instead of depending on an interface — the same violation "Constructor
+  injection, always" already names, just discovered from the test side
+  instead of the code side. The fix is to wrap the static behind an
+  interface you own and inject an adapter implementing it, same as any
+  other infrastructure dependency — not to reach for a static-mocking tool
+  to work around it.
+- **Exception: a static you don't own and can't wrap out of scope.** A
+  JDK or third-party static (`Math`, a library's static factory) can't be
+  redesigned, and wrapping it is sometimes a bigger change than the task
+  at hand. There, mocking the static is an accepted last resort — but
+  still prefer introducing a thin owned interface around it when it's
+  practical, rather than defaulting to static mocking every time the
+  dependency recurs.
+- **The line isn't "static," it's determinism.** A pure static call — same
+  input always gives the same output, no hidden state, no side effect
+  (`Math.max(a, b)`, `Collections.emptyList()`, `String.valueOf(x)`) — is
+  fine to call directly. Nothing to inject: a test can assert on it like
+  any other expression. The static calls that actually need wrapping are
+  the ones that can return a different result for the same input —
+  `Instant.now()`, `System.currentTimeMillis()`, `UUID.randomUUID()`,
+  `Math.random()`, an env-var read. Those are the always-applicable case
+  of the rule above: wrap each behind an owned interface (`Clock`,
+  `IdGenerator`) and inject it, the same as any other collaborator — not
+  because it's static, but because a test can never pin down an expected
+  value for a call that isn't deterministic.
+
 <!-- Add further architecture preferences here as they come up. -->
 
 ## When this skill doesn't cover the case

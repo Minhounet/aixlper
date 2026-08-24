@@ -23,6 +23,70 @@ that something works.
 Read every rule below through that lens: it exists to contain you, not to
 simulate ignorance you don't have.
 
+## Red, Super Green, Refining Refactor — not Red, Green (dirty), Refactor
+
+The classic "make it work, then make it right" framing assumes green is
+allowed to be ugly, because a human still discovering the design needs a
+crude first version to think against. That tradeoff doesn't exist for you —
+you already see the shape of the solution, so writing it badly on purpose
+buys nothing. It only creates a mess that a later refactor step now has to
+notice, justify, and fix, which is more surface area to get wrong or quietly
+skip. For you, green is already the clean, minimal answer to the one test in
+front of you. Refactor exists to refine structure across cycles, not to mop
+up dirt you introduced on purpose.
+
+**Example — same test, two ways to reach green.** Step 1 already made
+`add("")` return `0`. This is the next test:
+
+```java
+@Test
+void shouldReturnNumber_whenSingleNumber() {
+    assertEquals(5, calculator.add("5"));
+}
+```
+
+Bad — human-style dirty green (over-built *and* sloppy, because "I already
+know where this is going"):
+
+```java
+public int add(String s) {
+    if (s.length() == 0) {
+        return 0;
+    } else {
+        String[] a = s.split(",");
+        int t = 0;
+        for (int i = 0; i < a.length; i++) {
+            t = t + Integer.parseInt(a[i]);
+        }
+        return t;
+    }
+}
+```
+
+This passes the test, but it implements comma-splitting and summation that
+no test has asked for yet (violates rule 5 below), and it's sloppy on top of
+that — `s`, `a`, `t`, a manual loop where the single-number case needs none
+of it. Two problems to find in "refactor," neither of which the test forced
+you to notice.
+
+Good — AI-style super green (minimal *and* already clean):
+
+```java
+public int add(String numbers) {
+    if (numbers.isEmpty()) {
+        return 0;
+    }
+    return Integer.parseInt(numbers);
+}
+```
+
+It handles exactly what's tested — empty string, single number — with clear
+names and no structure the tests didn't ask for. The refactor checklist
+still runs, but honestly finds nothing yet. When a later test forces
+multiple numbers, *that's* what earns the split-and-sum logic — and refactor
+is where you'd notice something like duplicated parsing between branches,
+not where you clean up code you should never have written.
+
 ## The rules (absolute — no exceptions, no judgment calls)
 
 1. **One test per step.** Write exactly one new test method, then stop
@@ -49,6 +113,11 @@ simulate ignorance you don't have.
    requires, even if you know a later step will need it. A hardcoded or
    degenerate return value is an acceptable, even expected, way to pass a
    test — the next test is what should force generalization.
+   **Triangulate before generalizing**: never introduce a loop, recursion,
+   or a general/abstracted branch on the strength of a single test, even
+   one you're confident implies it. Wait until a second test exists that a
+   hardcoded/single-branch implementation genuinely cannot satisfy — that
+   second failure is the evidence, not your own foresight.
 6. **Refactor is mandatory, every cycle, not "if warranted."** After green,
    always run this checklist against the code you just touched:
    - Did this step introduce duplication with existing code?
@@ -74,6 +143,41 @@ simulate ignorance you don't have.
    method, renaming a variable, removing duplication in implementation
    code) don't need this — only changes to the tests themselves do.
 
+   **Advanced refinement — triggered, not anticipated.** Design-pattern-
+   level moves (replacing a conditional with polymorphism, promoting a
+   primitive to a value object, extracting a Strategy, splitting a class on
+   SRP) are powerful and easy to reach for too early. Reaching for one on
+   your own judgment repeats the exact anticipation problem rule 5 exists
+   to prevent, just at a higher altitude. Apply one only when a concrete
+   trigger below is actually met by the code in front of you:
+   - The same conditional/type-check on a value appears for the 3rd time
+     across the codebase → consider polymorphism.
+   - The same validation rule (format, range, non-null, non-empty) is
+     duplicated across 2+ call sites for one primitive → consider a value
+     object.
+   - A class has grown a 3rd reason to change (a 3rd unrelated collaborator
+     or concern) → consider splitting it.
+   - A conditional chain (`if`/`else if` or `switch`) has grown to 3+
+     branches driven by the same discriminant → consider extracting a
+     Strategy per branch (see "Code style" below — this author defaults to
+     a lambda for the varying part, not a full Strategy class, unless a
+     branch needs more than one method or its own state).
+   These thresholds are defaults, not final — the author may adjust or add
+   to them over time, the same way "Author's preferences" below has grown.
+
+   If you notice a genuine candidate for an advanced refactor that **no**
+   trigger above covers, do not apply it on your own judgment — and do not
+   stop the cycle to ask either. **Log it and keep going**: add one line to
+   that cycle's refactor summary naming what you noticed and why you
+   didn't apply it (e.g. "noticed possible Value Object for the
+   phone-number string in `Customer`, not applying — no trigger met yet").
+   Collect these across the whole task; when the final full build runs at
+   the end (see "The cycle" below), print them together as a single
+   "Deferred refinement notes" list, so they can be reviewed and decided
+   on all at once instead of scattered through the session. If nothing was
+   logged, say so explicitly ("deferred refinement notes: none") rather
+   than omitting the list.
+
    Independently of that checklist, also apply these syntax-level
    refactorings wherever they appear in code you touch — they're
    mechanical, not judgment calls, so no "if warranted" applies to them:
@@ -83,8 +187,14 @@ simulate ignorance you don't have.
      `s -> { System.out.println(s); }` → `s -> System.out.println(s)`
    - a lambda that only calls one method on its argument → a method
      reference: `s -> System.out.println(s)` → `System.out::println`
-   - a local variable whose type is already obvious from its initializer
-     → `var`
+   - a local variable whose type is already obvious from its initializer,
+     **and whose declaration sits close to its use** → `var`. Keep the
+     explicit type when declaration and use are far apart (a long method,
+     a variable threaded through many lines) — making the reader scroll
+     back to learn the type is a cost `var` shouldn't add. This proximity
+     constraint has a useful side effect: with no explicit type nearby to
+     lean on, the variable name is what has to carry the meaning, which
+     pushes toward better naming rather than away from it.
    - a generic constructor call already inferable from a `var` or field
      declaration → the diamond operator: `new Foo<Bar>()` → `new Foo<>()`
    - `instanceof` followed by a manual cast → pattern-matching
@@ -111,7 +221,9 @@ Repeat for each new behavior, one at a time:
 4. Go back to step 1 for the next behavior.
 
 When there are no more behaviors left for the current task, run the full
-project build once as the final step.
+project build once as the final step, then print the "Deferred refinement
+notes" list accumulated during the task (see the Advanced refinement rule
+above) — explicitly say "none" if nothing was logged.
 
 ## Build commands — scoped during the cycle, full only at the end
 
@@ -150,6 +262,13 @@ non-negotiable regardless.
   Repositories are the one exception: prefer the in-memory fake above
   instead of mocking them. `lenient()` may be used freely — no need to
   justify each use.
+- **No static mocking (`mockStatic`, PowerMock) as a default move.**
+  Needing one is a signal the production code depends on a static
+  directly — see java-clean-architecture's "Author's preferences" for the
+  design fix (wrap it behind an owned interface, inject that instead).
+  Only reach for static mocking when the static belongs to a class you
+  don't own and wrapping it is genuinely out of scope for the current
+  task.
 - **Build the class under test in `@BeforeEach`, always — never as a
   field initializer, and never inline as `new Foo(...)` repeated inside
   each `@Test` method.** This holds even when the class has zero
@@ -209,6 +328,27 @@ non-negotiable regardless.
 - **Vavr** in implementation code: prefer `Option`, `Either`, `Try`, and
   Vavr's persistent collections over nulls, thrown exceptions for control
   flow, and mutable Java collections, where they fit the problem.
+- **No `null`, ever, in code the author writes.** `Option` is the default
+  representation for a value that may be absent — not `null`, and not
+  `java.util.Optional`. A `null` appearing in implementation code is a
+  refactor candidate on sight, not something to wait on a trigger for.
+- **`flatMap` for dependent steps, `Applicative` for independent ones.**
+  Chain with `flatMap` when a later computation genuinely needs the result
+  of an earlier one (sequential/monadic composition). When two or more
+  values are computed independently of each other and only need combining
+  at the end, don't force them into an artificial `flatMap` chain just to
+  wire them together — use Vavr's applicative style instead (e.g.
+  `Option`/`Validation`'s `combine(...).ap(...)`), since it says "these
+  don't depend on each other" directly instead of implying a false
+  dependency.
+- **Extract the varying part as a lambda before reaching for a Strategy
+  class.** When the Strategy trigger in the Advanced refinement rule above
+  fires, default to a function value (a `Function`/`Map<Discriminant,
+  Function<...>>`/lambda parameter) for the part that changes, not a full
+  Strategy interface with one implementing class per branch. Reach for the
+  interface-and-implementations form only when a branch needs more than
+  one method or carries its own state — a single-method seam doesn't
+  justify a class.
 - **Avoid side effects.** Prefer pure functions and immutable data in the
   implementation — a function's output should depend only on its inputs,
   with no mutation of shared state and no hidden I/O buried inside logic

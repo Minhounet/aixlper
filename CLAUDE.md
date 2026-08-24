@@ -50,7 +50,11 @@ than production code. The refactor step also always
 applies a fixed set of mechanical syntax refactorings (stream
 `.toList()`, lambda brace/return cleanup, method references, `var`,
 diamond operator, pattern-matching `instanceof`) — these are not
-judgment calls, unlike the design-level checklist. Author's preferences
+judgment calls, unlike the design-level checklist. The `var` rule is
+scoped to proximity: only when the declaration sits close to its use, not
+when they're far apart in a long method — this is also treated as a
+deliberate forcing function for good naming, since without an explicit
+type nearby the variable name has to carry the meaning. Author's preferences
 captured so far: in-memory repositories over real adapters when the task
 allows it, Mockito for collaborators not owned by the codebase (services,
 gateways, clients — repositories are the one exception, kept in-memory)
@@ -61,6 +65,41 @@ field initializer that reads a `@Mock` field captures `null`, since
 `MockitoExtension` populates `@Mock` fields only after construction
 (found live while dogfooding, see below); `@InjectMocks` is a narrower
 alternative, only when every dependency is a genuine mock/spy.
+
+Latest addition (this session): reframed the cycle as Red / **Super
+Green** / **Refining Refactor**, not the classic Red / Green(dirty)
+/ Refactor — for an AI, "green" should already be minimal *and* clean, since
+writing it dirty on purpose has no design payoff (it only creates mess a
+later step must notice and might quietly skip) and refactor becomes
+refinement of structure across cycles, not cleanup. Concretely this added:
+(1) a "triangulate before generalizing" clause on the minimal-implementation
+rule — never introduce a loop/recursion/abstraction on one test's strength;
+wait for a second test that a hardcoded/single-branch implementation
+genuinely can't satisfy; (2) an "advanced refinement" tier on top of the
+existing refactor checklist, gated by concrete trigger thresholds (3rd
+same-type conditional → polymorphism, duplicated validation across 2+ call
+sites → value object, 3rd reason-to-change on a class → split it, 3+
+branches on the same discriminant → Strategy) rather than left to
+open-ended judgment, since open-ended judgment repeats the same
+anticipation problem one altitude up; (3) a "log, don't ask" rule for a
+refactor candidate that hits no trigger — noted inline in that cycle's
+refactor summary (not applied, not asked about), then rolled up into a
+single "Deferred refinement notes" list printed once at the end of the task
+alongside the one-time full build, so judgment calls are visible without
+interrupting the cycle. Trigger thresholds are defaults the author can
+tune, the same way the preferences above have grown over sessions.
+
+Also added, code-style preferences (functional-programming-flavored):
+`null` is disallowed outright in author-written code — `Option` is the
+default for an absent value, not `null` or `java.util.Optional`, and a
+`null` is a refactor candidate on sight rather than something to wait on a
+trigger for; `flatMap` is for genuinely dependent/sequential steps, while
+independent values that just need combining should use Vavr's applicative
+style (`combine(...).ap(...)`) instead of a forced `flatMap` chain; and
+when the Strategy trigger fires, default to extracting the varying part as
+a lambda/function value rather than a full Strategy interface with one
+implementing class per branch — reach for the class form only when a
+branch needs more than one method or its own state.
 
 **`skills/java-clean-architecture/`** — dependency inversion via
 interfaces is the one rule everything else follows from. Constructor
@@ -78,7 +117,19 @@ declaring class via a prototype-scoped `InjectionPoint` bean rather than
 one shared logger. One open assumption not yet explicitly confirmed by
 the author: the `Logger` interface is taken to mean SLF4J's
 `Logger`/`LoggerFactory` (log4j2 as the binding), not a hand-rolled
-interface.
+interface. Latest addition: needing to mock a static method is treated as
+a design smell, not a testing inconvenience — it means the code reached
+for a static dependency directly instead of an interface, same violation
+as the constructor-injection rule, just spotted from the test side. Fix is
+to wrap it behind an owned interface and inject an adapter, mirrored as a
+mocking-preference note in `java-tdd-baby-steps`. Exception: a static you
+don't own (JDK, a third-party library) where wrapping is out of scope —
+mocking it is an accepted last resort there. Sharpened further: the actual
+line isn't "static," it's determinism — a pure static (`Math.max`,
+`Collections.emptyList`) is fine to call directly, but a non-deterministic
+one (`Instant.now()`, `UUID.randomUUID()`, `Math.random()`) always needs
+wrapping behind an owned interface (`Clock`, `IdGenerator`), since a test
+can never pin an expected value on a call that isn't repeatable.
 
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
