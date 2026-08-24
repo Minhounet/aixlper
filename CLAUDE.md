@@ -143,6 +143,14 @@ running as `dmadmin` locally authenticates on OS identity, not the
 password string, so a successful connect there doesn't confirm the
 credential file was right. Added as pattern 8.
 
+Second addition, also author-driven: bulk update/delete needs its own two
+patterns, since neither is covered by "check before create" — 9 is the
+set-based `ENABLE (RETURN_TOP n)` loop (naturally idempotent as long as the
+mutation moves rows out of the `WHERE` clause), 10 is ID-batch + per-object
+API loop for operations DQL can't express set-based (versioning, lifecycle,
+ACL changes), which needs an explicit processed-ids log since it isn't
+transactional across a batch the way pattern 9 is.
+
 ## Active work: java-tdd-baby-steps and java-clean-architecture
 
 ```

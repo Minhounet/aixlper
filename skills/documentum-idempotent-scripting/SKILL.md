@@ -1,6 +1,6 @@
 ---
 name: documentum-idempotent-scripting
-description: Patterns for writing idempotent bash scripts that provision or modify an OpenText Documentum repository by composing DQL and API (iapi/idql) calls — existence-check-before-create for types, attributes and objects, output-based error detection (iapi/idql exit 0 even when a command fails), and safe session lifecycle. Use when writing or reviewing a bash script that runs DQL/API commands against a Documentum docbase, especially anything that creates or alters repository objects.
+description: Patterns for writing idempotent bash scripts that provision, bulk-update, or bulk-delete objects in an OpenText Documentum repository by composing DQL and API (iapi/idql) calls — existence-check-before-create for types, attributes and objects, output-based error detection (iapi/idql exit 0 even when a command fails), safe session lifecycle, and batching large updates/deletes into packets instead of one unbounded statement. Use when writing or reviewing a bash script that runs DQL/API commands against a Documentum docbase, especially anything that creates, alters, or bulk-mutates repository objects.
 ---
 
 # Documentum Idempotent Scripting
@@ -250,3 +250,84 @@ not a real secret in that mode, pattern 7's `ps`-exposure concern just
 doesn't apply to it). A script meant to also run remotely, as a different
 user, or in CI needs a real credential path (pattern 7) and should not
 assume a bare connect proves anything about which one it used.
+
+## 9. Bulk update/delete in packets: `ENABLE (RETURN_TOP n)`, looped
+
+**Failure mode:** a single `UPDATE ... OBJECTS SET ...` or
+`DELETE ... OBJECTS WHERE ...` touching a large number of rows runs as one
+long statement — it holds locks on every matching row for the whole
+duration (blocking other readers/writers on that table), risks a huge
+rollback/transaction footprint, and if the session dies partway through,
+there's no visibility into how many rows actually committed before the
+failure.
+
+**Mechanism:** cap the statement with DQL's `ENABLE (RETURN_TOP n)` hint so
+each execution only touches the first `n` qualifying rows, then loop the
+*same* statement until it reports 0 rows affected. This is naturally
+idempotent-safe as long as the `SET`/`DELETE` moves rows out of the `WHERE`
+clause's matching set — each rerun's `WHERE` only sees what's still
+pending, so a mid-run failure just means "run the loop again," no separate
+progress tracking needed.
+
+```bash
+BATCH_SIZE=500
+while true; do
+  affected=$(run_dql "UPDATE dm_document OBJECTS SET a_status = 'archived' \
+    WHERE a_status = 'pending' AND r_creation_date < DATE('2020-01-01') \
+    ENABLE (RETURN_TOP ${BATCH_SIZE})" \
+    | grep -oE '[0-9]+ objects? affected' | awk '{print $1}')
+  [[ "${affected:-0}" -eq 0 ]] && break
+  echo "archived ${affected} objects this batch"
+done
+```
+
+`DELETE` self-terminates the same way — a deleted row can never match the
+`WHERE` again, so the loop condition is automatically satisfied. The one
+correctness trap: if the `WHERE` clause does **not** become false for rows
+the statement just changed (e.g. the `SET` doesn't touch any column the
+`WHERE` filters on), the loop re-touches the same first `n` rows forever —
+verify that relationship before relying on this pattern, not after.
+
+## 10. ID-batch + per-object API loop, when per-object logic must fire
+
+**Failure mode:** some bulk operations can't be expressed as one set-based
+DQL statement at all — checkout/checkin versioning, a lifecycle state
+transition, an ACL change that needs `save`/`checkin` semantics — because
+DQL's `UPDATE ... OBJECTS` only sets attributes directly and skips the
+API-layer behavior (workflow triggers, lifecycle validation, versioning)
+that those operations require. Forcing them into raw DQL either isn't
+supported or silently bypasses that behavior.
+
+**Mechanism:** `SELECT` ids in bounded batches (`ENABLE (RETURN_TOP n)`
+again), then loop individual API commands over each id in the batch.
+Unlike pattern 9, this loop is not transactional across the batch — one
+object's API call failing midway leaves earlier objects in the batch
+already mutated with no atomic marker — so track processed ids explicitly
+and skip them on retry, the same "state must be resumable" discipline as
+pattern 6's get-or-create.
+
+```bash
+BATCH_SIZE=200
+while true; do
+  ids=$(run_dql "SELECT r_object_id FROM dm_document \
+    WHERE a_status = 'pending' ENABLE (RETURN_TOP ${BATCH_SIZE})" \
+    | awk '/^090/{print $1}')
+  [[ -z "$ids" ]] && break
+  while IFS= read -r id; do
+    grep -qxF "$id" "$PROCESSED_LOG" 2>/dev/null && continue
+    iapi "$DOCBASE" -U"$DM_USER" -Pf"$DM_PW_FILE" -e <<EOF
+checkout,c,${id}
+set,c,l,a_status
+archived
+checkin,c,l
+EOF
+    echo "$id" >> "$PROCESSED_LOG"
+  done <<< "$ids"
+done
+```
+
+As in pattern 9, the `SELECT`'s `WHERE` should become false once an object
+is processed (`a_status` moves off `pending`) so the candidate set shrinks
+on its own across reruns — the `$PROCESSED_LOG` is still needed as a
+finer-grained marker for a failure *inside* a batch, which the `WHERE`
+clause alone can't detect until the whole object is actually updated.
