@@ -50,7 +50,11 @@ than production code. The refactor step also always
 applies a fixed set of mechanical syntax refactorings (stream
 `.toList()`, lambda brace/return cleanup, method references, `var`,
 diamond operator, pattern-matching `instanceof`) — these are not
-judgment calls, unlike the design-level checklist. Author's preferences
+judgment calls, unlike the design-level checklist. The `var` rule is
+scoped to proximity: only when the declaration sits close to its use, not
+when they're far apart in a long method — this is also treated as a
+deliberate forcing function for good naming, since without an explicit
+type nearby the variable name has to carry the meaning. Author's preferences
 captured so far: in-memory repositories over real adapters when the task
 allows it, Mockito for collaborators not owned by the codebase (services,
 gateways, clients — repositories are the one exception, kept in-memory)

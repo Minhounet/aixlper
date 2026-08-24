@@ -187,8 +187,14 @@ not where you clean up code you should never have written.
      `s -> { System.out.println(s); }` → `s -> System.out.println(s)`
    - a lambda that only calls one method on its argument → a method
      reference: `s -> System.out.println(s)` → `System.out::println`
-   - a local variable whose type is already obvious from its initializer
-     → `var`
+   - a local variable whose type is already obvious from its initializer,
+     **and whose declaration sits close to its use** → `var`. Keep the
+     explicit type when declaration and use are far apart (a long method,
+     a variable threaded through many lines) — making the reader scroll
+     back to learn the type is a cost `var` shouldn't add. This proximity
+     constraint has a useful side effect: with no explicit type nearby to
+     lean on, the variable name is what has to carry the meaning, which
+     pushes toward better naming rather than away from it.
    - a generic constructor call already inferable from a `var` or field
      declaration → the diamond operator: `new Foo<Bar>()` → `new Foo<>()`
    - `instanceof` followed by a manual cast → pattern-matching
