@@ -43,10 +43,16 @@ test-scoped builds during the loop with a full build only once at the
 end, `should<ExpectedResult>_when<Condition>` naming, and never sourcing a
 test's expected value from the implementation (e.g. a shared constant).
 Converting tests to `@ParameterizedTest` during refactor requires warning
-the author first, never done silently. Author's preferences captured so
-far: in-memory repositories over real adapters when the task allows it,
-Mockito with `@ExtendWith(MockitoExtension.class)` (`lenient()` freely
-allowed), Vavr in implementation code, avoid side effects. Build the
+the author first, never done silently. The refactor step also always
+applies a fixed set of mechanical syntax refactorings (stream
+`.toList()`, lambda brace/return cleanup, method references, `var`,
+diamond operator, pattern-matching `instanceof`) — these are not
+judgment calls, unlike the design-level checklist. Author's preferences
+captured so far: in-memory repositories over real adapters when the task
+allows it, Mockito for collaborators not owned by the codebase (services,
+gateways, clients — repositories are the one exception, kept in-memory)
+with `@ExtendWith(MockitoExtension.class)` (`lenient()` freely allowed),
+Vavr in implementation code, avoid side effects. Build the
 class under test in `@BeforeEach`, never as a field initializer — a
 field initializer that reads a `@Mock` field captures `null`, since
 `MockitoExtension` populates `@Mock` fields only after construction
