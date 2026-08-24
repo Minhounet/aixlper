@@ -58,13 +58,21 @@ simulate ignorance you don't have.
    - Does the current structure fight the next behavior you already know
      is coming?
    - Could this test now be merged with an existing one into a
-     `@ParameterizedTest`? If yes, **do not do it silently** — stop and
-     warn the author first, naming the tests you'd merge, and only merge
-     after they confirm.
-   If one or more apply (besides parameterization, which always needs
-   confirmation first), fix them now, then re-run the scoped test and show
+     `@ParameterizedTest`? If yes, do it — no confirmation needed — but
+     **never silently**: it changes test code, not just production code,
+     so it must be traced. See "Tracing test refactors" below.
+   If one or more apply, fix them now, then re-run the scoped test and show
    it's still green. If genuinely none apply, say so explicitly ("refactor
    checklist: nothing applies") — do not silently skip the step.
+
+   **Tracing test refactors.** Any time this step changes test code itself
+   (merging tests into a `@ParameterizedTest` is the case that comes up
+   most, but this covers any other restructuring of existing tests too —
+   renames, splits, moved assertions), report it explicitly in that
+   cycle's refactor summary: name the specific test method(s) before and
+   the resulting method(s) after. Production-only refactors (extracting a
+   method, renaming a variable, removing duplication in implementation
+   code) don't need this — only changes to the tests themselves do.
 
    Independently of that checklist, also apply these syntax-level
    refactorings wherever they appear in code you touch — they're
