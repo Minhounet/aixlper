@@ -110,7 +110,48 @@ as the unconditional default (single source of truth for wiring the
 SUT), with the `@Mock`-null trap kept as one reason among others rather
 than the only one.
 
-## Layout
+## Active work: documentum-idempotent-scripting
+
+`skills/documentum-idempotent-scripting/` is unverified — written from
+general Documentum DQL/API knowledge, not yet run against a real docbase.
+Treat every pattern in it as a draft until the author reports back from
+real usage; don't cite it as settled the way the two Java skills below are.
+
+The gap it targets: individually, DQL and the API (`iapi`/`idql`) are
+well-documented and widely known; composing the two into a bash script
+that's safe to re-run — existence-check before `create`, surviving a
+partial failure, converging to the same end state across dev/test/prod —
+is the part that isn't. That's the same shape of gap the two Java skills
+below fill (tacit operational knowledge, not syntax), just for a different
+domain.
+
+**Testing method: real docbase, not kata.** Unlike the Java skills' kata
+dogfooding (see below), there's no throwaway-project equivalent for a
+Documentum skill — it needs a live docbase to mean anything. The author
+will validate it by using it against a real Documentum environment and
+reporting friction back. Known-weak spot going in: pattern 4's
+`get_type_attr_count` in the SKILL.md is a named placeholder, not real
+DQL — the exact query for enumerating a type's attributes varies by
+Documentum version and hasn't been confirmed. Any correction from real
+usage should land as an edit to
+`skills/documentum-idempotent-scripting/SKILL.md` plus a note here, the
+same discipline as the Java skills' entries below.
+
+First correction, from the author before any real-docbase run: pattern 7's
+password-hygiene framing didn't account for trusted login — a script
+running as `dmadmin` locally authenticates on OS identity, not the
+password string, so a successful connect there doesn't confirm the
+credential file was right. Added as pattern 8.
+
+Second addition, also author-driven: bulk update/delete needs its own two
+patterns, since neither is covered by "check before create" — 9 is the
+set-based `ENABLE (RETURN_TOP n)` loop (naturally idempotent as long as the
+mutation moves rows out of the `WHERE` clause), 10 is ID-batch + per-object
+API loop for operations DQL can't express set-based (versioning, lifecycle,
+ACL changes), which needs an explicit processed-ids log since it isn't
+transactional across a batch the way pattern 9 is.
+
+## Active work: java-tdd-baby-steps and java-clean-architecture
 
 ```
 skills/<skill-name>/SKILL.md      # one skill per directory
