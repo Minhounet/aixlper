@@ -131,6 +131,48 @@ one (`Instant.now()`, `UUID.randomUUID()`, `Math.random()`) always needs
 wrapping behind an owned interface (`Clock`, `IdGenerator`), since a test
 can never pin an expected value on a call that isn't repeatable.
 
+Latest additions (this session): repositories return the domain object
+itself (`Option<Entity>`/`Entity`/`List<Entity>`), never a primitive or
+partial projection, since the use case almost always needs the whole
+object to build its response. The use case's output is its own `Response`
+object, built via an explicit mapping step, never the domain entity
+returned directly. Input naming is CQRS-flavored but naming-only (no
+separate read/write models implied): `Command` for a mutating use case
+(thin response — id/ack, not data back), `Query` for a read-only one
+(response is the data), `Request` as the generic fallback. Mappers are
+scoped one-per-domain-type (not one-per-use-case/response) and reused
+across both directions — outbound (domain object → `Response`, the normal
+case) and inbound (`Command`/`Request` → domain object, only when the use
+case must hydrate one before calling a repository/service); a `Response`
+assembled from multiple repositories composes each entity's own mapper
+output rather than one combined multi-arg mapper. Added a "Relationship to
+DDD" framing: Clean Architecture governs dependency direction, DDD's
+tactical patterns (Entities/Value Objects/Aggregates with real invariants)
+govern what lives inside the domain layer that direction protects — the
+two are orthogonal and composable, same as this skill's relationship to
+`java-tdd-baby-steps`, and the outbound mapper doubles as the DDD rule of
+never letting an aggregate leak past its boundary. Added a "Heavy ECM/
+legacy SDKs (Nuxeo, Documentum, etc.)" framework example: the fix for an
+expensive-to-wrap SDK type (`DocumentModel`, `IDfSysObject`) is a
+narrowly-scoped port (only the methods actually called), not relaxing the
+dependency rule; a framework-instantiated entry point (a Nuxeo
+`EventListener`) is the existing legacy-entry-point seam — stays
+framework-flavored at its outer edge but immediately translates into a
+`Command` and hands off to a use case that never sees the framework, and
+any framework-forced static lookup (`Framework.getService(...)`) stays
+confined to that translation code, never reaching the use case. Carved out
+one explicit judgment-call exception (logged via the skill's existing
+improvement-proposal format, not decided silently): a step with no
+domain concept beyond the ECM's own model doesn't need a full wrapper.
+Added a paired "Testing across the seam" note: use case tests stay pure
+unit tests (no framework runtime), adapter/listener tests exist only to
+prove the translation and use the framework's own embedded test harness
+where one exists (Nuxeo's `FeaturesRunner`/`@Features(CoreFeature.class)`);
+flagged Documentum as unresolved — no known embedded-runtime equivalent,
+DFC's `IDfSysObject`/`IDfSession` are mockable as interfaces but mock
+fidelity against real behavior is unverified, consistent with
+`documentum-idempotent-scripting`'s own unverified status.
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
