@@ -87,6 +87,87 @@ TDD skill's preferences possible: an in-memory repository and a Mockito
 mock are both just another implementation of the same interface the use
 case already depends on — no test-only wiring hacks needed.
 
+## Repository return types
+
+- A repository method returns the domain object itself — an
+  `Option<Entity>` for a possible-absent lookup, an `Entity` or
+  `List<Entity>` otherwise — never a primitive, a boolean, or a partial
+  projection.
+- Reasoning: the use case almost always needs the full object to build its
+  response (see below). A repository that only returns an id or a boolean
+  forces the use case into a second fetch, or forces extra data to be
+  threaded through method parameters that don't belong there. Return the
+  whole object once; let the use case decide what to keep.
+
+## Use case input and output: Request/Command and Response
+
+### Naming the input: Request, Command, or Query
+
+- **`Command`** — the use case's job is to mutate state. The response
+  stays thin (an id, an acknowledgement, a version) — the point of a
+  command isn't to hand data back, since the caller already has what it
+  sent.
+- **`Query`** — the use case only reads, no side effects. The response
+  *is* the requested data.
+- **`Request`** — the generic fallback name, for a use case that doesn't
+  cleanly split into one or the other (e.g. read-then-write in a single
+  operation).
+
+This is naming-only: it signals intent at the boundary, it does not imply
+full CQRS (separate read/write models or separate persistence stores).
+Don't reach for a split read/write architecture unless that's a deliberate,
+separately-justified decision — the naming convention alone doesn't ask
+for it.
+
+### The output is a Response object, not the domain entity
+
+The use case never returns a domain entity directly. It returns its own
+`Response` object, built by an explicit mapping step from whatever domain
+object(s) the repository/service calls returned. Returning the entity
+directly couples every caller to the persistence/domain shape — a field
+rename on the entity then breaks the use case's contract for no reason
+related to the use case itself.
+
+### Mappers: one per domain type, both directions as needed
+
+- **Outbound** (domain object → `Response`): the normal case, since a
+  domain object almost always needs transforming before it can leave the
+  use case.
+- **Inbound** (`Command`/`Request` → domain object): only when the use
+  case has to construct or hydrate a domain object before handing it to a
+  repository or service. If primitives pass straight through to a
+  repository method's parameters, there's nothing to map — don't add a
+  mapper for its own sake.
+- **One mapper per domain type, not one per use case.** When a `Response`
+  is assembled from more than one repository (e.g. `User` +
+  `Order`), don't write a single mapper that takes both as parameters.
+  Give each entity its own mapper (`UserMapper`, `OrderMapper`) and let
+  the use case — or a small assembly step — combine their outputs into the
+  final `Response`. A combined mapper can't be reused by any other use
+  case that also needs to map a `User`, and it grows a new reason to
+  change every time either source entity changes.
+
+## Relationship to DDD
+
+Clean Architecture and DDD answer different questions and aren't the same
+commitment — same relationship as this skill has to `java-tdd-baby-steps`:
+orthogonal, composable, neither implies the other.
+
+- **Clean Architecture** governs *dependency direction*: what's allowed to
+  depend on what, and what sits behind an interface at the boundary.
+- **DDD's tactical patterns** govern *what lives inside* the domain layer
+  that rule protects: rich Entities, Value Objects, and Aggregates with
+  enforced invariants and real behavior, instead of anemic data holders a
+  service class pushes around from the outside.
+
+Clean Architecture doesn't require DDD — a project can respect the
+dependency rule with a thin, anemic domain model. But they compose
+naturally: the "domain object" a repository returns (see above) is exactly
+DDD's Entity/Aggregate, and the outbound mapper is precisely the boundary
+where that rich object is deliberately flattened into a dumb `Response`
+DTO before it leaves the use case — a DDD rule in its own right (never let
+an aggregate leak past its boundary), not only a Clean Architecture one.
+
 ## Framework examples
 
 ### Spring: keep it out of the core, prefer bean configuration
@@ -162,6 +243,82 @@ circular bean dependency, a base class the framework instantiates without
 arguments). Scope the exception to that one seam — it doesn't reopen
 constructor injection as a general choice elsewhere in the same class or
 codebase.
+
+### Heavy ECM/legacy SDKs (Nuxeo, Documentum, etc.): keep the port narrow, translate at the seam
+
+Frameworks like Nuxeo or Documentum expose large, concrete SDK types
+(`DocumentModel`, `IDfSysObject`) that are genuinely expensive to fully
+wrap. The dependency rule doesn't relax because the SDK is big — the fix
+for the cost is to scope the port down, not to let the SDK type into the
+core:
+
+- Define the repository interface with only the methods the current use
+  case(s) actually call (`findContractById`, `save`) — not a
+  general-purpose repository mirroring the whole SDK API. A narrow port is
+  cheap to adapt; a wide, speculative one is the expensive one people run
+  into.
+- One adapter class maps the SDK type ↔ your domain object, touching only
+  the fields the use case needs — the same per-entity mapper pattern as
+  the `Response` mapping above, reused here on the inbound side.
+- A framework-instantiated entry point (a Nuxeo `EventListener`, a
+  Documentum event handler) is the legacy-entry-point seam already
+  described above: it stays framework-flavored at its outer edge, but the
+  first thing it does is translate the framework event into a
+  `Command`/`Request` and hand off to a real use case that has never heard
+  of the framework.
+- Where the SDK forces a static lookup (`Framework.getService(...)`)
+  because the framework — not you — instantiates the class, confine that
+  lookup to the listener's translation code. Never let it reach into the
+  use case; the use case still only sees interfaces via its constructor.
+
+```java
+public class ContractStatusListener implements EventListener {
+    @Override
+    public void handleEvent(Event event) {
+        DocumentModel doc = ((DocumentEventContext) event.getContext()).getSourceDocument();
+
+        ContractRepository repository = Framework.getService(ContractRepository.class);
+        Logger logger = LoggerFactory.getLogger(ChangeContractStatusUseCase.class);
+
+        new ChangeContractStatusUseCase(repository, logger).execute(toCommand(doc));
+    }
+
+    private ChangeContractStatusCommand toCommand(DocumentModel doc) { /* mapping */ }
+}
+```
+
+**Exception, judgment call:** when a step has no independent domain concept
+beyond the ECM's own model — e.g. a workflow transition that's genuinely
+just `documentModel.followTransition(...)` with no rule layered on top —
+forcing a full domain wrapper is ceremony with no payoff, same spirit as
+the pure-static-call exception under *Author's preferences* below. Don't
+decide this silently every time it comes up: log it with the "Skill
+improvement proposal" format further down, so the threshold gets reviewed
+rather than reinvented per use case.
+
+### Testing across the seam
+
+Two tiers, not one:
+
+- **Use case tests** stay pure unit tests — no framework runtime, an
+  in-memory repository and Mockito per `java-tdd-baby-steps`'s existing
+  preferences. This is where most tests live.
+- **Adapter/listener integration tests** exist only to prove the seam's
+  translation is correct (event → `Command`, SDK type ↔ domain object, the
+  static lookup actually resolves) — not to re-test business rules already
+  covered by the use case's unit tests. Nuxeo provides this via
+  `nuxeo-runtime-test`'s `FeaturesRunner` + `@Features(CoreFeature.class)`:
+  an embedded runtime where `Framework.getService(...)` resolves for real,
+  scoped down with `@Deploy` to just the components under test.
+- **Documentum: unresolved, flag rather than assume.** There's no known
+  embedded-runtime equivalent for DFC. `IDfSysObject`/`IDfSession` are
+  interfaces, so they're directly Mockito-mockable, but the fidelity of
+  that mock against real Documentum behavior is an open concern, not a
+  settled pattern — the same unverified status as
+  `documentum-idempotent-scripting`. Don't present a mocked-DFC adapter
+  test as equivalent proof to a Nuxeo `FeaturesRunner` test; treat it as a
+  weaker substitute until real usage says otherwise, and prefer validating
+  the adapter against a real docbase where practical.
 
 ## Author's preferences
 
