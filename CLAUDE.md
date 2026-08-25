@@ -161,6 +161,26 @@ as the unconditional default (single source of truth for wiring the
 SUT), with the `@Mock`-null trap kept as one reason among others rather
 than the only one.
 
+Third run: a Gradle-based Java project, solved under Gemini CLI, surfaced
+that scoped-test evidence (rule 7/8) can become unobtainable through no
+fault of the agent — Gradle reported "no tests ran" even after
+`--rerun-tasks`, and the test report files under `build/` were unreadable
+because `build/` was gitignored and the client respects `.gitignore` for
+file reads. Root-caused as structural rather than a one-off: build output
+dirs (`build/`, `target/`) are gitignored by near-universal convention, so
+report-file reads will keep failing on any Java project, on any client that
+honors `.gitignore` — not specific to Gemini CLI. Added a "Getting evidence
+when the build tool fights you" section to `java-tdd-baby-steps`: read
+console output instead of report files first (`--console=plain -i` for
+Gradle; Maven already does this by default), check the test filter pattern
+before suspecting caching if zero tests ran, and only fall back to
+"full build once, trust console's per-test line or, failing that, the exit
+code" as a logged last resort — never a silent one, and never a first
+reach. The author's framing that shaped this: a rule should never be broken
+silently, but a workflow with zero fallback for a genuine environment
+failure just forces the agent to freeze or lie, so the fix is an escalation
+ladder with real remedies tried first, not removing the fallback.
+
 ## Active work: documentum-idempotent-scripting
 
 `skills/documentum-idempotent-scripting/` is unverified — written from
