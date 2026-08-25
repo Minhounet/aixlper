@@ -247,6 +247,42 @@ mvn test
 ./gradlew build
 ```
 
+## Getting evidence when the build tool fights you
+
+Test report files (Gradle's `build/test-results/`, Maven's
+`target/surefire-reports/`) sit inside directories that are gitignored by
+near-universal convention — and a client that respects `.gitignore` for file
+reads will be unable to open them. This is not an occasional fluke or a
+quirk of one client: it will recur on any Java project, on any client that
+honors `.gitignore`. Don't let it stall the cycle; route around it in this
+order.
+
+1. **Read evidence from console output, not report files.** This alone
+   satisfies rule 8 without touching the filesystem at all:
+   - Gradle: `./gradlew test --tests "com.example.ClassNameTest" --console=plain -i`
+   - Maven: prints per-test results to console by default; add `-e` for
+     failure detail.
+2. **If the scoped run reports zero tests executed**, don't jump straight to
+   a full build — check these in order:
+   - **Filter mismatch first.** Confirm the fully-qualified class name in
+     `--tests`/`-Dtest` matches the real package and class exactly. A wrong
+     pattern silently matches nothing rather than erroring.
+   - **Caching second**, only if the filter is confirmed correct — force a
+     rerun with `--rerun-tasks` (Gradle) or add `-DfailIfNoTests=true`
+     (Maven) so a future filter typo fails loudly instead of silently
+     running nothing.
+3. **Last resort, only once 1 and 2 are genuinely exhausted:** run the full
+   project build once. Look for that specific test's pass/fail line in the
+   console output — most build tools print one even in a full run — and use
+   that as evidence. Only fall back to "the build exited 0, so this test
+   passed" if no per-test line is visible either. This is a deviation from
+   rule 7 (build scope) and must be logged explicitly in that cycle's
+   summary — e.g. "scoped evidence unavailable: report files gitignored,
+   console showed no per-test filter match after `--rerun-tasks`; falling
+   back to full-build exit code" — never silently. Treat this as routing
+   around a broken environment, not a standing option to reach for whenever
+   scoped testing feels inconvenient.
+
 ## Author's preferences
 
 These are conventions to default to; the checklist and rules above stay
