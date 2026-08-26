@@ -351,6 +351,44 @@ Two tiers, not one:
   because it's static, but because a test can never pin down an expected
   value for a call that isn't deterministic.
 
+- **Threading shared configuration through a call chain: Parameter Object
+  over a loose primitive, even for one value.** When several methods down a
+  call chain all need the same configuration, don't add a raw primitive or
+  collection parameter (`Set<String>`, a `boolean`, a `String` path) to
+  every method on that chain. Bundle it into one named value object (e.g.
+  `PeppaConfig`) starting from the very first config value, not only once a
+  second one shows up. The payoff is asymmetric: with a loose `Set<String>`,
+  adding a second, differently-typed config value means touching every
+  method signature on the chain again; with a config object, every method
+  in between still just says `PeppaConfig config` — only the object's
+  fields and the leaf methods that read them change.
+- **That pattern is manual/"poor man's" Reader, not the Reader monad itself
+  — know the difference before reaching for one.** `Reader<Env, A>`
+  represents "a function that needs an `Env` to produce an `A`"; its
+  monadic `map`/`flatMap` compose several such functions so the environment
+  is threaded automatically by the monad's own bind, and the caller
+  supplies `Env` only once, at the outermost `run(env)`. Manually adding a
+  `PeppaConfig` parameter to every method and passing it down by hand gets
+  the same *intent* — defer/centralize where the environment is supplied —
+  without the monadic machinery. That's a legitimate, simpler choice for a
+  shallow call chain. Vavr doesn't ship a `Reader` type, so reaching for one
+  here means hand-rolling monadic infrastructure to solve a problem
+  constructor injection already solves for free in OOP — don't build a
+  Reader for this.
+- **If the class can stop being a bag of static methods, constructor
+  injection removes the threading problem entirely, not just improves it.**
+  A static method taking a config parameter is exactly the shape Reader
+  targets: a function needing an environment it has no instance to hold. If
+  callers can hold an instance, give the class a constructor that takes
+  `PeppaConfig` once, store it `private final`, and turn the static methods
+  into instance methods reading `this.config` — no parameter to thread
+  through any call chain at all, consistent with "Constructor injection,
+  always" above. Reach for the static-plus-parameter-object form only when
+  the class is genuinely forced to stay static (called from many places
+  that can't hold or obtain an instance — a legacy static-utility seam) —
+  there, the parameter object is the right compromise, not a consolation
+  prize.
+
 <!-- Add further architecture preferences here as they come up. -->
 
 ## When this skill doesn't cover the case

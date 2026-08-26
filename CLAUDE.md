@@ -173,6 +173,26 @@ DFC's `IDfSysObject`/`IDfSession` are mockable as interfaces but mock
 fidelity against real behavior is unverified, consistent with
 `documentum-idempotent-scripting`'s own unverified status.
 
+Latest addition (this session): a case of a static-only utility class
+(`PeppaService`) needing configuration values passed into its methods
+surfaced a Parameter Object rule — bundle shared config into one named
+value object (e.g. `PeppaConfig`) from the first config value, not a loose
+primitive/collection (a raw `Set<String>`), since a config object keeps
+every method signature on the call chain stable as fields are added later,
+while a loose collection forces every signature to change again. Framed
+its relationship to the Reader monad explicitly: passing a config object
+down a call chain by hand is manual/"poor man's" Reader (same intent —
+defer/centralize where an environment is supplied — without monadic
+`map`/`flatMap` plumbing), not the Reader monad itself; Vavr has no
+`Reader` type, so building one is solving a problem constructor injection
+already solves for free in OOP. Added the sharper fix where available: if
+the class can stop being static-only, inject `PeppaConfig` via constructor
+once and read `this.config` from instance methods — this removes the
+threading problem rather than just improving it, and is the default;
+static-plus-parameter-object stays the fallback only when the class is
+genuinely forced to stay static (called from places that can't hold an
+instance).
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
