@@ -325,6 +325,48 @@ API loop for operations DQL can't express set-based (versioning, lifecycle,
 ACL changes), which needs an explicit processed-ids log since it isn't
 transactional across a batch the way pattern 9 is.
 
+## Active work: ddd-strategic-design
+
+`skills/ddd-strategic-design/` is new (created this session, from a request
+to fold Eric Evans' *Domain-Driven Design* strategic-design chapter —
+summarized in Avram & Marinescu's *DDD Quickly*, which the author shared —
+into a skill). Not yet dogfooded; treat it the same as
+`documentum-idempotent-scripting`'s unverified status until it's been
+exercised on a real multi-context design.
+
+**Scope decision:** DDD splits into tactical patterns (Entity, Value
+Object, Aggregate, Repository, Factory — structuring *one* model) and
+strategic patterns (Bounded Context, Context Map, Shared Kernel,
+Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service,
+Separate Ways, Core Domain distillation — structuring the *boundaries
+between* models/teams/systems). Tactical patterns already live in
+`java-clean-architecture`'s "Relationship to DDD" section (Java-specific,
+folded in rather than split out, since a repository/aggregate/entity is
+inseparable from that skill's dependency-direction rules). Strategic
+design got its own skill instead of also folding into
+`java-clean-architecture`, for two reasons the author confirmed: (1) it's
+a genuinely different altitude of concern — "where does one model end and
+another begin" is not a single-model dependency-direction question — and
+(2) unlike the two Java skills, it's language-agnostic (Bounded Context,
+Ubiquitous Language, Context Map apply to any stack), which fits this
+repo's portability goal better as a standalone skill than as a section
+bolted onto a Java-flavored one.
+
+**Trigger design:** the author also wants this skill to work as a learning
+aid (they're learning DDD themselves), not just enforcement — so the
+frontmatter description and a "Learning mode" section both trigger on
+explaining a term on request ("what's a bounded context"), not only on
+applying the patterns during real design work. Cross-referenced from
+`java-clean-architecture`'s "Related skills" note (one line, matching the
+existing `java-tdd-baby-steps` cross-reference style — not a shared
+section duplicated in both files).
+
+Expect this to grow the same way the two Java skills did: from real usage,
+not from re-reading the source book. No testing method decided yet beyond
+`make validate`; a kata-equivalent for strategic design would need a
+multi-context scenario (e.g. designing the boundary for a legacy/
+third-party integration) rather than a single-class kata.
+
 ## Active work: java-tdd-baby-steps and java-clean-architecture
 
 ```

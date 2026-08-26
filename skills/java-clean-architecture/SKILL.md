@@ -5,11 +5,15 @@ description: Enforces dependency inversion via interfaces and constructor inject
 
 # Java Clean Architecture
 
-**Related skill:** `java-tdd-baby-steps` covers how you *write code over
+**Related skills:** `java-tdd-baby-steps` covers how you *write code over
 time* (test-first, one behavior per step) — this skill only covers how the
 code should be *structured* (dependency inversion, constructor injection).
 Orthogonal and composable, not a dependency: load the other one too when
-writing new code, not just restructuring existing code.
+writing new code, not just restructuring existing code. `ddd-strategic-design`
+covers the boundary *between* models/teams/systems (Bounded Context, Context
+Map) — language-agnostic, one level up from this skill's single-model
+dependency rules. Load it too once a second model, team, or external system
+enters the picture.
 
 ## The one principle that matters most
 
