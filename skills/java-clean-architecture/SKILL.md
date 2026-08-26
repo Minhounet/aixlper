@@ -107,6 +107,17 @@ pass"; the full build answers "did this change break a caller or wiring
 point outside this test's compile unit," which is the actual risk a
 structural change carries.
 
+Adding a new constructor dependency (a new repository/service/collaborator
+an existing class now needs) is exactly this kind of change, even when no
+behavior changes — the constructor signature is different, so the full
+build will fail every existing test that constructs the class directly.
+Fix those tests as part of the same change: add the new dependency to
+each affected test's setup (typically a new `@Mock` field and constructor
+argument). This is a mechanical fix to keep the code compiling, not new
+test coverage to justify — "no behavior changed" is not a reason to leave
+a test broken, since a broken build is exactly what the rule above exists
+to catch.
+
 ## Repository return types
 
 - A repository method returns the domain object itself — an
@@ -297,12 +308,12 @@ public class ProcessingConfiguration {
 }
 ```
 
-This is the case where the interface tier above earns its keep: the
-composition root needs to turn a raw property string into the object the
-use case's constructor takes, so something has to sit between them. A
-plain record wired with a literal value wouldn't need this — the
-interface shows up because the *source* of the values varies with
-environment, not because interfaces are always the better default.
+The interface here is the same one the config object always has, per
+"Constructor injection, always" — this pattern is just one concrete
+implementation of it. The composition root turns a raw property string
+into `DefaultProcessingConfig`; a test can turn a literal `Set.of(...)`
+into a different `ProcessingConfig` implementation just as easily,
+without either one touching the use case's constructor.
 
 ### Setter injection: narrow legacy exception
 
@@ -458,19 +469,18 @@ Two tiers, not one:
   that can't hold or obtain an instance — a legacy static-utility seam) —
   there, the parameter object is the right compromise, not a consolation
   prize.
-- **A plain record is the default for the parameter object; escalate to
-  an interface only when something needs to vary or be substituted.**
-  `PeppaConfig` as a `record`/plain class is enough when there's exactly
-  one implementation and nothing needs to swap it. Reach for an interface
-  (`ProcessingConfig` behind a `DefaultProcessingConfig`) only when a
-  genuine need shows up — the composition root has to build it from
-  environment/properties rather than a literal (see *Environment-driven
-  config objects* under *Framework examples* below), a test needs a
-  different config without touching the constructor, or more than one
-  concrete shape is actually expected. Adding the interface by default,
-  with no such need in view, is ceremony this skill doesn't ask for — a
-  value object doesn't need to be hidden behind an interface just because
-  everything else in the core is.
+- **A config/parameter object is a constructor dependency like any
+  other — type it as an interface, not a bare `record`/concrete class,
+  same as repository/service/logger under "Constructor injection,
+  always."** No special-casing it as "just data": the point of that rule
+  is the seam itself, not something earned only once a second
+  implementation is already needed. `ProcessingConfig` behind a
+  `DefaultProcessingConfig` costs one extra type and buys the same
+  liberty every other injected interface does — swap in an
+  environment-driven implementation later (see *Environment-driven config
+  objects* under *Framework examples* below), a test-specific one, or a
+  second concrete shape, without touching the constructor signature of
+  anything that depends on it.
 
 <!-- Add further architecture preferences here as they come up. -->
 
