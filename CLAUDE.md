@@ -193,6 +193,32 @@ static-plus-parameter-object stays the fallback only when the class is
 genuinely forced to stay static (called from places that can't hold an
 instance).
 
+Latest additions (this session, from a Gemini CLI dogfooding report):
+sharpened the skill's frontmatter description to trigger on "building or
+extending a real feature/use case with collaborators, dependencies, or
+configuration to wire" rather than a generic "designing/structuring Java
+production code" line, to distinguish it from `java-tdd-baby-steps`
+(which also covers a bare algorithm/kata with no architecture concerns).
+Added a caveat to the Parameter Object rule: a plain record/class is the
+default, and escalating it to an interface is only warranted when
+something genuinely needs to vary or be substituted (the composition
+root builds it from environment/properties, a test needs to swap it, or
+more than one concrete shape is expected) — not as a default "interface
+everything" move, which the report's proposed "Best" tier read as.
+Added a paired "Environment-driven config objects" pattern under the
+Spring framework examples: the core parameter object stays a plain POJO
+behind an interface, and only the `@Configuration` class reads Spring's
+`Environment` to build it from a property string — this is the concrete
+case where the interface tier from the previous point actually earns its
+keep. Also added a "Verifying a structural change: full build, not just
+the scoped test" rule: a structural change (new interface, constructor
+signature change, static→instance conversion, `@Configuration`/`@Bean`
+rewiring) has a wider blast radius than a `java-tdd-baby-steps` cycle's
+scoped build can catch (a broken composition root or another caller
+aren't in that test's compile unit), so a full build is warranted after
+this kind of change even when the work itself was done in TDD-scoped
+steps.
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.

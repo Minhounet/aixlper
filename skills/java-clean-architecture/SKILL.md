@@ -1,6 +1,6 @@
 ---
 name: java-clean-architecture
-description: Enforces dependency inversion via interfaces and constructor injection for Java — use cases as the entry point depending only on repository/service interfaces, with guidance for legacy code where the entry point isn't yours to control. Use when designing, structuring, or reviewing Java production code.
+description: Enforces dependency inversion via interfaces and constructor injection for Java — use cases as the entry point depending only on repository/service interfaces, with guidance for legacy code where the entry point isn't yours to control. Use when building or extending a real feature or use case — anything with collaborators, dependencies, or configuration to wire together — not for a standalone algorithm or self-contained utility with no external dependencies.
 ---
 
 # Java Clean Architecture
@@ -86,6 +86,26 @@ Repository, service, and logger all being interfaces is what makes the
 TDD skill's preferences possible: an in-memory repository and a Mockito
 mock are both just another implementation of the same interface the use
 case already depends on — no test-only wiring hacks needed.
+
+## Verifying a structural change: full build, not just the scoped test
+
+A structural change here — introducing an interface, changing a
+constructor signature, moving a static method to an instance method,
+adding or editing `@Configuration`/`@Bean` wiring — has a wider blast
+radius than a typical TDD baby step. `java-tdd-baby-steps` runs
+scoped/single-test builds during a cycle and only does one full build at
+the end; that's correct for a change confined to one class. It isn't
+enough on its own here: a scoped build only compiles the test's own
+compile unit, so it can't catch a composition root that no longer
+compiles, or another caller still doing `new ConcreteThing(...)` against
+the constructor you just changed.
+
+Run a full build — compile everything, run the full test suite — after
+any structural change of this kind, even if the work leading up to it was
+done in TDD-scoped steps. The scoped build answers "does this test
+pass"; the full build answers "did this change break a caller or wiring
+point outside this test's compile unit," which is the actual risk a
+structural change carries.
 
 ## Repository return types
 
@@ -233,6 +253,56 @@ Every class with a `Logger` constructor parameter gets a logger bound to
 itself, without hand-writing `LoggerFactory.getLogger(ThisClass.class)`
 in every constructor. Outside Spring (or without bean config), the
 hand-written form is the equivalent and is perfectly fine.
+
+### Environment-driven config objects: resolve properties at the composition root
+
+When a parameter object (see *Threading shared configuration* under
+*Author's preferences* below) needs its values from environment/properties
+rather than a literal in code, the core class still never sees `@Value`
+or `@Component` — only the `@Configuration` class touches Spring's
+`Environment`:
+
+```java
+// core — a plain POJO, still no Spring
+public interface ProcessingConfig {
+    Set<String> attributesToKeepEmpty();
+}
+
+public class DefaultProcessingConfig implements ProcessingConfig {
+    private final Set<String> attributesToKeepEmpty;
+
+    public DefaultProcessingConfig(Set<String> attributesToKeepEmpty) {
+        this.attributesToKeepEmpty = attributesToKeepEmpty;
+    }
+
+    @Override
+    public Set<String> attributesToKeepEmpty() {
+        return attributesToKeepEmpty;
+    }
+}
+
+// composition root — the Environment lookup lives here, not in the core
+@Configuration
+public class ProcessingConfiguration {
+
+    @Bean
+    public ProcessingConfig processingConfig(Environment environment) {
+        String raw = environment.getProperty("app.processing.keep-empty-attributes", "");
+        Set<String> attributes = Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+        return new DefaultProcessingConfig(attributes);
+    }
+}
+```
+
+This is the case where the interface tier above earns its keep: the
+composition root needs to turn a raw property string into the object the
+use case's constructor takes, so something has to sit between them. A
+plain record wired with a literal value wouldn't need this — the
+interface shows up because the *source* of the values varies with
+environment, not because interfaces are always the better default.
 
 ### Setter injection: narrow legacy exception
 
@@ -388,6 +458,19 @@ Two tiers, not one:
   that can't hold or obtain an instance — a legacy static-utility seam) —
   there, the parameter object is the right compromise, not a consolation
   prize.
+- **A plain record is the default for the parameter object; escalate to
+  an interface only when something needs to vary or be substituted.**
+  `PeppaConfig` as a `record`/plain class is enough when there's exactly
+  one implementation and nothing needs to swap it. Reach for an interface
+  (`ProcessingConfig` behind a `DefaultProcessingConfig`) only when a
+  genuine need shows up — the composition root has to build it from
+  environment/properties rather than a literal (see *Environment-driven
+  config objects* under *Framework examples* below), a test needs a
+  different config without touching the constructor, or more than one
+  concrete shape is actually expected. Adding the interface by default,
+  with no such need in view, is ceremony this skill doesn't ask for — a
+  value object doesn't need to be hidden behind an interface just because
+  everything else in the core is.
 
 <!-- Add further architecture preferences here as they come up. -->
 
