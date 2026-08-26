@@ -5,6 +5,13 @@ description: Enforces one-test-at-a-time Test-Driven Development for Java, non-n
 
 # Java TDD — Baby Steps
 
+**Related skill:** `java-clean-architecture` covers how the code under test
+should be *structured* (dependency inversion, constructor injection) — this
+skill only covers how you *write it over time* (test-first, one behavior per
+step). Orthogonal and composable, not a dependency: load the other one too
+when the work involves wiring real collaborators, not just a self-contained
+algorithm.
+
 ## Why baby steps, specifically for you (an AI)
 
 Baby steps are usually justified as a *design-discovery* tool: a human doesn't
