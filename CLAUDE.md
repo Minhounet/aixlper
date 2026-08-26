@@ -193,6 +193,36 @@ static-plus-parameter-object stays the fallback only when the class is
 genuinely forced to stay static (called from places that can't hold an
 instance).
 
+Latest additions (this session, from a Gemini CLI dogfooding report):
+sharpened the skill's frontmatter description to trigger on "building or
+extending a real feature/use case with collaborators, dependencies, or
+configuration to wire" rather than a generic "designing/structuring Java
+production code" line, to distinguish it from `java-tdd-baby-steps`
+(which also covers a bare algorithm/kata with no architecture concerns).
+A config/parameter object is a constructor dependency like any other, so
+it follows the same "typed as an interface, never a concrete class" rule
+as repository/service/logger — no bare-`record`-by-default special case;
+the author's own framing is that the interface is the seam/liberty to
+substitute later, earned upfront rather than only once a second
+implementation is already needed. Added a paired "Environment-driven
+config objects" pattern under the Spring framework examples: the core
+parameter object stays a plain POJO behind that same interface, and only
+the `@Configuration` class reads Spring's `Environment` to build the
+concrete implementation from a property string — one instance of the
+general rule, not a special case that justifies it. Also added a
+"Verifying a structural change: full build, not just the scoped test"
+rule: a structural change (new interface, constructor signature change,
+static→instance conversion, `@Configuration`/`@Bean` rewiring) has a
+wider blast radius than a `java-tdd-baby-steps` cycle's scoped build can
+catch (a broken composition root or another caller aren't in that test's
+compile unit), so a full build is warranted after this kind of change
+even when the work itself was done in TDD-scoped steps. Extended that
+rule: adding a new constructor dependency with no behavior change still
+breaks every existing test that constructs the class directly, and
+fixing those call sites (adding the new dependency, typically a new
+`@Mock`, to each test's setup) is a mandatory mechanical fix, not
+optional just because "no behavior changed."
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.

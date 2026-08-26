@@ -1,6 +1,6 @@
 ---
 name: java-clean-architecture
-description: Enforces dependency inversion via interfaces and constructor injection for Java — use cases as the entry point depending only on repository/service interfaces, with guidance for legacy code where the entry point isn't yours to control. Use when designing, structuring, or reviewing Java production code.
+description: Enforces dependency inversion via interfaces and constructor injection for Java — use cases as the entry point depending only on repository/service interfaces, with guidance for legacy code where the entry point isn't yours to control. Use when building or extending a real feature or use case — anything with collaborators, dependencies, or configuration to wire together — not for a standalone algorithm or self-contained utility with no external dependencies.
 ---
 
 # Java Clean Architecture
@@ -86,6 +86,37 @@ Repository, service, and logger all being interfaces is what makes the
 TDD skill's preferences possible: an in-memory repository and a Mockito
 mock are both just another implementation of the same interface the use
 case already depends on — no test-only wiring hacks needed.
+
+## Verifying a structural change: full build, not just the scoped test
+
+A structural change here — introducing an interface, changing a
+constructor signature, moving a static method to an instance method,
+adding or editing `@Configuration`/`@Bean` wiring — has a wider blast
+radius than a typical TDD baby step. `java-tdd-baby-steps` runs
+scoped/single-test builds during a cycle and only does one full build at
+the end; that's correct for a change confined to one class. It isn't
+enough on its own here: a scoped build only compiles the test's own
+compile unit, so it can't catch a composition root that no longer
+compiles, or another caller still doing `new ConcreteThing(...)` against
+the constructor you just changed.
+
+Run a full build — compile everything, run the full test suite — after
+any structural change of this kind, even if the work leading up to it was
+done in TDD-scoped steps. The scoped build answers "does this test
+pass"; the full build answers "did this change break a caller or wiring
+point outside this test's compile unit," which is the actual risk a
+structural change carries.
+
+Adding a new constructor dependency (a new repository/service/collaborator
+an existing class now needs) is exactly this kind of change, even when no
+behavior changes — the constructor signature is different, so the full
+build will fail every existing test that constructs the class directly.
+Fix those tests as part of the same change: add the new dependency to
+each affected test's setup (typically a new `@Mock` field and constructor
+argument). This is a mechanical fix to keep the code compiling, not new
+test coverage to justify — "no behavior changed" is not a reason to leave
+a test broken, since a broken build is exactly what the rule above exists
+to catch.
 
 ## Repository return types
 
@@ -233,6 +264,56 @@ Every class with a `Logger` constructor parameter gets a logger bound to
 itself, without hand-writing `LoggerFactory.getLogger(ThisClass.class)`
 in every constructor. Outside Spring (or without bean config), the
 hand-written form is the equivalent and is perfectly fine.
+
+### Environment-driven config objects: resolve properties at the composition root
+
+When a parameter object (see *Threading shared configuration* under
+*Author's preferences* below) needs its values from environment/properties
+rather than a literal in code, the core class still never sees `@Value`
+or `@Component` — only the `@Configuration` class touches Spring's
+`Environment`:
+
+```java
+// core — a plain POJO, still no Spring
+public interface ProcessingConfig {
+    Set<String> attributesToKeepEmpty();
+}
+
+public class DefaultProcessingConfig implements ProcessingConfig {
+    private final Set<String> attributesToKeepEmpty;
+
+    public DefaultProcessingConfig(Set<String> attributesToKeepEmpty) {
+        this.attributesToKeepEmpty = attributesToKeepEmpty;
+    }
+
+    @Override
+    public Set<String> attributesToKeepEmpty() {
+        return attributesToKeepEmpty;
+    }
+}
+
+// composition root — the Environment lookup lives here, not in the core
+@Configuration
+public class ProcessingConfiguration {
+
+    @Bean
+    public ProcessingConfig processingConfig(Environment environment) {
+        String raw = environment.getProperty("app.processing.keep-empty-attributes", "");
+        Set<String> attributes = Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+        return new DefaultProcessingConfig(attributes);
+    }
+}
+```
+
+The interface here is the same one the config object always has, per
+"Constructor injection, always" — this pattern is just one concrete
+implementation of it. The composition root turns a raw property string
+into `DefaultProcessingConfig`; a test can turn a literal `Set.of(...)`
+into a different `ProcessingConfig` implementation just as easily,
+without either one touching the use case's constructor.
 
 ### Setter injection: narrow legacy exception
 
@@ -388,6 +469,18 @@ Two tiers, not one:
   that can't hold or obtain an instance — a legacy static-utility seam) —
   there, the parameter object is the right compromise, not a consolation
   prize.
+- **A config/parameter object is a constructor dependency like any
+  other — type it as an interface, not a bare `record`/concrete class,
+  same as repository/service/logger under "Constructor injection,
+  always."** No special-casing it as "just data": the point of that rule
+  is the seam itself, not something earned only once a second
+  implementation is already needed. `ProcessingConfig` behind a
+  `DefaultProcessingConfig` costs one extra type and buys the same
+  liberty every other injected interface does — swap in an
+  environment-driven implementation later (see *Environment-driven config
+  objects* under *Framework examples* below), a test-specific one, or a
+  second concrete shape, without touching the constructor signature of
+  anything that depends on it.
 
 <!-- Add further architecture preferences here as they come up. -->
 
