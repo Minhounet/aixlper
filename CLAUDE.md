@@ -223,6 +223,17 @@ fixing those call sites (adding the new dependency, typically a new
 `@Mock`, to each test's setup) is a mandatory mechanical fix, not
 optional just because "no behavior changed."
 
+Latest addition (this session): the two skills stayed cross-reference-free
+until now — the author explicitly asked for a pointer between them, since
+they're a real, known relationship (TDD governs *how you write code over
+time*, Clean Architecture governs *how it's structured*) even though
+they're deliberately kept decoupled (see the intro above). Added a short
+"Related skill" note right under each `SKILL.md`'s title heading, before
+any rules — one line naming the other skill, its orthogonal concern, and
+when to load it too. Deliberately kept to that one line each, not a shared
+"how they relate" section duplicated in both files, so the pointer aids
+discovery without making either skill require or auto-load the other.
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
