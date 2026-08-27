@@ -94,6 +94,42 @@ multiple numbers, *that's* what earns the split-and-sum logic — and refactor
 is where you'd notice something like duplicated parsing between branches,
 not where you clean up code you should never have written.
 
+## Plan the tests before the first cycle
+
+Before writing the first test, list every planned test for the current task
+as **names + one-line intent only** — no test code, no implementation
+detail:
+
+```
+Planned tests — StringCalculator.add:
+1. shouldReturnZero_whenEmptyString — add("") == 0
+2. shouldReturnNumber_whenSingleNumber — add("5") == 5
+3. shouldReturnSum_whenTwoCommaSeparatedNumbers — add("1,2") == 3
+4. shouldReturnSum_whenUnknownAmountOfNumbers — add("1,2,3,4") == 10
+```
+
+Present this list and wait for a single go-ahead (approve as-is, or the
+author edits/reorders/adds/removes entries) before touching test 1's RED.
+This is the one and only pause for the whole task: once approved, run every
+cycle below straight through to the end without stopping again — the plan,
+not a per-test check-in, is the review point. Don't ask "should I write the
+next test?" between cycles; that defeats the point of planning up front.
+
+The plan is a checklist, not a contract with the code: rule 1 (one test per
+step) and rule 5 (minimal implementation, triangulate before generalizing)
+still govern exactly how each planned test gets implemented once you reach
+it. If implementing the plan surfaces a reason to deviate — a planned test
+turns out to be redundant, impossible as worded, or the actual code reveals
+a test the plan missed — stop, show the deviation and why (in the same
+"Skill improvement proposal"-adjacent spirit as an unlisted gap: state it,
+don't silently substitute), get a quick go-ahead, then resume running
+straight through. This is the only other pause besides the initial one.
+
+If `java-clean-architecture` is also loaded and produced a structural plan
+first (its classes/interfaces/signatures), write this test plan against
+that already-approved structure rather than re-deriving or re-presenting
+it — one plan per concern, not two overlapping ones.
+
 ## The rules (absolute — no exceptions, no judgment calls)
 
 1. **One test per step.** Write exactly one new test method, then stop
@@ -217,7 +253,8 @@ not where you clean up code you should never have written.
 
 ## The cycle
 
-Repeat for each new behavior, one at a time:
+Once the test plan above is approved, repeat for each planned behavior, one
+at a time, straight through to the end:
 
 1. **RED** — Add the one test method for the next smallest behavior. Run it
    scoped to its class. Show the failure output.

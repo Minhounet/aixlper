@@ -284,6 +284,30 @@ silently, but a workflow with zero fallback for a genuine environment
 failure just forces the agent to freeze or lie, so the fix is an escalation
 ladder with real remedies tried first, not removing the fallback.
 
+Latest addition (this session): a runtime-transparency/control gap the
+author raised directly — during an actual TDD or clean-architecture
+session, decisions were happening (which tests, what structure) without a
+review point before code got written, and stopping mid-session (the
+session's own interrupt control) only catches a bad direction *after* it's
+underway. Fixed per-skill rather than as a meta CLAUDE.md rule, since the
+right checkpoint shape differs by skill: `java-tdd-baby-steps` got a new
+"Plan the tests before the first cycle" section — list every planned test
+as name + one-line intent (no code) before RED on test 1, one approval
+gate, then run every cycle straight through with no further per-test
+check-ins (the author explicitly chose this over per-test confirmation or
+dictating tests themselves — approve the list once, then let the cycles
+run). `java-clean-architecture` got a "Plan the structure before
+implementing" section — classes/interfaces/ports, constructor
+dependencies, composition-root wiring, **and public method signatures**
+(the author's pick over structure-only), no bodies, one approval gate
+before implementation starts. Both plans allow exactly one further pause
+each: a genuine deviation from the approved plan discovered during
+implementation, shown and re-approved before resuming — never silent
+substitution. Cross-referenced: when both skills are loaded, the
+clean-architecture structural plan comes first and the TDD test plan is
+written against it rather than re-derived, so a task doesn't produce two
+overlapping upfront plans.
+
 ## Active work: documentum-idempotent-scripting
 
 `skills/documentum-idempotent-scripting/` is unverified — written from

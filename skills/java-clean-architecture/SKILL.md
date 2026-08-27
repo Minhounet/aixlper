@@ -26,6 +26,50 @@ adapters — live outside the core and are plugged in from the outside.
 Everything else in this skill (constructor injection, the use-case shape,
 the legacy guidance) is a consequence of this one rule, not a separate rule.
 
+## Plan the structure before implementing
+
+Before writing any implementation code for a new or extended feature, show
+a structural plan — no method bodies, no wiring code, just the shape:
+
+```
+Structural plan — RegisterUserUseCase:
+- RegisterUserUseCase (use case)
+    constructor(UserRepository, EmailSender, Logger)
+    + execute(RegisterUserCommand cmd): RegisterUserResponse
+- UserRepository (interface, port)
+    + findByEmail(String email): Option<User>
+    + save(User user): User
+- EmailSender (interface, port)
+    + sendWelcomeEmail(String email): void
+- UserMapper
+    + toResponse(User user): RegisterUserResponse
+- Composition root: UseCaseConfig.registerUserUseCase(UserRepository, EmailSender, Logger)
+    → wires an in-memory/JPA UserRepository + concrete EmailSender + Logger
+```
+
+List every class/interface to be created or changed, each one's
+constructor dependencies (typed as interfaces per the rule below), and the
+signature of each public method — name, parameters, return type, never a
+body. Include composition-root wiring (what gets bound to what) when the
+plan introduces a new interface or bean. Present this and wait for one
+go-ahead — approve as-is, or the author edits the shape — before writing
+any implementation.
+
+This is the single pause for the structural shape of the task. Once
+approved, implement straight through without re-presenting the plan,
+unless implementation forces a real deviation (a signature that doesn't
+work once you're in the code, a dependency that turns out unnecessary, a
+port that needs an extra method) — then stop, show the deviation and why,
+get a quick go-ahead, and resume.
+
+This plan covers *structure*, not *test order*: if `java-tdd-baby-steps` is
+also loaded, its own upfront test-plan step comes next, listing the tests
+that will drive each class/method above into existence — write that plan
+against this already-approved structure rather than re-deriving it. A
+change that touches no new class/interface/method signature (a bug fix
+inside an existing method body, say) doesn't need this plan at all — it's
+for structural work, per "Verifying a structural change" below.
+
 ## Constructor injection, always
 
 - Every dependency a class needs arrives as a constructor parameter,
