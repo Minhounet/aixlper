@@ -308,6 +308,29 @@ clean-architecture structural plan comes first and the TDD test plan is
 written against it rather than re-derived, so a task doesn't produce two
 overlapping upfront plans.
 
+Latest addition (this session): two Nuxeo-specific operational rules
+surfaced while the author started real Nuxeo work, added to the "Heavy
+ECM/legacy SDKs" example. (1) Sharpened the existing static-lookup bullet
+with the *why*: `Framework.getService(...)` (and building a
+`CoreSession`-backed adapter) must never happen in an `EventListener`'s
+constructor, since listener instances are created during
+component/bundle registration before the runtime guarantees every
+service has started, and `CoreSession` is request/transaction-scoped and
+doesn't exist yet at construction time — both are resolved inside
+`handleEvent` instead, meaning the repository/gateway adapters and the
+use case are constructed per-invocation there, not once in the
+constructor. (2) A new "Syncing Nuxeo to an external system" pattern:
+pushing a changed document to another system over REST is a genuine
+clean-architecture candidate (real logic to isolate: what to sync, how
+to map it, how to handle failure) unlike the trivial-transition overkill
+exception, but needs two separate ports rather than one repository
+stretched both ways — `DocumentRepository` (reads the domain object from
+Nuxeo, the system of record) and a distinctly-named gateway/service port
+(`SyncGateway`, pushes to the external system, Mockito-mocked like any
+other gateway/client, not in-memory-faked like a repository) — composed
+in the use case via an outbound mapper, same per-domain-type mapper
+convention as elsewhere in the skill.
+
 ## Active work: documentum-idempotent-scripting
 
 `skills/documentum-idempotent-scripting/` is unverified — written from
