@@ -405,6 +405,17 @@ core:
   because the framework — not you — instantiates the class, confine that
   lookup to the listener's translation code. Never let it reach into the
   use case; the use case still only sees interfaces via its constructor.
+- Nuxeo specifically: never call `Framework.getService(...)` in the
+  listener's constructor, and never build a `CoreSession`-backed adapter
+  there either. Listener instances are created during component/bundle
+  registration, before the runtime guarantees every service has started,
+  so a service resolved in the constructor can come back `null` or
+  half-initialized; `CoreSession` is scoped to the current
+  request/transaction and doesn't exist yet at construction time either.
+  Both are resolved inside `handleEvent`, at the same point the
+  translation happens — which means the repository/gateway adapters and
+  the use case itself are constructed per-invocation in `handleEvent`,
+  not once in the listener's constructor.
 
 ```java
 public class ContractStatusListener implements EventListener {
@@ -430,6 +441,50 @@ the pure-static-call exception under *Author's preferences* below. Don't
 decide this silently every time it comes up: log it with the "Skill
 improvement proposal" format further down, so the threshold gets reviewed
 rather than reinvented per use case.
+
+### Syncing Nuxeo to an external system: two ports, not one
+
+A common real case: an `EventListener` needs to push a changed document to
+another system over REST. Unlike the trivial-transition exception above,
+this is a genuine clean-architecture candidate — there's real logic to
+isolate (what to sync, how to map it, how to handle failure) — but it
+needs two separate ports, not one repository stretched to cover both
+directions:
+
+- **`DocumentRepository`** (or similarly named) — reads the domain object
+  out of Nuxeo. This is the repository: it reconstructs *your* domain
+  entity from the system of record, same as any other repository in this
+  skill.
+- **A gateway/service port** (`SyncGateway`, `ExternalSystemService`) —
+  pushes to the external system. Name and treat this as a gateway, not a
+  repository, even though the instinct is to call it "the other
+  repository": it's a one-way call to a system you don't own, not a
+  reconstruction of your domain entity. The distinction also drives
+  testing — the Nuxeo repository gets `java-tdd-baby-steps`'s
+  in-memory-fake treatment, the external-system gateway gets Mockito, same
+  as any other service/gateway/client collaborator.
+
+The use case takes both through its constructor, with an outbound mapper
+(the same per-domain-type mapper convention as the `Response` mapping
+elsewhere in this skill) turning the domain object into the external
+system's shape:
+
+```java
+class SyncDocumentUseCase {
+    SyncDocumentUseCase(DocumentRepository repository, SyncGateway gateway) { ... }
+
+    void execute(SyncDocumentCommand command) {
+        Document doc = repository.findById(command.documentId());
+        ExternalDto dto = mapper.toExternal(doc);
+        gateway.push(dto);
+    }
+}
+```
+
+The Nuxeo `EventListener` stays the thin translation entry point from the
+pattern above, wired inside `handleEvent`. The REST client adapter behind
+`SyncGateway` is a plain Java HTTP client needing no Nuxeo test harness at
+all — Mockito or a wiremock-style test is enough for it.
 
 ### Testing across the seam
 
