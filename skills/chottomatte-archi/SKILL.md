@@ -486,6 +486,37 @@ pattern above, wired inside `handleEvent`. The REST client adapter behind
 `SyncGateway` is a plain Java HTTP client needing no Nuxeo test harness at
 all — Mockito or a wiremock-style test is enough for it.
 
+### Nuxeo addon packaging: enforcing dependency direction with Maven modules
+
+Nuxeo deploys addons as a collection of OSGi bundles — not an uber-JAR. The addon
+marketplace package (ZIP) contains:
+
+- `bundles/` — OSGi JARs with `Bundle-SymbolicName` in `MANIFEST.MF`; Nuxeo-aware components
+- `lib/` — plain library JARs; visible to all bundles via Nuxeo's classloader
+
+This is an opportunity to enforce the dependency direction at the **Maven compiler
+level**, not just by convention. Split the addon into two Maven modules:
+
+- **Core/adapter module** (e.g. `my-addon-core`, `my-addon-soap`): model classes, use
+  case interfaces, gateway interfaces, and pure infrastructure adapters (HTTP clients,
+  SOAP clients). **Zero Nuxeo dependency.** Ends up in `lib/`.
+- **Nuxeo bundle module** (e.g. `my-addon-nuxeo`): `EventListener`,
+  `AbstractComputation`, `DefaultComponent` services, OSGI-INF XML, `MANIFEST.MF`.
+  Depends on the core module. Ends up in `bundles/`.
+
+The compiler enforces that the core module cannot import a single Nuxeo class — the
+Maven dependency simply doesn't exist in that module. Tests for the core module need
+no `nuxeo-runtime-test` infrastructure: WireMock or Mockito is sufficient.
+
+The bundle module's `pom.xml` declares the core as a `compile`-scope dependency. The
+packaging module (e.g. `hydro-package`) collects both JARs into their respective
+directories.
+
+Default to this split for any Nuxeo addon whose external adapter (REST, SOAP, Kafka
+producer) has no inherent Nuxeo dependency. The overhead is one extra `pom.xml`, one
+`<modules>` entry in the parent, and one `<dependency>` in the bundle module — a
+small cost for a compiler-enforced boundary.
+
 ### Testing across the seam
 
 Two tiers, not one:
