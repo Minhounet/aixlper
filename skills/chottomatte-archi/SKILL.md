@@ -1,11 +1,11 @@
 ---
-name: java-clean-architecture
+name: chottomatte-archi
 description: Enforces dependency inversion via interfaces and constructor injection for Java — use cases as the entry point depending only on repository/service interfaces, with guidance for legacy code where the entry point isn't yours to control. Use when building or extending a real feature or use case — anything with collaborators, dependencies, or configuration to wire together — not for a standalone algorithm or self-contained utility with no external dependencies.
 ---
 
 # Java Clean Architecture
 
-**Related skills:** `java-tdd-baby-steps` covers how you *write code over
+**Related skills:** `igiari-tdd` covers how you *write code over
 time* (test-first, one behavior per step) — this skill only covers how the
 code should be *structured* (dependency inversion, constructor injection).
 Orthogonal and composable, not a dependency: load the other one too when
@@ -62,7 +62,7 @@ work once you're in the code, a dependency that turns out unnecessary, a
 port that needs an extra method) — then stop, show the deviation and why,
 get a quick go-ahead, and resume.
 
-This plan covers *structure*, not *test order*: if `java-tdd-baby-steps` is
+This plan covers *structure*, not *test order*: if `igiari-tdd` is
 also loaded, its own upfront test-plan step comes next, listing the tests
 that will drive each class/method above into existence — write that plan
 against this already-approved structure rather than re-deriving it. A
@@ -146,7 +146,7 @@ case already depends on — no test-only wiring hacks needed.
 A structural change here — introducing an interface, changing a
 constructor signature, moving a static method to an instance method,
 adding or editing `@Configuration`/`@Bean` wiring — has a wider blast
-radius than a typical TDD baby step. `java-tdd-baby-steps` runs
+radius than a typical TDD baby step. `igiari-tdd` runs
 scoped/single-test builds during a cycle and only does one full build at
 the end; that's correct for a change confined to one class. It isn't
 enough on its own here: a scoped build only compiles the test's own
@@ -235,7 +235,7 @@ related to the use case itself.
 ## Relationship to DDD
 
 Clean Architecture and DDD answer different questions and aren't the same
-commitment — same relationship as this skill has to `java-tdd-baby-steps`:
+commitment — same relationship as this skill has to `igiari-tdd`:
 orthogonal, composable, neither implies the other.
 
 - **Clean Architecture** governs *dependency direction*: what's allowed to
@@ -460,7 +460,7 @@ directions:
   repository, even though the instinct is to call it "the other
   repository": it's a one-way call to a system you don't own, not a
   reconstruction of your domain entity. The distinction also drives
-  testing — the Nuxeo repository gets `java-tdd-baby-steps`'s
+  testing — the Nuxeo repository gets `igiari-tdd`'s
   in-memory-fake treatment, the external-system gateway gets Mockito, same
   as any other service/gateway/client collaborator.
 
@@ -491,7 +491,7 @@ all — Mockito or a wiremock-style test is enough for it.
 Two tiers, not one:
 
 - **Use case tests** stay pure unit tests — no framework runtime, an
-  in-memory repository and Mockito per `java-tdd-baby-steps`'s existing
+  in-memory repository and Mockito per `igiari-tdd`'s existing
   preferences. This is where most tests live.
 - **Adapter/listener integration tests** exist only to prove the seam's
   translation is correct (event → `Command`, SDK type ↔ domain object, the
@@ -604,7 +604,7 @@ and folded back into this file later:
 
 ```
 ## Skill improvement proposal
-- Skill: java-clean-architecture
+- Skill: chottomatte-archi
 - Situation: <what you were doing>
 - Gap: <what these rules don't cover, or got wrong>
 - Proposed rule: <the addition, worded as a rule, ready to paste in>

@@ -1,11 +1,11 @@
 ---
-name: java-tdd-baby-steps
+name: igiari-tdd
 description: Enforces one-test-at-a-time Test-Driven Development for Java, non-negotiably — never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle, and test-scoped builds during the loop with a full project build only at the very end. Use whenever writing or changing Java production code.
 ---
 
 # Java TDD — Baby Steps
 
-**Related skill:** `java-clean-architecture` covers how the code under test
+**Related skill:** `chottomatte-archi` covers how the code under test
 should be *structured* (dependency inversion, constructor injection) — this
 skill only covers how you *write it over time* (test-first, one behavior per
 step). Orthogonal and composable, not a dependency: load the other one too
@@ -125,7 +125,7 @@ a test the plan missed — stop, show the deviation and why (in the same
 don't silently substitute), get a quick go-ahead, then resume running
 straight through. This is the only other pause besides the initial one.
 
-If `java-clean-architecture` is also loaded and produced a structural plan
+If `chottomatte-archi` is also loaded and produced a structural plan
 first (its classes/interfaces/signatures), write this test plan against
 that already-approved structure rather than re-deriving or re-presenting
 it — one plan per concern, not two overlapping ones.
@@ -344,7 +344,7 @@ non-negotiable regardless.
   justify each use.
 - **No static mocking (`mockStatic`, PowerMock) as a default move.**
   Needing one is a signal the production code depends on a static
-  directly — see java-clean-architecture's "Author's preferences" for the
+  directly — see chottomatte-archi's "Author's preferences" for the
   design fix (wrap it behind an owned interface, inject that instead).
   Only reach for static mocking when the static belongs to a class you
   don't own and wrapping it is genuinely out of scope for the current
@@ -447,7 +447,7 @@ format, so it can be reviewed and folded back into this file later:
 
 ```
 ## Skill improvement proposal
-- Skill: java-tdd-baby-steps
+- Skill: igiari-tdd
 - Situation: <what you were doing>
 - Gap: <what these rules don't cover, or got wrong>
 - Proposed rule: <the addition, worded as a rule, ready to paste in>

@@ -14,8 +14,8 @@ tool — no per-client fork.
 
 | Skill | What it does |
 |---|---|
-| [`java-tdd-baby-steps`](skills/java-tdd-baby-steps/SKILL.md) | One-test-at-a-time TDD for Java: never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle. |
-| [`java-clean-architecture`](skills/java-clean-architecture/SKILL.md) | Dependency inversion via interfaces and constructor injection for Java: the use case as entry point, depending only on repository/service interfaces. |
+| [`igiari-tdd`](skills/igiari-tdd/SKILL.md) | One-test-at-a-time TDD for Java: never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle. |
+| [`chottomatte-archi`](skills/chottomatte-archi/SKILL.md) | Dependency inversion via interfaces and constructor injection for Java: the use case as entry point, depending only on repository/service interfaces. |
 | [`bash-cli-patterns`](skills/bash-cli-patterns/SKILL.md) | Ten hardening patterns for robust, interactive bash CLI tools: keybinding dispatch, atomic writes, strict mode, framework-free testing, and more. |
 | [`documentum-idempotent-scripting`](skills/documentum-idempotent-scripting/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
 
@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/inst
 ```
 
 Claude Code picks these up on the next session; each skill is invoked as
-`/java-tdd-baby-steps` or `/java-clean-architecture`, or triggers
+`/igiari-tdd` or `/chottomatte-archi`, or triggers
 automatically based on its `description`.
 
 ### Gemini CLI — one-line install
