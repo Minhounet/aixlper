@@ -17,7 +17,7 @@ Portability rules for every skill in this repo:
   a specific client's tool names, unless a step genuinely differs per
   client (call that out explicitly).
 
-## Active work: java-tdd-baby-steps and java-clean-architecture
+## Active work: igiari-tdd and chottomatte-archi
 
 These two skills are being designed iteratively, directly with the repo's
 author, across many sessions — they are **not** finished/stable in the way
@@ -32,7 +32,7 @@ code is structured* (the dependency rule) — orthogonal, composable, and
 you shouldn't have to pull in architecture rules just to fix a bug in an
 unstructured script.
 
-**`skills/java-tdd-baby-steps/`** — one-test-per-step TDD, framed for an
+**`skills/igiari-tdd/`** — one-test-per-step TDD, framed for an
 AI specifically: baby steps exist for *containment* (capping the blast
 radius of a confidently-wrong diff), not *design-discovery* (the usual
 human justification, which is weak for an AI that often already sees the
@@ -101,7 +101,7 @@ a lambda/function value rather than a full Strategy interface with one
 implementing class per branch — reach for the class form only when a
 branch needs more than one method or its own state.
 
-**`skills/java-clean-architecture/`** — dependency inversion via
+**`skills/chottomatte-archi/`** — dependency inversion via
 interfaces is the one rule everything else follows from. Constructor
 injection always (setter injection is a narrow, seam-scoped exception for
 legacy framework wiring that genuinely blocks the constructor path, not a
@@ -122,7 +122,7 @@ a design smell, not a testing inconvenience — it means the code reached
 for a static dependency directly instead of an interface, same violation
 as the constructor-injection rule, just spotted from the test side. Fix is
 to wrap it behind an owned interface and inject an adapter, mirrored as a
-mocking-preference note in `java-tdd-baby-steps`. Exception: a static you
+mocking-preference note in `igiari-tdd`. Exception: a static you
 don't own (JDK, a third-party library) where wrapping is out of scope —
 mocking it is an accepted last resort there. Sharpened further: the actual
 line isn't "static," it's determinism — a pure static (`Math.max`,
@@ -150,7 +150,7 @@ DDD" framing: Clean Architecture governs dependency direction, DDD's
 tactical patterns (Entities/Value Objects/Aggregates with real invariants)
 govern what lives inside the domain layer that direction protects — the
 two are orthogonal and composable, same as this skill's relationship to
-`java-tdd-baby-steps`, and the outbound mapper doubles as the DDD rule of
+`igiari-tdd`, and the outbound mapper doubles as the DDD rule of
 never letting an aggregate leak past its boundary. Added a "Heavy ECM/
 legacy SDKs (Nuxeo, Documentum, etc.)" framework example: the fix for an
 expensive-to-wrap SDK type (`DocumentModel`, `IDfSysObject`) is a
@@ -197,7 +197,7 @@ Latest additions (this session, from a Gemini CLI dogfooding report):
 sharpened the skill's frontmatter description to trigger on "building or
 extending a real feature/use case with collaborators, dependencies, or
 configuration to wire" rather than a generic "designing/structuring Java
-production code" line, to distinguish it from `java-tdd-baby-steps`
+production code" line, to distinguish it from `igiari-tdd`
 (which also covers a bare algorithm/kata with no architecture concerns).
 A config/parameter object is a constructor dependency like any other, so
 it follows the same "typed as an interface, never a concrete class" rule
@@ -213,7 +213,7 @@ general rule, not a special case that justifies it. Also added a
 "Verifying a structural change: full build, not just the scoped test"
 rule: a structural change (new interface, constructor signature change,
 static→instance conversion, `@Configuration`/`@Bean` rewiring) has a
-wider blast radius than a `java-tdd-baby-steps` cycle's scoped build can
+wider blast radius than a `igiari-tdd` cycle's scoped build can
 catch (a broken composition root or another caller aren't in that test's
 compile unit), so a full build is warranted after this kind of change
 even when the work itself was done in TDD-scoped steps. Extended that
@@ -246,20 +246,20 @@ the target skill's rules literally and verbatim, showing real command
 output at every red/green checkpoint rather than asserting it worked.
 Choose the kata to fit whichever skill is under test: something with many
 small, naturally incremental cases (numeric conversions, parsers, small
-calculators) exercises `java-tdd-baby-steps`; something shaped like a
+calculators) exercises `igiari-tdd`; something shaped like a
 real use case with real collaborators (a repository, a service, a
-logger) exercises `java-clean-architecture`'s DIP/constructor-injection/
+logger) exercises `chottomatte-archi`'s DIP/constructor-injection/
 seam rules. Treat any friction — an ambiguous rule, a step that doesn't
 produce the right behavior, a bug the rules should have caught but didn't
 — as a direct signal to fix the SKILL.md, not just the kata code. First
 run: the roman-numeral kata (int → roman numeral, wrapped in a use case
 with an injected repository and logger) surfaced the `@Mock`
-field-initializer trap now documented in `java-tdd-baby-steps`. Second
+field-initializer trap now documented in `igiari-tdd`. Second
 run: the String Calculator kata (no collaborators at all), solved under
 Gemini CLI, surfaced that the `@BeforeEach`-construction rule read as
 conditional on mocks being present — a mock-free class quietly reverted
 to `new StringCalculator()` inline per test method. The rule in
-`java-tdd-baby-steps` was broadened to state `@BeforeEach` construction
+`igiari-tdd` was broadened to state `@BeforeEach` construction
 as the unconditional default (single source of truth for wiring the
 SUT), with the `@Mock`-null trap kept as one reason among others rather
 than the only one.
@@ -273,7 +273,7 @@ file reads. Root-caused as structural rather than a one-off: build output
 dirs (`build/`, `target/`) are gitignored by near-universal convention, so
 report-file reads will keep failing on any Java project, on any client that
 honors `.gitignore` — not specific to Gemini CLI. Added a "Getting evidence
-when the build tool fights you" section to `java-tdd-baby-steps`: read
+when the build tool fights you" section to `igiari-tdd`: read
 console output instead of report files first (`--console=plain -i` for
 Gradle; Maven already does this by default), check the test filter pattern
 before suspecting caching if zero tests ran, and only fall back to
@@ -290,13 +290,13 @@ session, decisions were happening (which tests, what structure) without a
 review point before code got written, and stopping mid-session (the
 session's own interrupt control) only catches a bad direction *after* it's
 underway. Fixed per-skill rather than as a meta CLAUDE.md rule, since the
-right checkpoint shape differs by skill: `java-tdd-baby-steps` got a new
+right checkpoint shape differs by skill: `igiari-tdd` got a new
 "Plan the tests before the first cycle" section — list every planned test
 as name + one-line intent (no code) before RED on test 1, one approval
 gate, then run every cycle straight through with no further per-test
 check-ins (the author explicitly chose this over per-test confirmation or
 dictating tests themselves — approve the list once, then let the cycles
-run). `java-clean-architecture` got a "Plan the structure before
+run). `chottomatte-archi` got a "Plan the structure before
 implementing" section — classes/interfaces/ports, constructor
 dependencies, composition-root wiring, **and public method signatures**
 (the author's pick over structure-only), no bodies, one approval gate
@@ -387,11 +387,11 @@ strategic patterns (Bounded Context, Context Map, Shared Kernel,
 Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service,
 Separate Ways, Core Domain distillation — structuring the *boundaries
 between* models/teams/systems). Tactical patterns already live in
-`java-clean-architecture`'s "Relationship to DDD" section (Java-specific,
+`chottomatte-archi`'s "Relationship to DDD" section (Java-specific,
 folded in rather than split out, since a repository/aggregate/entity is
 inseparable from that skill's dependency-direction rules). Strategic
 design got its own skill instead of also folding into
-`java-clean-architecture`, for two reasons the author confirmed: (1) it's
+`chottomatte-archi`, for two reasons the author confirmed: (1) it's
 a genuinely different altitude of concern — "where does one model end and
 another begin" is not a single-model dependency-direction question — and
 (2) unlike the two Java skills, it's language-agnostic (Bounded Context,
@@ -404,8 +404,8 @@ aid (they're learning DDD themselves), not just enforcement — so the
 frontmatter description and a "Learning mode" section both trigger on
 explaining a term on request ("what's a bounded context"), not only on
 applying the patterns during real design work. Cross-referenced from
-`java-clean-architecture`'s "Related skills" note (one line, matching the
-existing `java-tdd-baby-steps` cross-reference style — not a shared
+`chottomatte-archi`'s "Related skills" note (one line, matching the
+existing `igiari-tdd` cross-reference style — not a shared
 section duplicated in both files).
 
 Expect this to grow the same way the two Java skills did: from real usage,
@@ -414,7 +414,7 @@ not from re-reading the source book. No testing method decided yet beyond
 multi-context scenario (e.g. designing the boundary for a legacy/
 third-party integration) rather than a single-class kata.
 
-## Active work: java-tdd-baby-steps and java-clean-architecture
+## Active work: igiari-tdd and chottomatte-archi
 
 ```
 skills/<skill-name>/SKILL.md      # one skill per directory

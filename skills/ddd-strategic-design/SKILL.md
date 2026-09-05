@@ -1,18 +1,18 @@
 ---
 name: ddd-strategic-design
-description: Guidance and reference for Domain-Driven Design's strategic patterns — Ubiquitous Language, Bounded Context, Context Map, and the model/team relationship patterns (Shared Kernel, Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service, Separate Ways), plus Core Domain / Generic Subdomain distillation. Language-agnostic. Use when defining or reasoning about the boundary between two or more models, teams, services, or systems — including integrating with a legacy or third-party system — not for structuring dependencies inside a single model (see java-clean-architecture, Java-specific) or for the test-writing workflow (see java-tdd-baby-steps). Also use to explain any of these DDD terms on request, e.g. "what's a bounded context", "explain the anticorruption layer".
+description: Guidance and reference for Domain-Driven Design's strategic patterns — Ubiquitous Language, Bounded Context, Context Map, and the model/team relationship patterns (Shared Kernel, Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service, Separate Ways), plus Core Domain / Generic Subdomain distillation. Language-agnostic. Use when defining or reasoning about the boundary between two or more models, teams, services, or systems — including integrating with a legacy or third-party system — not for structuring dependencies inside a single model (see chottomatte-archi, Java-specific) or for the test-writing workflow (see igiari-tdd). Also use to explain any of these DDD terms on request, e.g. "what's a bounded context", "explain the anticorruption layer".
 ---
 
 # DDD Strategic Design
 
-**Related skills:** `java-clean-architecture` governs dependency direction
+**Related skills:** `chottomatte-archi` governs dependency direction
 *inside* one model/codebase, and already covers DDD's tactical patterns
 (Entity, Value Object, Aggregate) as what lives inside the domain layer that
 direction protects — Java-specific. This skill is one level up and
 language-agnostic: it's about the boundary *between* models — where one
 model ends and another begins, and how two models talk to each other.
 Orthogonal, not a dependency: a single-model Java feature only needs
-`java-clean-architecture`; load this skill too once a second model, team,
+`chottomatte-archi`; load this skill too once a second model, team,
 service, or external system enters the picture.
 
 ## Scope: strategic vs. tactical
@@ -21,7 +21,7 @@ DDD has two halves. This skill is the strategic half only:
 
 - **Tactical** (Entity, Value Object, Aggregate, Repository, Factory,
   Service, Module) — patterns for structuring *one* model. Already covered,
-  for Java, in `java-clean-architecture`.
+  for Java, in `chottomatte-archi`.
 - **Strategic** (this skill) — patterns for structuring a *system of
   models*: where the boundaries are, what crosses them, and how the teams
   on either side relate to each other.
@@ -156,7 +156,7 @@ using the definition above plus a concrete example — don't just name-drop
 the pattern. If a question sits right at the tactical/strategic boundary
 (e.g. "what's the difference between a Module and a Bounded Context",
 "where do Aggregates fit into a Context Map"), answer the strategic half
-here and point to `java-clean-architecture` for the tactical half rather
+here and point to `chottomatte-archi` for the tactical half rather
 than improvising tactical guidance in this file.
 
 ## When this skill doesn't cover the case
