@@ -16,8 +16,10 @@ tool — no per-client fork.
 |---|---|
 | [`igiari-tdd`](skills/igiari-tdd/SKILL.md) | One-test-at-a-time TDD for Java: never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle. |
 | [`chottomatte-archi`](skills/chottomatte-archi/SKILL.md) | Dependency inversion via interfaces and constructor injection for Java: the use case as entry point, depending only on repository/service interfaces. |
-| [`bash-cli-patterns`](skills/bash-cli-patterns/SKILL.md) | Ten hardening patterns for robust, interactive bash CLI tools: keybinding dispatch, atomic writes, strict mode, framework-free testing, and more. |
-| [`documentum-idempotent-scripting`](skills/documentum-idempotent-scripting/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
+| [`gyakuten-ddd`](skills/gyakuten-ddd/SKILL.md) | Domain-Driven Design's strategic patterns: Bounded Context, Context Map, Ubiquitous Language, and Core Domain distillation — the boundary between models, teams, and systems. |
+| [`kurae-bash`](skills/kurae-bash/SKILL.md) | Ten hardening patterns for robust, interactive bash CLI tools: keybinding dispatch, atomic writes, strict mode, framework-free testing, and more. |
+| [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
+| [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session. |
 
 ## Installing
 

@@ -1,5 +1,5 @@
 ---
-name: bash-cli-patterns
+name: kurae-bash
 description: Ten hardening patterns for building a robust, interactive bash CLI tool or shell helper — readline/bind -x dispatch, annotation-driven command registries, build-time comment stripping, layered config precedence, avoiding eval on dynamic commands, atomic file writes, double-load guards, framework-free unit testing, strict mode, and exact-match list filtering. Use whenever writing or reviewing bash that defines interactive keybindings, ships as a sourced shell helper (.bashrc/profile.d), parses its own source for a command palette/help system, reads layered config files, or needs unit tests without a test framework.
 ---
 

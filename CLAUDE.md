@@ -171,7 +171,7 @@ where one exists (Nuxeo's `FeaturesRunner`/`@Features(CoreFeature.class)`);
 flagged Documentum as unresolved — no known embedded-runtime equivalent,
 DFC's `IDfSysObject`/`IDfSession` are mockable as interfaces but mock
 fidelity against real behavior is unverified, consistent with
-`documentum-idempotent-scripting`'s own unverified status.
+`mujitsu-documentum`'s own unverified status.
 
 Latest addition (this session): a case of a static-only utility class
 (`PeppaService`) needing configuration values passed into its methods
@@ -331,9 +331,9 @@ other gateway/client, not in-memory-faked like a repository) — composed
 in the use case via an outbound mapper, same per-domain-type mapper
 convention as elsewhere in the skill.
 
-## Active work: documentum-idempotent-scripting
+## Active work: mujitsu-documentum
 
-`skills/documentum-idempotent-scripting/` is unverified — written from
+`skills/mujitsu-documentum/` is unverified — written from
 general Documentum DQL/API knowledge, not yet run against a real docbase.
 Treat every pattern in it as a draft until the author reports back from
 real usage; don't cite it as settled the way the two Java skills below are.
@@ -355,7 +355,7 @@ reporting friction back. Known-weak spot going in: pattern 4's
 DQL — the exact query for enumerating a type's attributes varies by
 Documentum version and hasn't been confirmed. Any correction from real
 usage should land as an edit to
-`skills/documentum-idempotent-scripting/SKILL.md` plus a note here, the
+`skills/mujitsu-documentum/SKILL.md` plus a note here, the
 same discipline as the Java skills' entries below.
 
 First correction, from the author before any real-docbase run: pattern 7's
@@ -372,13 +372,13 @@ API loop for operations DQL can't express set-based (versioning, lifecycle,
 ACL changes), which needs an explicit processed-ids log since it isn't
 transactional across a batch the way pattern 9 is.
 
-## Active work: ddd-strategic-design
+## Active work: gyakuten-ddd
 
-`skills/ddd-strategic-design/` is new (created this session, from a request
+`skills/gyakuten-ddd/` is new (created this session, from a request
 to fold Eric Evans' *Domain-Driven Design* strategic-design chapter —
 summarized in Avram & Marinescu's *DDD Quickly*, which the author shared —
 into a skill). Not yet dogfooded; treat it the same as
-`documentum-idempotent-scripting`'s unverified status until it's been
+`mujitsu-documentum`'s unverified status until it's been
 exercised on a real multi-context design.
 
 **Scope decision:** DDD splits into tactical patterns (Entity, Value

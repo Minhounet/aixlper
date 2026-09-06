@@ -1,5 +1,5 @@
 ---
-name: documentum-idempotent-scripting
+name: mujitsu-documentum
 description: Patterns for writing idempotent bash scripts that provision, bulk-update, or bulk-delete objects in an OpenText Documentum repository by composing DQL and API (iapi/idql) calls — existence-check-before-create for types, attributes and objects, output-based error detection (iapi/idql exit 0 even when a command fails), safe session lifecycle, and batching large updates/deletes into packets instead of one unbounded statement. Use when writing or reviewing a bash script that runs DQL/API commands against a Documentum docbase, especially anything that creates, alters, or bulk-mutates repository objects.
 ---
 
