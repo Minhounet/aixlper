@@ -308,6 +308,16 @@ clean-architecture structural plan comes first and the TDD test plan is
 written against it rather than re-derived, so a task doesn't produce two
 overlapping upfront plans.
 
+Latest addition (this session): a worked example was added right after
+the "Plan the tests before the first cycle" section, prompted by the
+author asking to make explicit that seeing the whole plan doesn't license
+building ahead of the current test. It reuses the plan's own
+StringCalculator example — implementing test 1 while tests 3/4 (visible on
+the approved plan) already imply a split-and-sum loop — and shows a bad
+version that jumps to the general implementation early versus the minimal
+one rule 5 requires, closing the same "plan is visibility, not permission"
+point rule 5's triangulation clause already made in the abstract.
+
 Latest addition (this session): two Nuxeo-specific operational rules
 surfaced while the author started real Nuxeo work, added to the "Heavy
 ECM/legacy SDKs" example. (1) Sharpened the existing static-lookup bullet

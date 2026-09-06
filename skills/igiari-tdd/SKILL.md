@@ -130,6 +130,37 @@ first (its classes/interfaces/signatures), write this test plan against
 that already-approved structure rather than re-deriving or re-presenting
 it — one plan per concern, not two overlapping ones.
 
+**Example — seeing the whole plan doesn't license building ahead.** Take
+the plan above. You're implementing test 1, but you can already read
+tests 3 and 4 and know a split-and-sum loop is coming. Rule 5 (minimal
+implementation, triangulate before generalizing) still applies exactly as
+if the plan didn't exist — the plan is visibility, not permission:
+
+Bad — jumping ahead because the plan reveals what's coming:
+```java
+public int add(String numbers) {
+    if (numbers.isEmpty()) return 0;
+    return Arrays.stream(numbers.split(","))
+        .mapToInt(Integer::parseInt)
+        .sum();
+}
+```
+This passes test 1, but nothing has forced the split/sum logic yet — tests
+3 and 4 haven't been written, let alone failed. If the real requirement
+turns out to differ from what you predicted (a different separator, an
+overflow rule, a cap on operand count), you're unwinding code no test ever
+asked for.
+
+Good — minimal for test 1, plan or no plan:
+```java
+public int add(String numbers) {
+    return numbers.isEmpty() ? 0 : Integer.parseInt(numbers);
+}
+```
+Test 3 is what should force the split; a later triangulating case is what
+should force it to generalize past two numbers. The plan tells you the
+destination — it never moves up when you're allowed to build the road.
+
 ## The rules (absolute — no exceptions, no judgment calls)
 
 1. **One test per step.** Write exactly one new test method, then stop
