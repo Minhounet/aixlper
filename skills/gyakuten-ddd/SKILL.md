@@ -1,5 +1,5 @@
 ---
-name: ddd-strategic-design
+name: gyakuten-ddd
 description: Guidance and reference for Domain-Driven Design's strategic patterns — Ubiquitous Language, Bounded Context, Context Map, and the model/team relationship patterns (Shared Kernel, Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service, Separate Ways), plus Core Domain / Generic Subdomain distillation. Language-agnostic. Use when defining or reasoning about the boundary between two or more models, teams, services, or systems — including integrating with a legacy or third-party system — not for structuring dependencies inside a single model (see chottomatte-archi, Java-specific) or for the test-writing workflow (see igiari-tdd). Also use to explain any of these DDD terms on request, e.g. "what's a bounded context", "explain the anticorruption layer".
 ---
 
@@ -168,7 +168,7 @@ the best call for the situation, then flag the gap:
 
 ```
 ## Skill improvement proposal
-- Skill: ddd-strategic-design
+- Skill: gyakuten-ddd
 - Situation: <what you were doing>
 - Gap: <what these rules don't cover, or got wrong>
 - Proposed rule: <the addition, worded as a rule, ready to paste in>

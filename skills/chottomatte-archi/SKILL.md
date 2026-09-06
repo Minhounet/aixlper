@@ -9,7 +9,7 @@ description: Enforces dependency inversion via interfaces and constructor inject
 time* (test-first, one behavior per step) — this skill only covers how the
 code should be *structured* (dependency inversion, constructor injection).
 Orthogonal and composable, not a dependency: load the other one too when
-writing new code, not just restructuring existing code. `ddd-strategic-design`
+writing new code, not just restructuring existing code. `gyakuten-ddd`
 covers the boundary *between* models/teams/systems (Bounded Context, Context
 Map) — language-agnostic, one level up from this skill's single-model
 dependency rules. Load it too once a second model, team, or external system
@@ -505,7 +505,7 @@ Two tiers, not one:
   interfaces, so they're directly Mockito-mockable, but the fidelity of
   that mock against real Documentum behavior is an open concern, not a
   settled pattern — the same unverified status as
-  `documentum-idempotent-scripting`. Don't present a mocked-DFC adapter
+  `mujitsu-documentum`. Don't present a mocked-DFC adapter
   test as equivalent proof to a Nuxeo `FeaturesRunner` test; treat it as a
   weaker substitute until real usage says otherwise, and prefer validating
   the adapter against a real docbase where practical.
