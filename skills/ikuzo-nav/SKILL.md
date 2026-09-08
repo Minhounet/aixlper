@@ -72,8 +72,15 @@ If a bookmark with that name already exists, overwrite it and say so: `Updated "
 
 1. Read `~/.claude/bookmarks.json`.
 2. Look up `<name>`. If not found, list the available bookmarks and stop.
-3. Run a `cd` to the bookmark's path so subsequent shell commands run from there.
-4. Confirm: `→ /home/alice/workspaces/aixlper`.
+3. Output the resolved path and the ready-to-run slash command for the user to execute:
+
+```
+→ /home/alice/workspaces/aixlper
+
+/cd /home/alice/workspaces/aixlper
+```
+
+The user runs `/cd <path>` themselves — Claude cannot invoke slash commands directly.
 
 When the path no longer exists on disk, warn: `Bookmark "aixlper" points to /home/alice/workspaces/aixlper which does not exist. Remove it with /ikuzo-nav rm aixlper?`
 
