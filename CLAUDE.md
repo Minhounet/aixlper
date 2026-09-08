@@ -474,3 +474,22 @@ both sourced from this same repo:
 
 Both manifests point at the shared `skills/` directory — there is one copy
 of each skill, not a fork per client.
+
+## Git workflow
+
+Commit message format: `<gitmoji><semantic>|<message>`
+
+- `semantic` is one of: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`
+- Pick the gitmoji from [gitmoji.dev](https://gitmoji.dev) to match the change
+
+Examples:
+- `✨feat|add ikuzo-nav skill`
+- `🐛fix|correct frontmatter validation`
+- `♻️refactor|reorganize skill directory structure`
+- `📝docs|update igiari-tdd worked example`
+
+### Auto-commit policy
+
+After completing any change, commit automatically — never ask for permission first.
+Tell the user the commit message used so they can request a change if not satisfied.
+Never push automatically; push only when the user explicitly asks.
