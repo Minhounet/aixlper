@@ -20,6 +20,7 @@ tool — no per-client fork.
 | [`kurae-bash`](skills/kurae-bash/SKILL.md) | Ten hardening patterns for robust, interactive bash CLI tools: keybinding dispatch, atomic writes, strict mode, framework-free testing, and more. |
 | [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session. |
+| [`ikuzo-nav`](skills/ikuzo-nav/SKILL.md) | Directory bookmarks — save the current folder, list saved spots, and jump to any of them with `/cd`. |
 
 ## Installing
 
