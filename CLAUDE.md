@@ -424,6 +424,24 @@ not from re-reading the source book. No testing method decided yet beyond
 multi-context scenario (e.g. designing the boundary for a legacy/
 third-party integration) rather than a single-class kata.
 
+First real dogfooding, via a learning conversation rather than a kata:
+walking someone new to DDD through the Context Map using a kebab-shop
+example (Caisse/Stock/Comptabilité) surfaced that the natural next
+question after Context Map is "how do these actually communicate, and
+what happens on partial failure" — landing squarely on Saga/Process
+Manager, a pattern outside Evans' book. Added a "Beyond the Context Map:
+Saga / Process Manager" section: when a Context Map relationship implies
+a multi-step process, whether a Saga is needed at all (vs. a plain local
+transaction), and the choreography/orchestration choice with a concrete
+heuristic (2-3 steps, no chained compensations → choreography; longer
+chains or rippling compensations → orchestration). Flagged explicitly as
+adjacent to the skill's own scope (implementation-level, not one of
+Evans' strategic patterns), included anyway because recognizing the need
+is a strategic-design judgment call the skill's Context Map section
+already sets up. Also extended the frontmatter description so a direct
+question ("do I need a Saga here?") triggers the skill the same way a
+term-definition question already does.
+
 ## Active work: igiari-tdd and chottomatte-archi
 
 ```

@@ -1,6 +1,6 @@
 ---
 name: gyakuten-ddd
-description: Guidance and reference for Domain-Driven Design's strategic patterns — Ubiquitous Language, Bounded Context, Context Map, and the model/team relationship patterns (Shared Kernel, Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service, Separate Ways), plus Core Domain / Generic Subdomain distillation. Language-agnostic. Use when defining or reasoning about the boundary between two or more models, teams, services, or systems — including integrating with a legacy or third-party system — not for structuring dependencies inside a single model (see chottomatte-archi, Java-specific) or for the test-writing workflow (see igiari-tdd). Also use to explain any of these DDD terms on request, e.g. "what's a bounded context", "explain the anticorruption layer".
+description: Guidance and reference for Domain-Driven Design's strategic patterns — Ubiquitous Language, Bounded Context, Context Map, and the model/team relationship patterns (Shared Kernel, Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service, Separate Ways), plus Core Domain / Generic Subdomain distillation. Language-agnostic. Use when defining or reasoning about the boundary between two or more models, teams, services, or systems — including integrating with a legacy or third-party system — not for structuring dependencies inside a single model (see chottomatte-archi, Java-specific) or for the test-writing workflow (see igiari-tdd). Also use to explain any of these DDD terms on request, e.g. "what's a bounded context", "explain the anticorruption layer", or to decide whether a cross-context business process needs a Saga/compensation and whether to orchestrate or choreograph it.
 ---
 
 # DDD Strategic Design
@@ -111,6 +111,46 @@ Two extra notes worth keeping in mind:
   actually backs the relationship — otherwise expect it to degrade into a
   de facto Conformist relationship, and plan accordingly rather than
   assuming best intentions will hold.
+
+## Beyond the Context Map: Saga / Process Manager
+
+Not a pattern from Evans' book — from distributed-systems literature
+(Hohpe & Woolf's *Enterprise Integration Patterns* calls it a Process
+Manager; "Saga" is the common name in microservices practice). It's
+adjacent to this skill, not part of it: the Context Map says *which*
+pattern connects two contexts; a Saga is the technical answer to *what
+happens when a business process crossing that connection fails halfway
+through*. Covered here anyway because the need for one falls directly out
+of a Context Map decision, and recognizing that need is squarely a
+strategic-design judgment call.
+
+**When you need one**: a single business operation spans 2+ Bounded
+Contexts (each its own transaction boundary — separate database/service),
+*and* a failure partway through would leave the system inconsistent if
+left alone (payment taken but stock never decremented). If either
+condition is false — everything lives in one context, or every
+participant shares one database/transaction — a real local transaction is
+simpler and sufficient; don't reach for a Saga just because multiple
+classes are involved.
+
+**Choreography vs. orchestration** — two ways to implement the same Saga,
+not two different patterns:
+
+| | Choreography | Orchestration |
+|---|---|---|
+| Who decides "what's next" | Each context reacts to others' events with its own local rule; no central component | One dedicated component holds the plan and per-instance state, drives every step and compensation |
+| Cost | Cheap, fully decoupled | A dedicated component every participant becomes visible to |
+| Global visibility | None — "where is process #123" needs reconstructing from every participant | One place to query |
+| Testability | Each reaction unit-tests in isolation; the full chain needs an integration test | The plan/compensation logic is a pure, mockable unit — the whole chain is unit-testable |
+
+Default heuristic: 2-3 steps, no compensation that itself triggers another
+context's compensation → choreography is enough. A longer chain, or
+compensations that ripple across contexts → orchestration earns its cost.
+
+**Compensation, not rollback**: there is no distributed rollback across
+separate systems. Each step that can affect another context needs its own
+explicit undo (refund, restock...), run in reverse order of the steps that
+actually succeeded when a later step fails.
 
 ## Core Domain and Generic Subdomain (Distillation)
 
