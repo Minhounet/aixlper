@@ -234,6 +234,26 @@ when to load it too. Deliberately kept to that one line each, not a shared
 "how they relate" section duplicated in both files, so the pointer aids
 discovery without making either skill require or auto-load the other.
 
+Latest addition (this session): a single Kafka computation that dispatches
+to three distinct SOAP operations (`creerDocument`, `creerRevision`,
+`changerStatut`) prompted the question of whether this should be one use
+case or three. Settled: when a single infrastructure entry point handles
+multiple **distinct** business operations discriminated by a type field,
+use an **orchestrator use case** that routes to specific use cases — not
+one fat use case routing inside it. Each specific use case gets its own
+typed `Command` with no nullable fields (only the fields that operation
+actually needs). The orchestrator's jobs are: (1) map the raw input to the
+right typed `Command`, (2) delegate to the right specific use case,
+(3) own the cross-cutting concerns (retry, audit, metrics, status store)
+that apply regardless of which operation ran. The infrastructure entry point
+only ever knows about the orchestrator — routing stays in domain code, not
+infrastructure. Added as a subsection "Orchestrator use case for
+discriminated entry points" under "From scratch: the use case is the
+entry point", with a code example and a "when to split vs. keep one use
+case" heuristic: split when any variant develops its own validation,
+error handling, or pre/post-conditions; stay merged when all variants
+differ only in which fields are sent.
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
