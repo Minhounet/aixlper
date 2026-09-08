@@ -102,6 +102,56 @@ When you control the whole shape:
   at the composition root (`main`, a framework config class, a test's
   setup) — never inside the use case itself.
 
+### Orchestrator use case for discriminated entry points
+
+When a single infrastructure entry point (a Kafka message, an HTTP endpoint
+with a type field, a file-based event) handles multiple **distinct** business
+operations discriminated by a type field, do not collapse them into one fat use
+case. Instead:
+
+- **One specific use case per business operation** — each gets its own typed
+  `Command` carrying only the fields that operation needs (no nullable fields
+  for "not applicable to this variant").
+- **An orchestrator use case** sits in front of them. Its sole jobs are:
+  (1) map the raw input to the right typed `Command`, and (2) delegate to the
+  matching specific use case. Cross-cutting concerns that apply regardless of
+  operation (retry, audit, metrics, status store) live here, not in the specific
+  use cases.
+- **The infrastructure entry point** (the Kafka `AbstractComputation`, the
+  servlet, the event listener) only ever knows about the orchestrator — the
+  routing stays in domain code, not in infrastructure.
+
+```
+// Orchestrator: maps raw event → typed command → delegates
+class ProcessSyncMessageUseCase {
+    ProcessSyncMessageUseCase(CreerDocumentUseCase creerDoc,
+                              CreerRevisionUseCase creerRev,
+                              ChangerStatutUseCase changerStatut,
+                              SyncRequestStore store, ...) { ... }
+
+    void execute(GemHydroSyncMessage msg) {
+        SoapCallResult result = switch (msg.flowType()) {
+            case CREATION    -> creerDoc.execute(toCreerDocumentCommand(msg));
+            case REVISION    -> creerRev.execute(toCreerRevisionCommand(msg));
+            case DESTRUCTION -> changerStatut.execute(toChangerStatutCommand(msg));
+        };
+        // ... audit / metrics / store
+    }
+}
+
+// Specific use case: one operation, one Command, no nullable fields
+class ChangerStatutUseCase {
+    ChangerStatutUseCase(GemHydroSoapClient soapClient) { ... }
+    SoapCallResult execute(ChangerStatutCommand cmd) { ... }
+}
+```
+
+**When to split vs. keep one use case:** if all variants share the same
+pre-conditions, post-conditions, and business rules — and differ only in
+which fields are sent — a single use case routing to gateway methods is
+acceptable. Split into specific use cases once any variant develops its own
+validation logic, its own error handling, or distinct pre/post-conditions.
+
 ## Working on legacy code: the entry point isn't always yours
 
 Not every task starts from a clean slate. Sometimes the entry point — a
