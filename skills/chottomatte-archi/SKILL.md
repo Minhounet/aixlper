@@ -253,6 +253,43 @@ where that rich object is deliberately flattened into a dumb `Response`
 DTO before it leaves the use case — a DDD rule in its own right (never let
 an aggregate leak past its boundary), not only a Clean Architecture one.
 
+### Domain Event: same altitude as Entity/Aggregate, not the Saga's integration event
+
+A Domain Event captures something that happened inside **one** model that
+domain experts care about — `OrderConfirmed`, `StockDepleted` — named as
+part of the Ubiquitous Language, not just a technical "something changed"
+notification. It sits at the same tactical altitude as
+Entity/Value Object/Aggregate (structuring *one* model), which is why it
+lives here rather than in `gyakuten-ddd` — that skill covers the same
+event once it crosses a Bounded Context boundary as an *integration*
+event (see its "Beyond the Context Map: Saga / Process Manager" section).
+
+- **Immutable value object**, past-tense named, carrying only what
+  happened and when — no behavior beyond that.
+- **Raised by the Aggregate root** whose invariant/state change it
+  records, not by a service reaching in from outside — the Aggregate is
+  the one authority on "did this actually happen."
+- **Publishing it is a Gateway/outbound-port concern, not the Aggregate's
+  job.** The use case collects the events the Aggregate raised and hands
+  them to a port (`EventPublisher`, `OutboxGateway`) after the triggering
+  change is persisted — same repository/gateway split as elsewhere in
+  this skill, and the same Outbox pattern `gyakuten-ddd`'s Saga section
+  describes for not losing an event on a crash between the write and the
+  publish.
+
+```java
+public final class Order {                          // Aggregate root
+    private final List<DomainEvent> pendingEvents = new ArrayList<>();
+
+    public void confirm() {
+        // ... invariants enforced here ...
+        pendingEvents.add(new OrderConfirmed(this.id, Instant.now()));
+    }
+
+    public List<DomainEvent> pendingEvents() { return List.copyOf(pendingEvents); }
+}
+```
+
 ## Framework examples
 
 ### Spring: keep it out of the core, prefer bean configuration

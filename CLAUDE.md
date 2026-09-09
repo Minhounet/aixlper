@@ -173,6 +173,22 @@ DFC's `IDfSysObject`/`IDfSession` are mockable as interfaces but mock
 fidelity against real behavior is unverified, consistent with
 `mujitsu-documentum`'s own unverified status.
 
+Latest addition (this session): a learning conversation that first added
+Saga guidance to `gyakuten-ddd` (see that skill's entry below) raised a
+follow-up question — isn't a Domain Event just as "business" as an
+Aggregate, so shouldn't it live in the strategic-DDD skill instead? Landed
+on: "business" isn't the tactical/strategic dividing line (Entity/
+Aggregate are just as business-driven and already live here) — the actual
+criterion is altitude, structuring *one* model (tactical) vs. the
+*boundary between* models (strategic), and a Domain Event is raised and
+named inside one model, same altitude as Aggregate. Added a "Domain
+Event" subsection under "Relationship to DDD": immutable, past-tense
+named, raised by the Aggregate root (not a service reaching in), and
+published via a Gateway/outbound-port after the triggering change is
+persisted — never the Aggregate's own job. Cross-referenced both ways
+with `gyakuten-ddd`'s Saga section, which covers the same event
+once it crosses a Bounded Context boundary as an integration event.
+
 Latest addition (this session): a case of a static-only utility class
 (`PeppaService`) needing configuration values passed into its methods
 surfaced a Parameter Object rule — bundle shared config into one named

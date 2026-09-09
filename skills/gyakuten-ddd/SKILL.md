@@ -152,6 +152,11 @@ separate systems. Each step that can affect another context needs its own
 explicit undo (refund, restock...), run in reverse order of the steps that
 actually succeeded when a later step fails.
 
+The events a Saga reacts to usually start life as a Domain Event inside
+one context before being published across the boundary as an integration
+event — see `chottomatte-archi`'s "Relationship to DDD" section for
+that tactical-side definition (Aggregate-raised, published via a Gateway).
+
 ## Core Domain and Generic Subdomain (Distillation)
 
 Even inside one large system, not all of it deserves equal attention:
