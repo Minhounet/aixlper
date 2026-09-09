@@ -497,12 +497,7 @@ of each skill, not a fork per client.
 
 ## Skill editing
 
-Skills exist in two places that must always stay in sync:
-
-- **Repo copy** — `skills/<skill-name>/SKILL.md` (source of truth, version-controlled)
-- **Local install** — `~/.claude/skills/<skill-name>/SKILL.md` (what Claude Code actually loads)
-
-Whenever a skill is modified, update **both** files. Edit the repo copy first, commit it, then copy the change to the local install (or vice-versa, but both must end up identical). Never update only one.
+`~/.claude/skills/<skill-name>/SKILL.md` is a symlink to `skills/<skill-name>/SKILL.md` in this repo. Edit the repo copy — the local install updates automatically. No manual copy needed.
 
 ## Git workflow
 
