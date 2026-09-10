@@ -536,6 +536,68 @@ pattern above, wired inside `handleEvent`. The REST client adapter behind
 `SyncGateway` is a plain Java HTTP client needing no Nuxeo test harness at
 all — Mockito or a wiremock-style test is enough for it.
 
+### Pulling deterministic computation out of the seam: a business-ID example
+
+A recurring case inside a Nuxeo listener or use case: a document's business
+ID is assembled from today's date, a random or sequence fragment, and
+maybe a prefix — e.g. `DOC-20260910-fa3c9e1b`. The instinct is to compute
+it inline, right where `LocalDate.now()`/`UUID.randomUUID()` are easiest to
+reach for — which makes the whole thing untestable without either running
+Nuxeo or mocking those statics directly.
+
+Split it per the determinism rule above instead of treating "ID
+computation" as one lump:
+
+- The **inputs that vary** (today's date, the random fragment) are
+  non-deterministic — wrap them behind the same owned interfaces the
+  determinism rule already names: `Clock` (or a domain-flavored
+  `DateProvider`) and `IdGenerator`.
+- The **assembly logic** — how the date, fragment, and prefix combine into
+  the final string (format, separators, padding) — is pure once it
+  receives those values as arguments. It needs no port, no mock, no Nuxeo
+  at all: a plain class or Value Object, given inputs, returns a string.
+
+```java
+class DocumentBusinessIdPolicy {
+    private final Clock clock;
+    private final IdGenerator idGenerator;
+
+    DocumentBusinessIdPolicy(Clock clock, IdGenerator idGenerator) { ... }
+
+    String generate(String prefix) {
+        LocalDate today = clock.today();
+        String random = idGenerator.next();
+        return prefix + "-" + today.format(BASIC_ISO_DATE) + "-" + random;
+    }
+}
+```
+
+Tested with a fixed `Clock`/`IdGenerator` fake, the assembly is asserted
+exactly — no Nuxeo, no repository fake, no `FeaturesRunner` for this class
+at all:
+
+```java
+@Test
+void shouldBuildId_whenGivenFixedDateAndRandomFragment() {
+    Clock fixedClock = () -> LocalDate.of(2026, 9, 10);
+    IdGenerator fixedId = () -> "fa3c9e1b";
+    DocumentBusinessIdPolicy policy = new DocumentBusinessIdPolicy(fixedClock, fixedId);
+
+    assertThat(policy.generate("DOC")).isEqualTo("DOC-20260910-fa3c9e1b");
+}
+```
+
+The use case takes `DocumentBusinessIdPolicy` as one more constructor
+dependency alongside `DocumentRepository`. Only the actual Nuxeo write
+(`repository.save(document)`) needs the in-memory-fake/`FeaturesRunner`
+tiers from "Testing across the seam" below — the ID computation is already
+fully covered before either tier runs. This is the general shape of
+"extract deterministic computation before reaching for a port": the more
+of a listener's logic reduces to a function of already-known values, the
+smaller the surface that actually needs a fake repository or a real Nuxeo
+integration test — even as the number of genuine Nuxeo actions in the use
+case grows.
+
 ### Nuxeo addon packaging: enforcing dependency direction with Maven modules
 
 Nuxeo deploys addons as a collection of OSGi bundles — not an uber-JAR. The addon

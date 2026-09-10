@@ -254,6 +254,28 @@ case" heuristic: split when any variant develops its own validation,
 error handling, or pre/post-conditions; stay merged when all variants
 differ only in which fields are sent.
 
+Latest addition (this session): a question about coping with a Nuxeo use
+case that performs many Nuxeo actions — with real integration tests being
+slow, and mocking Nuxeo/`CoreSession` being unreliable — settled that the
+existing hybrid (in-memory-faked `DocumentRepository` for use-case tests,
+`FeaturesRunner` only at the adapter/listener seam, per the already-
+documented "Testing across the seam" section) is the right approach, and
+sharpened it further: pull every piece of *deterministic* computation a
+Nuxeo action needs out of the Nuxeo-touching code entirely, so it needs no
+port, no fake, and no Nuxeo runtime at all — only genuine reads/writes
+against Nuxeo stay behind `DocumentRepository`. Added a worked example,
+"Pulling deterministic computation out of the seam," under the Nuxeo
+section: a document business ID assembled from today's date and a random
+fragment (a case the author has seen repeatedly) splits into the
+non-deterministic inputs (wrapped behind `Clock`/`IdGenerator`, per the
+skill's existing determinism rule) and the pure assembly logic (a plain
+`DocumentBusinessIdPolicy` class/Value Object, unit-tested directly with
+fixed fakes for the two inputs, asserting the exact output string — no
+repository fake or `FeaturesRunner` needed for that class at all). Net
+effect: as a listener's Nuxeo-action count grows, the pure-computation
+share of its logic should grow with it, keeping the `FeaturesRunner`
+integration-test surface flat rather than growing with every business rule.
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
