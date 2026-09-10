@@ -64,20 +64,27 @@ Benefits:
 - The compiler enforces exhaustiveness in switch expressions
 - Adding a new variant forces every switch site to handle it
 
-Log them with a single exhaustive switch:
+Log them with a single exhaustive switch. Use **record pattern destructuring**
+to bind components directly — not a type pattern binding (`IsProxy r`) followed
+by an accessor call (`r.docId()`). Sonar flags the accessor form; the
+destructuring form is the Java 21 idiom:
 
 ```java
 private void logSkipReason(SkipReason reason) {
     switch (reason) {
-        case SkipReason.IsProxy r ->
-            log.debug("skipping proxy: id={}", r.docId());
-        case SkipReason.NotHydroDocument r ->
-            log.debug("skipping non-HydroDocument: id={}", r.docId());
+        case SkipReason.IsProxy(String docId) ->
+            log.debug("skipping proxy: id={}", docId);
+        case SkipReason.NotHydroDocument(String docId) ->
+            log.debug("skipping non-HydroDocument: id={}", docId);
         case SkipReason.NotDocumentEvent() ->
             log.debug("skipping non-document event");
     }
 }
 ```
+
+The `()` in `NotDocumentEvent()` is already record pattern syntax (zero
+components). Variants with components follow the same form: list the component
+types inside the parentheses and bind them to local names.
 
 ## Option instead of null
 
