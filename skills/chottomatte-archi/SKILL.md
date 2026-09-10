@@ -88,10 +88,12 @@ for structural work, per "Verifying a structural change" below.
 
 When you control the whole shape:
 
-- One use case class per business operation (e.g. `RegisterUserUseCase`,
+- One use case **interface** per business operation (e.g. `RegisterUserUseCase`,
   `CancelOrderUseCase`). This *is* the entry point — nothing else sits in
-  front of it as far as the core is concerned.
-- Its constructor takes exactly the interfaces it needs: repository
+  front of it as far as the core is concerned. The concrete implementation
+  (`RegisterUserUseCaseImpl`) is wired at the composition root; callers
+  never reference the impl class directly.
+- The impl constructor takes exactly the interfaces it needs: repository
   interfaces (e.g. `UserRepository`), service interfaces (e.g.
   `EmailSender`, `PaymentGateway`), and cross-cutting ones like `Logger`.
 - The use case orchestrates domain logic. It has no knowledge of
@@ -100,7 +102,57 @@ When you control the whole shape:
 - Concrete adapters (a JPA-backed repository, an HTTP client, an
   in-memory repository for tests, the log4j2 binding) are wired together
   at the composition root (`main`, a framework config class, a test's
-  setup) — never inside the use case itself.
+  setup) — never inside the use case impl itself.
+
+### Use cases are interfaces, not concrete classes
+
+Apply dependency inversion to use cases themselves, not just to their
+collaborators. Callers (a Kafka computation, a REST controller, an
+orchestrator use case) depend on the use case *interface* — the impl is
+invisible to them.
+
+**Why this matters:** it makes every caller independently testable. A test
+for `GemHydroSyncComputation` mocks `CreerDocumentUseCase` (interface) with
+Mockito, exactly the way it mocks `GemHydroGateway`. Without the interface,
+the caller's test must construct the real impl and its transitive
+dependencies — the gateway, the SOAP config, the HTTP client — turning a
+caller test into an integration test.
+
+```java
+// interface — in the domain/usecase package
+public interface CreerDocumentUseCase {
+    CreerDocumentResponse execute(CreerDocumentCommand cmd);
+}
+
+// impl — constructor-injected, wired at composition root
+public class CreerDocumentUseCaseImpl implements CreerDocumentUseCase {
+    private final GemHydroGateway gateway;
+
+    public CreerDocumentUseCaseImpl(GemHydroGateway gateway) {
+        this.gateway = gateway;
+    }
+
+    @Override
+    public CreerDocumentResponse execute(CreerDocumentCommand cmd) {
+        return gateway.creerDocument(cmd);
+    }
+}
+```
+
+Tests for the impl declare the field as the interface type and construct
+the impl directly in `@BeforeEach`:
+
+```java
+private CreerDocumentUseCase useCase;
+
+@BeforeEach
+void setUp() {
+    useCase = new CreerDocumentUseCaseImpl(gateway);
+}
+```
+
+This keeps the test honest: if a constructor-signature change breaks a
+caller, the test catches it.
 
 ### Orchestrator use case for discriminated entry points
 
@@ -643,6 +695,31 @@ Two tiers, not one:
   `nuxeo-runtime-test`'s `FeaturesRunner` + `@Features(CoreFeature.class)`:
   an embedded runtime where `Framework.getService(...)` resolves for real,
   scoped down with `@Deploy` to just the components under test.
+- **Checklist for listener changes — every new path needs a FeaturesRunner case.**
+  Any code path added to a listener's `handleEvent()` that involves a session
+  query or a decision based on Nuxeo state requires a FeaturesRunner test case
+  that exercises it. Before committing a listener change, enumerate every new
+  `if`/`switch` branch added to `handleEvent()` — if any branch reaches a
+  Nuxeo API, there must be a `@Test` method exercising it:
+  - A session call whose result drives a branch (`session.getVersions()`, an
+    NXQL query, `session.getWorkingCopy()`) → test each branch
+  - A property read from a Nuxeo document that feeds downstream output
+    (`gen:edfUuid`, `gen:indice`) → test the property-to-field translation
+    end-to-end through the listener
+  - A `Framework.getService(...)` lookup that affects behaviour → test that
+    the resolved service is called with the right arguments
+
+  What does **not** need a FeaturesRunner test:
+  - The listener registration itself (OSGi wiring — proven by the fact the
+    test fires at all)
+  - A filter already covered by an existing test case (e.g. a
+    non-HydroDocument guard already tested elsewhere)
+
+  Missing a FeaturesRunner case for a new branch is a violation of this skill,
+  even when the use case it delegates to is already unit-tested — the seam
+  translation itself (the session query, the branch, the field mapping) is
+  what the FeaturesRunner test proves.
+
 - **Documentum: unresolved, flag rather than assume.** There's no known
   embedded-runtime equivalent for DFC. `IDfSysObject`/`IDfSession` are
   interfaces, so they're directly Mockito-mockable, but the fidelity of
