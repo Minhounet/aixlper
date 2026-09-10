@@ -13,7 +13,9 @@ writing new code, not just restructuring existing code. `gyakuten-ddd`
 covers the boundary *between* models/teams/systems (Bounded Context, Context
 Map) — language-agnostic, one level up from this skill's single-model
 dependency rules. Load it too once a second model, team, or external system
-enters the picture.
+enters the picture. `kanpeki-fp` covers how logic should be *expressed*
+(pure guards, Either/Option, sealed types, no mutation) — load it too when
+implementing with functional style, which is the default for this codebase.
 
 ## The one principle that matters most
 

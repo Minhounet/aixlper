@@ -5,12 +5,14 @@ description: Enforces one-test-at-a-time Test-Driven Development for Java, non-n
 
 # Java TDD — Baby Steps
 
-**Related skill:** `chottomatte-archi` covers how the code under test
+**Related skills:** `chottomatte-archi` covers how the code under test
 should be *structured* (dependency inversion, constructor injection) — this
 skill only covers how you *write it over time* (test-first, one behavior per
 step). Orthogonal and composable, not a dependency: load the other one too
 when the work involves wiring real collaborators, not just a self-contained
-algorithm.
+algorithm. `kanpeki-fp` covers how logic should be *expressed* (pure guards,
+Either/Option, sealed types, no mutation) — load it too when writing new
+code, which is the default for this codebase.
 
 ## Why baby steps, specifically for you (an AI)
 
