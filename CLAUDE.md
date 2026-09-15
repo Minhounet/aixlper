@@ -276,6 +276,36 @@ effect: as a listener's Nuxeo-action count grows, the pure-computation
 share of its logic should grow with it, keeping the `FeaturesRunner`
 integration-test surface flat rather than growing with every business rule.
 
+Latest addition (this session): the author's experience using a gateway
+interface before the real integration existed prompted a new "Gateway
+stand-ins: Logging and No-Op implementations" section in
+`chottomatte-archi`. A `LoggingXGateway` (logs the call and all
+parameters instead of making the real call) and a `NoOpXGateway` (does
+nothing) are both ordinary implementations of the same gateway interface,
+swappable at the composition root exactly like an in-memory repository
+stands in for a JPA one — with a note to treat either as a placeholder,
+swapped out for the real adapter once it exists rather than left wired
+permanently, and a distinction from `igiari-tdd`'s
+Mockito-for-gateways preference (a mock lives for one test; a
+Logging/No-Op gateway is wired for a real environment or code path with
+no test running).
+
+Latest addition (this session): a follow-up question — switching
+implementation via a Nuxeo property produces an ugly `if`, and there's no
+Spring `@Profile` to reach for — added a "Without Spring (e.g. Nuxeo): a
+plain resolver instead of `@Profile`" subsection right after
+"Environment-driven config objects." Same fix as that section, minus the
+annotation: the branch lives in exactly one resolver function at the
+composition point (`Framework.getProperty(...)` inside `handleEvent`, the
+same seam already used for `Framework.getService(...)`), returning
+whichever gateway implementation applies; the use case's constructor only
+ever sees the interface. Framed as the general-purpose sibling of "Gateway
+stand-ins" (added earlier this session): there the two implementations are
+a stopgap for a not-yet-available integration, here they're two
+permanently-maintained variants selected by config, but the fix — the `if`
+belongs at the composition point, never inside the use case — is the same
+either way.
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
