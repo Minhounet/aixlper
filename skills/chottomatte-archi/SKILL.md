@@ -536,6 +536,41 @@ into `DefaultProcessingConfig`; a test can turn a literal `Set.of(...)`
 into a different `ProcessingConfig` implementation just as easily,
 without either one touching the use case's constructor.
 
+### Without Spring (e.g. Nuxeo): a plain resolver instead of `@Profile`
+
+Spring's `@Profile` picks which `@Bean` method runs based on an active
+profile — the same job as an `if (useLegacy)` scattered through business
+code, done once, outside the core. Without Spring, the fix is the same
+shape, just without the annotation: put the branch in exactly one
+resolver function at the composition point, reading whatever config
+mechanism the framework offers instead of Spring's `Environment`. In
+Nuxeo, that's `Framework.getProperty(...)` (backed by `nuxeo.conf`), read
+at the same seam the "Heavy ECM/legacy SDKs" section above already uses
+for `Framework.getService(...)` — inside `handleEvent`, never the
+listener's constructor:
+
+```java
+// composition code, inside handleEvent — the only place the flag is read
+private PaymentGateway resolvePaymentGateway() {
+    boolean useLegacy = Boolean.parseBoolean(
+            Framework.getProperty("myaddon.payment.legacy", "false"));
+    return useLegacy
+            ? new LegacyPaymentGateway(Framework.getService(LegacySoapClient.class))
+            : new RealPaymentGateway(Framework.getService(PaymentHttpClient.class));
+}
+```
+
+`PaymentGateway`'s consumers — the use case, its tests — never see the
+flag; the constructor only ever takes the interface. If more than one
+gateway flips on the same flag, pull the read into its own small resolver
+class instead of repeating `Framework.getProperty` per call site, same
+reasoning as the Parameter Object rule under *Author's preferences*: one
+read, one place, reused. This is the general-purpose version of "Gateway
+stand-ins" above — there the two implementations are a stopgap for a
+not-yet-available integration; here they're two permanently-maintained
+variants selected by config — but the fix is identical either way: the
+`if` belongs at the composition point, never inside the use case.
+
 ### Setter injection: narrow legacy exception
 
 Constructor injection stays the default. Switching one specific
