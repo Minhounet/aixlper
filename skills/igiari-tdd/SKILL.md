@@ -308,6 +308,24 @@ above) — explicitly say "none" if nothing was logged.
 
 ## Build commands — scoped during the cycle, full only at the end
 
+**Prefer `mvnd` whenever it is installed.** Check once, at the start of a task:
+
+```bash
+command -v mvnd
+```
+
+If that resolves, substitute `mvnd` for `mvn` in every command below — it is a
+drop-in replacement with identical flags and output, but it keeps the JVM and the
+resolved project model warm between invocations, which is most of what a scoped run
+costs. Measured on one multi-module Nuxeo project: the same scoped test class went
+from 21.9s under `mvn` to 10.8s under `mvnd`, against 0.2s of actual test time.
+
+The first run of a session starts the daemon and is slow (~17s in that same
+project); every run after it is the fast one, so never judge `mvnd` on its cold run
+or conclude from it that the daemon is not helping. If it ever appears to serve
+stale state, `mvnd --stop` clears it. Do not install it unprompted — just use it
+when it is already there.
+
 **Maven**
 ```bash
 # scoped (during the cycle) — one test class, or one method
@@ -317,6 +335,50 @@ mvn test -Dtest=ClassNameTest#methodName
 # full (end of task only, once)
 mvn test
 ```
+
+Surefire already fails when `-Dtest=` matches nothing: `failIfNoSpecifiedTests`
+defaults to `true`. You do not need a flag to make a filter typo loud.
+
+**Multi-module Maven.** The command above fails at dependency resolution when the
+test class's module depends on a sibling module that is not installed in the local
+repository. Build the sibling in the same reactor:
+
+```bash
+mvn -o test -pl <module> -am -Dtest=ClassNameTest \
+    -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+`-Dsurefire.failIfNoSpecifiedTests=false` is **required with `-am` and only there**:
+the upstream modules legitimately contain no test matching the filter, and without
+the override each of them fails the build. Do not carry this flag into a
+single-module run — there it would hide a real filter typo.
+
+Pass `-o` (offline) once dependencies are cached: without it, a project with
+SNAPSHOT dependencies re-checks every configured repository on every cycle. If `-o`
+fails on a genuinely missing artifact, run that one cycle online rather than dropping
+the flag for the rest of the task.
+
+**Measure before tuning the build.** If cycles feel slow, run once and compare the
+per-test time Surefire reports against wall clock. When the tests are a small
+fraction of the total, the cost is Maven startup and dependency resolution, and no
+plugin flag will touch it — chasing `-Denforcer.skip` and friends wastes the very
+time you are trying to save. The two levers that do work are `mvnd` (above) and
+`-DforkCount=0`, which runs the tests in the build JVM instead of forking a fresh
+one. On that same project the two together took the cycle from 21.9s to 6.5s.
+
+`-DforkCount=0` is a cycle-only flag, and only once you have checked its two
+conditions: no `argLine` and no jacoco anywhere in the build. Surefire discards both
+without warning when it does not fork, so you would keep green tests and silently
+lose coverage. Never use it for the end-of-task full build. Note too that under
+`mvnd` the daemon outlives the cycle, so with no fork, JVM-global state (static
+registries, counters, caches) now persists across runs — `mvnd --stop` clears it when
+results look impossible.
+
+**Do not buy the last second by dropping `-am`.** It is measurably faster, but the
+module then compiles against the sibling's jar in the local repository, which goes
+stale the moment you edit that sibling — and because the old API is still present
+there, you get silently outdated behaviour instead of a compile error. It is the one
+speedup that can make a green cycle lie to you.
 
 **Gradle**
 ```bash
@@ -349,9 +411,12 @@ order.
      `--tests`/`-Dtest` matches the real package and class exactly. A wrong
      pattern silently matches nothing rather than erroring.
    - **Caching second**, only if the filter is confirmed correct — force a
-     rerun with `--rerun-tasks` (Gradle) or add `-DfailIfNoTests=true`
-     (Maven) so a future filter typo fails loudly instead of silently
-     running nothing.
+     rerun with `--rerun-tasks` (Gradle). On Maven there is nothing to add:
+     `failIfNoSpecifiedTests` already defaults to `true`, so an unmatched
+     filter fails on its own. (`-DfailIfNoTests=true` is a different setting
+     — "no tests at all", default `false` — and is not what protects you
+     here. Do not reach for it in a `-am` reactor run, where it fights
+     `-Dsurefire.failIfNoSpecifiedTests=false`.)
 3. **Last resort, only once 1 and 2 are genuinely exhausted:** run the full
    project build once. Look for that specific test's pass/fail line in the
    console output — most build tools print one even in a full run — and use
