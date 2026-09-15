@@ -238,6 +238,69 @@ to the class it logs for, same as a hand-written
 injection-point example below for how to get that with constructor
 injection instead of a single shared logger bean.
 
+## Gateway stand-ins: Logging and No-Op implementations
+
+When a gateway/service you don't yet have access to (an external API not
+provisioned yet, a partner integration pending credentials) sits behind an
+interface per the dependency rule above, that same interface accepts more
+than one throwaway implementation before the real adapter exists — no
+different from swapping an in-memory repository in for a JPA one, just for
+a service port instead of a repository:
+
+- **`LoggingXGateway`** — logs the call and all parameters instead of
+  making the real call. Lets the use case, the composition root, and every
+  caller be built, wired, and exercised end-to-end before the real
+  integration exists, and doubles as a cheap audit trail once it does.
+- **`NoOpXGateway`** — does nothing at all. Useful where the call should be
+  silently skipped rather than logged — a disabled environment, a feature
+  not yet turned on, a case that genuinely doesn't care about this side
+  effect.
+
+Both are ordinary implementations of the gateway interface, bound at the
+composition root exactly like the real one would be — which implementation
+is wired is a one-line change there, never a change to the use case or its
+constructor. Same payoff "the interface is the seam/liberty to substitute
+later" already names for config objects: earned upfront by depending on
+the interface, not something justified only once the real adapter exists.
+
+```java
+public interface PaymentGateway {
+    PaymentResult charge(ChargeCommand command);
+}
+
+// stand-in while there's no access to the real payment provider yet
+public class LoggingPaymentGateway implements PaymentGateway {
+    private final Logger logger;
+
+    public LoggingPaymentGateway(Logger logger) {
+        this.logger = logger;
+    }
+
+    @Override
+    public PaymentResult charge(ChargeCommand command) {
+        logger.info("charge() called with {}", command);
+        return PaymentResult.simulated();
+    }
+}
+
+// stand-in where the call should be silently skipped
+public class NoOpPaymentGateway implements PaymentGateway {
+    @Override
+    public PaymentResult charge(ChargeCommand command) {
+        return PaymentResult.skipped();
+    }
+}
+```
+
+Treat a Logging/No-Op stand-in as a placeholder, not a permanent option:
+once the real adapter exists, swap the composition-root binding to it —
+don't leave a stand-in wired past the point it was covering for. This is
+also a different case from `igiari-tdd`'s Mockito-for-gateways
+preference: a mock exists only for the duration of one test, while a
+Logging/No-Op gateway is wired at the composition root for a real
+environment or code path (e.g. local dev, a not-yet-enabled feature) where
+no test is running at all.
+
 ## Why interfaces at these seams also pays for testing
 
 Repository, service, and logger all being interfaces is what makes the

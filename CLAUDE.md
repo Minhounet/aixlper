@@ -276,6 +276,20 @@ effect: as a listener's Nuxeo-action count grows, the pure-computation
 share of its logic should grow with it, keeping the `FeaturesRunner`
 integration-test surface flat rather than growing with every business rule.
 
+Latest addition (this session): the author's experience using a gateway
+interface before the real integration existed prompted a new "Gateway
+stand-ins: Logging and No-Op implementations" section in
+`chottomatte-archi`. A `LoggingXGateway` (logs the call and all
+parameters instead of making the real call) and a `NoOpXGateway` (does
+nothing) are both ordinary implementations of the same gateway interface,
+swappable at the composition root exactly like an in-memory repository
+stands in for a JPA one — with a note to treat either as a placeholder,
+swapped out for the real adapter once it exists rather than left wired
+permanently, and a distinction from `igiari-tdd`'s
+Mockito-for-gateways preference (a mock lives for one test; a
+Logging/No-Op gateway is wired for a real environment or code path with
+no test running).
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
