@@ -104,10 +104,29 @@ over-trusting-your-own-read failure mode the test run exists to catch.
 
 ## Workflow: triage before touching anything
 
-1. Run IntelliJ IDEA's inspection pass over the code in scope (Analyze →
-   Inspect Code, or a targeted profile) rather than fixing findings as
-   they're noticed ad hoc — the inspection report is the insight source
-   this skill is built around.
+1. Get the inspection findings as a report you can read and triage, not
+   a live GUI pass — run the scan headlessly rather than fixing findings
+   as they're noticed ad hoc (Analyze → Inspect Code is the GUI
+   equivalent, but produces nothing you can hand off or diff). Two ways
+   to run it, in preference order:
+   - **`qodana scan`** — JetBrains' CI-oriented headless inspector, built
+     on the same inspection engine, run via the `qodana` CLI or its
+     Docker image (`jetbrains/qodana-jvm` for Java). Prefer this when
+     it's available on the machine: it's the actively maintained path and
+     produces one consolidated report (`qodana.sarif.json`, plus an HTML
+     view) instead of one file per inspection.
+     ```bash
+     qodana scan --results-dir ./qodana-results
+     ```
+   - **`idea inspect`** — bundled with the IDE itself, as `inspect.sh` /
+     `inspect.bat` in its `bin/` directory (or the `inspect` subcommand of
+     an `idea` launcher already on PATH):
+     ```bash
+     idea inspect <project-path> <inspection-profile.xml> <output-path> -v2 [-d <subdirectory-path>]
+     ```
+     Requires a project with its SDK properly configured, and won't run
+     while another instance of the same IDE is open. Results land as one
+     XML file per inspection ID under `<output-path>`.
 2. Triage every finding into Tier 1 or Tier 2 before applying any of
    them. Don't act on a finding while still triaging the next one.
 3. Apply all Tier 1 findings, then run the test suite once.

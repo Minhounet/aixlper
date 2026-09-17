@@ -532,6 +532,16 @@ refactoring pass (a class or module with an IntelliJ inspection report
 run against it, both tiers exercised, a Tier 2 change actually caught by
 the test-coverage safety net).
 
+Latest addition (this session): the workflow's step 1 originally said
+"Analyze → Inspect Code," a GUI menu path with no scriptable output —
+the author asked whether a command-line equivalent exists. Confirmed and
+added: `qodana scan` (JetBrains' CI-oriented headless inspector, same
+engine, one consolidated report — preferred when available) and
+`idea inspect`/`inspect.sh` (bundled with the IDE itself, one XML file
+per inspection, needs a configured SDK and no other running instance of
+the same IDE) as the two real headless options, in that preference
+order, replacing the GUI-only phrasing.
+
 ## Active work: igiari-tdd and chottomatte-archi
 
 ```
