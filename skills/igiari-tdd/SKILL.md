@@ -12,7 +12,9 @@ step). Orthogonal and composable, not a dependency: load the other one too
 when the work involves wiring real collaborators, not just a self-contained
 algorithm. `kanpeki-fp` covers how logic should be *expressed* (pure guards,
 Either/Option, sealed types, no mutation) — load it too when writing new
-code, which is the default for this codebase.
+code, which is the default for this codebase. `kaizen-refactor` covers
+refactoring code that already exists, outside a TDD cycle — it also owns
+this skill's mechanical-syntax checklist (see rule 6 below).
 
 ## Why baby steps, specifically for you (an AI)
 
@@ -254,32 +256,14 @@ destination — it never moves up when you're allowed to build the road.
    logged, say so explicitly ("deferred refinement notes: none") rather
    than omitting the list.
 
-   Independently of that checklist, also apply these syntax-level
-   refactorings wherever they appear in code you touch — they're
-   mechanical, not judgment calls, so no "if warranted" applies to them:
-   - `.stream()...collect(Collectors.toList())` → `.stream()...toList()`
-   - a lambda with `{ }` braces around a single expression → drop the
-     braces (and the `return`, if any):
-     `s -> { System.out.println(s); }` → `s -> System.out.println(s)`
-   - a lambda that only calls one method on its argument → a method
-     reference: `s -> System.out.println(s)` → `System.out::println`
-   - a local variable whose type is already obvious from its initializer,
-     **and whose declaration sits close to its use** → `var`. Keep the
-     explicit type when declaration and use are far apart (a long method,
-     a variable threaded through many lines) — making the reader scroll
-     back to learn the type is a cost `var` shouldn't add. This proximity
-     constraint has a useful side effect: with no explicit type nearby to
-     lean on, the variable name is what has to carry the meaning, which
-     pushes toward better naming rather than away from it.
-   - a generic constructor call already inferable from a `var` or field
-     declaration → the diamond operator: `new Foo<Bar>()` → `new Foo<>()`
-   - `instanceof` followed by a manual cast → pattern-matching
-     `instanceof`: `if (o instanceof String) { String s = (String) o; }`
-     → `if (o instanceof String s) { ... }`
-   - a line that exceeds 121 characters → break at a natural boundary:
-     stream chains get one operation per line (dot leading);
-     long method calls get one argument per line.
-     See java.md for the full convention and examples.
+   Independently of that checklist, also apply the fixed set of
+   syntax-level refactorings wherever they appear in code you touch —
+   they're mechanical, not judgment calls, so no "if warranted" applies to
+   them. That list now lives in `kaizen-refactor` (its "Tier 1 —
+   IDE-verified mechanical refactorings" section), which owns it since the
+   same set applies whether you're mid-cycle here or refactoring existing
+   code outside a TDD cycle — load that skill for the list rather than
+   duplicating it here.
 7. **Build scope is never negotiable.** During the cycle (steps 1-4), build
    and run **only the single test class** you're working on — never the
    whole project. The full project build runs **exactly once, at the very

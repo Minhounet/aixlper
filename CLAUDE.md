@@ -496,6 +496,42 @@ not from re-reading the source book. No testing method decided yet beyond
 multi-context scenario (e.g. designing the boundary for a legacy/
 third-party integration) rather than a single-class kata.
 
+## Active work: kaizen-refactor
+
+`skills/kaizen-refactor/` is new (created this session). The author
+described a phase distinct from both existing Java skills: refactoring
+code that already *exists*, surfaced by inspecting it in IntelliJ IDEA
+rather than by a failing test — sometimes the safe next step is an FP-style
+change, sometimes it isn't, so it couldn't just be folded into
+`kanpeki-fp`. It also isn't `igiari-tdd`'s refactor step, since that step
+only fires on code just written this cycle inside a red/green loop, not on
+a standalone pass over existing code with no new test being added.
+
+**Two-tier split**, settled this session: Tier 1 (IDE-verified mechanical
+refactorings — rename, extract, inline, move, plus the fixed syntax-level
+set: stream `.toList()`, lambda cleanup, method references, `var`, diamond
+operator, pattern-matching `instanceof`) applies directly, no gate, since
+the IDE's own transformation guarantees the behavior is preserved. Tier 2
+(judgment-call refactors — polymorphism, value object, split class,
+Strategy, or any `kanpeki-fp`-governed style move) stays gated by the same
+trigger-threshold discipline as `igiari-tdd`'s "Advanced refinement"
+section, plus a test-coverage safety net (confirm a green baseline, one
+change at a time, re-verify green after each) — since unlike Tier 1, the
+IDE alone can't prove these preserve behavior.
+
+**The mechanical-syntax checklist moved here from `igiari-tdd`**,
+by the author's explicit call this session, since the same list applies
+whether you're mid-TDD-cycle or refactoring existing code outside one —
+`igiari-tdd` now references this skill's "Tier 1" section instead of
+carrying its own copy, so there's one source of truth instead of two
+lists that could drift apart.
+
+Not yet dogfooded; treat it the same as `mujitsu-documentum` and
+`gyakuten-ddd`'s unverified status until it's been exercised on a real
+refactoring pass (a class or module with an IntelliJ inspection report
+run against it, both tiers exercised, a Tier 2 change actually caught by
+the test-coverage safety net).
+
 ## Active work: igiari-tdd and chottomatte-archi
 
 ```
