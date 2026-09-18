@@ -63,6 +63,11 @@ below — these are mechanical, not judgment calls:
 - `instanceof` followed by a manual cast → pattern-matching `instanceof`:
   `if (o instanceof String) { String s = (String) o; }` →
   `if (o instanceof String s) { ... }`
+- a `protected` member in a `final` class — or in an `enum`, which is
+  implicitly final → drop the modifier. No subclass can exist, so `protected`
+  already grants exactly package-private access, and removing it changes no
+  call site. IntelliJ reports this as "Class member declared 'protected' in
+  'final' class".
 - a line that exceeds 121 characters → break at a natural boundary: stream
   chains get one operation per line (dot leading); long method calls get
   one argument per line. See java.md for the full convention and examples.
@@ -151,8 +156,23 @@ over-trusting-your-own-read failure mode the test run exists to catch.
 1. Get the inspection findings as a report you can read and triage, not
    a live GUI pass — run the scan headlessly rather than fixing findings
    as they're noticed ad hoc (Analyze → Inspect Code is the GUI
-   equivalent, but produces nothing you can hand off or diff). Two ways
+   equivalent, but produces nothing you can hand off or diff). Three ways
    to run it, in preference order:
+   - **The JetBrains IDE MCP server** (`mcp__idea__lint_files`,
+     `mcp__idea__get_file_problems`) — when the IDE is running with the
+     project open and its MCP server is connected, this is the best route:
+     no export step, no container, no second IDE instance, and the IDE stays
+     open while it runs. It uses the *installed* IDE's inspections, so an
+     Ultimate licence contributes its full set — strictly more than the
+     Community linter below. `lint_files` takes an explicit file list, so a
+     pass scopes cleanly to the package under review, and returns structured
+     findings (severity, description, line, lineText) already shaped for
+     triage. Caveats: the project must be imported in that IDE, and a large
+     batch can return `timedOut: true` entries — split it and re-run.
+     Note `mcp__ide__getDiagnostics` is a **different and much weaker**
+     channel: it returns the editor daemon's highlighting for files already
+     open in the editor, and times out on anything else. Do not mistake one
+     for the other.
    - **`qodana scan`** — JetBrains' CI-oriented headless inspector, built
      on the same inspection engine, run via the `qodana` CLI or its
      Docker image (`jetbrains/qodana-jvm` for Java). Prefer this when
@@ -181,6 +201,31 @@ over-trusting-your-own-read failure mode the test run exists to catch.
    return `Either`, a mutated collection that should be Vavr's immutable
    one), hand it to `kanpeki-fp`'s rules rather than deciding the shape of
    the fix here.
+
+## A finding names a symptom; it does not prescribe the fix
+
+An inspection reports what it can see locally, and its suggested remedy is
+sometimes exactly backwards once you know why the code is shaped that way.
+The case that proves it: **"Method 'getX()' is never used"** on an accessor
+whose *absence from the call path is itself the open defect*. The IDE offers
+to delete it; the correct action was to wire it up. Deleting would have
+removed the evidence needed to diagnose a production failure that had
+happened that same morning.
+
+Triage decides the **tier**; it does not decide the **fix**. Before applying
+any finding, ask whether the code is unused because it is dead, or unused
+because something that should call it does not yet. Only the first is a
+cleanup. When a finding lands on code you know is pending work, log it
+against that work instead of actioning it.
+
+Two other shapes recur and must never be auto-applied:
+
+- **String constants that look like URLs** — XML namespaces, XSD
+  `targetNamespace` values, SOAP envelope identifiers. "HTTP links are not
+  secure" fires on them, and rewriting `http://` to `https://` silently
+  breaks the contract: the string is an identifier that is never fetched.
+- **Anything under generated sources.** The fix belongs in the generator or
+  its configuration; edits to the output are overwritten on the next build.
 
 ## When this skill doesn't cover the case
 
