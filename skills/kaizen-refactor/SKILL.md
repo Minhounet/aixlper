@@ -63,6 +63,11 @@ below — these are mechanical, not judgment calls:
 - `instanceof` followed by a manual cast → pattern-matching `instanceof`:
   `if (o instanceof String) { String s = (String) o; }` →
   `if (o instanceof String s) { ... }`
+- a `serialVersionUID` field, or a `readObject` / `writeObject` /
+  `readResolve` / `writeReplace` method, on a `Serializable` type →
+  annotate it with `@Serial` (JDK 14+), importing `java.io.Serial`. The
+  annotation is `RetentionPolicy.SOURCE`: it enables a compile-time
+  correctness check and has no runtime effect whatsoever.
 - a `protected` member in a `final` class — or in an `enum`, which is
   implicitly final → drop the modifier. No subclass can exist, so `protected`
   already grants exactly package-private access, and removing it changes no
@@ -122,6 +127,30 @@ igiari-tdd's "Advanced refinement — triggered, not anticipated" section
 for the current threshold list — same triggers, same discipline, not
 duplicated here). A candidate that doesn't meet a trigger gets logged, not
 applied and not asked about — same "log, don't ask" rule as igiari-tdd.
+
+### "Class can be record class" — the accessor shape decides the risk
+
+This finding recurs on any codebase with value holders, and its cost varies
+enormously depending on one detail the inspection does not mention: **what
+the existing accessors are called.**
+
+- Accessors already named like record components (`statusCode()`, `body()`,
+  `endpointUrl()`) → the generated accessors have identical names, so the
+  conversion touches **no call site at all**. Near-mechanical; the risk is
+  only the added `equals`/`hashCode`/`toString` and the fields becoming
+  final. Check nothing relies on identity semantics, then convert.
+- Accessors in getter style (`getEdfUuid()`) → a record **renames every
+  one**, so each call site changes. That is an API change, not a cleanup,
+  and it is genuinely Tier 2 however small the class is.
+- Methods that are constants (`isSuccess()` always false) or whose name does
+  not match a component (`isRetryable()` vs component `retryable`) have to
+  be written out explicitly. Still fine, but the gain shrinks — weigh it.
+
+**Also check the siblings before converting one class.** An inspection sees
+one file at a time. Converting one of three parallel Command/Response types
+leaves the family inconsistent, which costs a reader more than the record
+saves. Convert the whole family deliberately, or none of it — and say which
+you chose.
 
 One difference from igiari-tdd's version of this gate: there, the trigger
 list is checked against code just written this cycle. Here it's checked
