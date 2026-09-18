@@ -542,6 +542,28 @@ per inspection, needs a configured SDK and no other running instance of
 the same IDE) as the two real headless options, in that preference
 order, replacing the GUI-only phrasing.
 
+Latest addition (this session): the author asked whether igiari-tdd's
+refactor step also needs to launch the IDE/scan tooling now that its
+mechanical checklist lives in `kaizen-refactor`. Answer: no — that
+checklist is a fixed, read-and-apply list, not something a scan needs to
+surface; only `kaizen-refactor`'s own workflow (triaging a fresh
+inspection report over *existing* code) uses `qodana scan`/`idea inspect`.
+The wording in igiari-tdd rule 6 was ambiguous on this point ("load that
+skill for the list" read as "run its scan") — tightened to say explicitly
+that this step never triggers a scan.
+
+Same session, a concrete Tier 1 addition: `list.get(list.size() - 1)` /
+`list.get(0)` → `.getLast()`/`.getFirst()` on a `List`/`Deque`/any
+`SequencedCollection` (Java 21+), spotted during real refactoring work.
+Used it to add a "Recognizing new Tier 1 candidates" section — the
+skill's own mechanism for growing its fixed mechanical list — gated by
+three checks (fixed input → fixed output, JDK/library-guaranteed
+equivalence, recurs across classes rather than a one-off); a candidate
+that passes all three is added to the list and logged via the skill's
+existing "Skill improvement proposal" format rather than applied and
+forgotten. The `getFirst()`/`getLast()` entry itself is the worked
+example showing the mechanism in use.
+
 ## Active work: igiari-tdd and chottomatte-archi
 
 ```

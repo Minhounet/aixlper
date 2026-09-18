@@ -259,11 +259,16 @@ destination — it never moves up when you're allowed to build the road.
    Independently of that checklist, also apply the fixed set of
    syntax-level refactorings wherever they appear in code you touch —
    they're mechanical, not judgment calls, so no "if warranted" applies to
-   them. That list now lives in `kaizen-refactor` (its "Tier 1 —
-   IDE-verified mechanical refactorings" section), which owns it since the
-   same set applies whether you're mid-cycle here or refactoring existing
-   code outside a TDD cycle — load that skill for the list rather than
-   duplicating it here.
+   them, and applying them never requires running a scan or launching an
+   IDE — it's a fixed, read-and-apply list, not something that needs a
+   fresh inspection report to surface. That list now lives in
+   `kaizen-refactor` (its "Tier 1 — IDE-verified mechanical refactorings"
+   section), which owns it since the same set applies whether you're
+   mid-cycle here or refactoring existing code outside a TDD cycle — load
+   that skill for the list itself rather than duplicating it here.
+   `kaizen-refactor`'s scan-based workflow (`qodana scan`/`idea inspect`)
+   is a separate, standalone activity for triaging existing code — this
+   step here never triggers it.
 7. **Build scope is never negotiable.** During the cycle (steps 1-4), build
    and run **only the single test class** you're working on — never the
    whole project. The full project build runs **exactly once, at the very

@@ -51,6 +51,9 @@ below — these are mechanical, not judgment calls:
   better naming rather than away from it.
 - a generic constructor call already inferable from a `var` or field
   declaration → the diamond operator: `new Foo<Bar>()` → `new Foo<>()`
+- `.get(0)` / `.get(list.size() - 1)` on a `List`, `Deque`, or any other
+  `SequencedCollection` (Java 21+) → `.getFirst()` / `.getLast()` — same
+  value, IDE/compiler-verifiable equivalence.
 - `instanceof` followed by a manual cast → pattern-matching `instanceof`:
   `if (o instanceof String) { String s = (String) o; }` →
   `if (o instanceof String s) { ... }`
@@ -61,6 +64,37 @@ below — these are mechanical, not judgment calls:
 These are safe enough to apply in a batch — fix every Tier 1 finding
 across the file/class under review, run the existing test suite once at
 the end to confirm nothing broke, and move on.
+
+### Recognizing new Tier 1 candidates
+
+The list above isn't closed. While triaging a report or refactoring by
+hand, you'll sometimes hit a transformation that isn't listed yet but
+clearly belongs there. Check it against the same bar every listed entry
+already meets, all three:
+
+- **Fixed input → fixed output.** The rewrite takes one shape to another
+  with no branching judgment about the surrounding code — nothing to
+  decide, only to apply.
+- **Guaranteed equivalence.** The JDK or library spec guarantees the two
+  forms behave identically — not "usually," not "in this codebase," not
+  "as long as the collection isn't empty."
+- **Recurs.** The pattern shows up across many classes, not just the one
+  in front of you — a true one-off doesn't earn a permanent list entry.
+
+A candidate that clears all three gets added to the fixed list above, used
+for the rest of the current pass, and logged via the "Skill improvement
+proposal" format below so the addition is recorded, not just applied and
+forgotten. A candidate that fails any of them isn't Tier 1 — if it's still
+worth doing, gate it as a Tier 2 judgment call instead; if the equivalence
+only holds "usually" (depends on nullability, ordering, an edge case), say
+so explicitly rather than promoting it.
+
+This is exactly how the `.getFirst()`/`.getLast()` entry above was added:
+`list.get(list.size() - 1)` and `list.get(0)` are a fixed rewrite, the
+`SequencedCollection` contract (Java 21+) guarantees the values match, and
+the "last element" idiom recurs constantly — a clean pass on all three,
+so it went straight into the fixed list rather than staying a one-off
+observation.
 
 **Tier 2 — judgment-call refactors.** Anything that changes shape rather
 than syntax — replacing a conditional with polymorphism, promoting a
