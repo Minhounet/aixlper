@@ -496,6 +496,74 @@ not from re-reading the source book. No testing method decided yet beyond
 multi-context scenario (e.g. designing the boundary for a legacy/
 third-party integration) rather than a single-class kata.
 
+## Active work: kaizen-refactor
+
+`skills/kaizen-refactor/` is new (created this session). The author
+described a phase distinct from both existing Java skills: refactoring
+code that already *exists*, surfaced by inspecting it in IntelliJ IDEA
+rather than by a failing test — sometimes the safe next step is an FP-style
+change, sometimes it isn't, so it couldn't just be folded into
+`kanpeki-fp`. It also isn't `igiari-tdd`'s refactor step, since that step
+only fires on code just written this cycle inside a red/green loop, not on
+a standalone pass over existing code with no new test being added.
+
+**Two-tier split**, settled this session: Tier 1 (IDE-verified mechanical
+refactorings — rename, extract, inline, move, plus the fixed syntax-level
+set: stream `.toList()`, lambda cleanup, method references, `var`, diamond
+operator, pattern-matching `instanceof`) applies directly, no gate, since
+the IDE's own transformation guarantees the behavior is preserved. Tier 2
+(judgment-call refactors — polymorphism, value object, split class,
+Strategy, or any `kanpeki-fp`-governed style move) stays gated by the same
+trigger-threshold discipline as `igiari-tdd`'s "Advanced refinement"
+section, plus a test-coverage safety net (confirm a green baseline, one
+change at a time, re-verify green after each) — since unlike Tier 1, the
+IDE alone can't prove these preserve behavior.
+
+**The mechanical-syntax checklist moved here from `igiari-tdd`**,
+by the author's explicit call this session, since the same list applies
+whether you're mid-TDD-cycle or refactoring existing code outside one —
+`igiari-tdd` now references this skill's "Tier 1" section instead of
+carrying its own copy, so there's one source of truth instead of two
+lists that could drift apart.
+
+Not yet dogfooded; treat it the same as `mujitsu-documentum` and
+`gyakuten-ddd`'s unverified status until it's been exercised on a real
+refactoring pass (a class or module with an IntelliJ inspection report
+run against it, both tiers exercised, a Tier 2 change actually caught by
+the test-coverage safety net).
+
+Latest addition (this session): the workflow's step 1 originally said
+"Analyze → Inspect Code," a GUI menu path with no scriptable output —
+the author asked whether a command-line equivalent exists. Confirmed and
+added: `qodana scan` (JetBrains' CI-oriented headless inspector, same
+engine, one consolidated report — preferred when available) and
+`idea inspect`/`inspect.sh` (bundled with the IDE itself, one XML file
+per inspection, needs a configured SDK and no other running instance of
+the same IDE) as the two real headless options, in that preference
+order, replacing the GUI-only phrasing.
+
+Latest addition (this session): the author asked whether igiari-tdd's
+refactor step also needs to launch the IDE/scan tooling now that its
+mechanical checklist lives in `kaizen-refactor`. Answer: no — that
+checklist is a fixed, read-and-apply list, not something a scan needs to
+surface; only `kaizen-refactor`'s own workflow (triaging a fresh
+inspection report over *existing* code) uses `qodana scan`/`idea inspect`.
+The wording in igiari-tdd rule 6 was ambiguous on this point ("load that
+skill for the list" read as "run its scan") — tightened to say explicitly
+that this step never triggers a scan.
+
+Same session, a concrete Tier 1 addition: `list.get(list.size() - 1)` /
+`list.get(0)` → `.getLast()`/`.getFirst()` on a `List`/`Deque`/any
+`SequencedCollection` (Java 21+), spotted during real refactoring work.
+Used it to add a "Recognizing new Tier 1 candidates" section — the
+skill's own mechanism for growing its fixed mechanical list — gated by
+three checks (fixed input → fixed output, JDK/library-guaranteed
+equivalence, recurs across classes rather than a one-off); a candidate
+that passes all three is added to the list and logged via the skill's
+existing "Skill improvement proposal" format rather than applied and
+forgotten. The `getFirst()`/`getLast()` entry itself is the worked
+example showing the mechanism in use.
+
 ## Active work: igiari-tdd and chottomatte-archi
 
 ```
