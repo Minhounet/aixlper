@@ -53,7 +53,13 @@ below — these are mechanical, not judgment calls:
   declaration → the diamond operator: `new Foo<Bar>()` → `new Foo<>()`
 - `.get(0)` / `.get(list.size() - 1)` on a `List`, `Deque`, or any other
   `SequencedCollection` (Java 21+) → `.getFirst()` / `.getLast()` — same
-  value, IDE/compiler-verifiable equivalence.
+  value, and one call instead of two. **Only mechanical when the collection
+  is already known non-empty**: on an empty one the indexed form throws
+  `IndexOutOfBoundsException` and the accessor throws
+  `NoSuchElementException`, so check that nothing catches or propagates the
+  specific type before swapping. Covers the first and last element only —
+  an offset like `get(1)` or `get(size() - 2)` has no accessor and stays as
+  it is.
 - `instanceof` followed by a manual cast → pattern-matching `instanceof`:
   `if (o instanceof String) { String s = (String) o; }` →
   `if (o instanceof String s) { ... }`
@@ -91,10 +97,14 @@ so explicitly rather than promoting it.
 
 This is exactly how the `.getFirst()`/`.getLast()` entry above was added:
 `list.get(list.size() - 1)` and `list.get(0)` are a fixed rewrite, the
-`SequencedCollection` contract (Java 21+) guarantees the values match, and
-the "last element" idiom recurs constantly — a clean pass on all three,
-so it went straight into the fixed list rather than staying a one-off
-observation.
+`SequencedCollection` contract (Java 21+) guarantees the values match on a
+non-empty collection, and the first/last idiom recurs constantly. It does
+*not* clear the equivalence bar unconditionally, though — on an empty
+collection the two forms throw different exception types — so it went into
+the fixed list with that precondition stated on the entry itself, which is
+what the "say so explicitly" clause above asks for. That is the line to
+hold: an entry may carry a precondition a reader can check at the call
+site, but never an unstated one.
 
 **Tier 2 — judgment-call refactors.** Anything that changes shape rather
 than syntax — replacing a conditional with polymorphism, promoting a

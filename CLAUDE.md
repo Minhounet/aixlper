@@ -564,6 +564,17 @@ existing "Skill improvement proposal" format rather than applied and
 forgotten. The `getFirst()`/`getLast()` entry itself is the worked
 example showing the mechanism in use.
 
+Refined immediately after, by the author's call: that entry was carrying
+an equivalence claim it doesn't actually meet — on an empty collection
+`get(0)` throws `IndexOutOfBoundsException` while `getFirst()` throws
+`NoSuchElementException`, which is the exact case the "Guaranteed
+equivalence" check names as disqualifying. The entry now states the
+non-empty precondition explicitly (and that offsets like `get(size() - 2)`
+have no accessor), and the worked example no longer claims a clean pass on
+all three checks — it routes through the same section's "say so explicitly"
+clause instead. Settled rule: a Tier 1 entry may carry a precondition the
+reader can check at the call site, never an unstated one.
+
 ## Active work: igiari-tdd and chottomatte-archi
 
 ```
