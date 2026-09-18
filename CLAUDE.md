@@ -626,6 +626,9 @@ skills/<skill-name>/SKILL.md      # one skill per directory
 skills/<skill-name>/references/   # optional supporting files
 skills/<skill-name>/scripts/      # optional scripts the skill runs
 skills/<skill-name>/evals/        # claude plugin eval cases for the skill
+
+global/                           # author's global ~/.claude config
+global/settings.template.json     # public-safe; secrets injected at install
 ```
 
 ## Build / CI
@@ -669,6 +672,23 @@ both sourced from this same repo:
 
 Both manifests point at the shared `skills/` directory — there is one copy
 of each skill, not a fork per client.
+
+## Global config
+
+`global/` holds the author's own `~/.claude` config — the global `CLAUDE.md`
+and the `java.md` / `nuxeo.md` it `@`-imports, plus a `settings.template.json`.
+`scripts/install-global.sh` installs them onto any machine.
+
+Rules for anything added here:
+- **This repo is public.** No credential, no internal hostname, no real ticket
+  ID or internal package name. The committed copies are genericized versions of
+  the author's real files (`PROJ-1234`, `com.example.*`) — keep it that way.
+- Secrets live only in `~/.claude/aixlper.env` (gitignored, `chmod 600`) and
+  reach `settings.json` through the `@@ENV_BLOCK@@` marker at install time.
+  Never add a real value to `settings.template.json`.
+- The installer stays separate from `scripts/install.sh` and must never write
+  to `~/.claude/skills/` — development machines symlink those into this repo.
+- `jq` and `envsubst` are not assumed present; the script is pure bash + `sed`.
 
 ## Skill editing
 

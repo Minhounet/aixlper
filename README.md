@@ -59,6 +59,37 @@ internally. `--auto-update` keeps it in sync with the repo.
 > [`CLAUDE.md`](CLAUDE.md) — no automated Gemini check runs here). If this
 > command doesn't work as expected, please open an issue.
 
+### Global config (personal machines)
+
+The skills above are for anyone. This part is the repo author's own machine
+setup — global `CLAUDE.md` (plus the `java.md` / `nuxeo.md` it imports) and a
+generated `settings.json`:
+
+```bash
+./scripts/install-global.sh            # from a clone
+curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install-global.sh | bash
+```
+
+It is deliberately **separate** from `install.sh` — a skills installer should
+never rewrite a stranger's `CLAUDE.md` or `settings.json`. It also never touches
+`~/.claude/skills/`, so a development machine where those are symlinks back into
+a clone keeps working.
+
+**No secret is stored in this repo.** `global/settings.template.json` carries a
+`@@ENV_BLOCK@@` marker; the API gateway, token and proxy are read at install
+time from `~/.claude/aixlper.env` (gitignored) or the shell environment:
+
+```bash
+cp global/aixlper.env.example ~/.claude/aixlper.env
+chmod 600 ~/.claude/aixlper.env   # then fill it in
+./scripts/install-global.sh
+```
+
+Leave every value empty and the env block collapses to telemetry alone, which
+is what a personal machine with no corporate gateway wants. Existing files are
+backed up to `.bak.<epoch>` before being replaced, re-running changes nothing if
+nothing differs, and `--dry-run` reports without writing.
+
 ### Marketplace distribution (optional, not set up)
 
 Claude Code also supports a plugin-marketplace mechanism
@@ -75,6 +106,9 @@ skills/<skill-name>/SKILL.md      # one skill per directory
 skills/<skill-name>/references/   # optional supporting files
 skills/<skill-name>/scripts/      # optional scripts the skill runs
 skills/<skill-name>/evals/        # claude plugin eval cases for the skill
+
+global/                           # author's global ~/.claude config
+global/settings.template.json     # public-safe; secrets injected at install
 ```
 
 ## Contributing / testing

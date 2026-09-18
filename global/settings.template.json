@@ -1,0 +1,36 @@
+{
+  "cleanupPeriodDays": 14,
+  "env": {
+@@ENV_BLOCK@@
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(mvn:*)",
+      "Bash(./gradlew:*)",
+      "Bash(ls)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(**/*.pem)"
+    ],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "~/.claude/skills"
+    ]
+  },
+  "model": "opus[1m]",
+  "syntaxHighlightingDisabled": true,
+  "tui": "fullscreen",
+  "theme": "dark"
+}
