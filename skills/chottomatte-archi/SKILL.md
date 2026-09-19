@@ -781,6 +781,109 @@ producer) has no inherent Nuxeo dependency. The overhead is one extra `pom.xml`,
 `<modules>` entry in the parent, and one `<dependency>` in the bundle module — a
 small cost for a compiler-enforced boundary.
 
+### Nuxeo addon logging: composite log4j2, never editing the shipped config
+
+An addon needing its own appenders/categories should never edit Nuxeo's
+shipped `log4j2.xml` directly — that fix would have to be reapplied on
+every environment and every Nuxeo upgrade. The actual mechanism is
+Log4j2's own **Composite Configuration** feature (not Nuxeo-specific):
+merge multiple config sources into one `LoggerContext`, later sources
+overriding matching Appenders/Loggers by name, the original file
+untouched on disk.
+
+Two ways to trigger the merge — which one fits depends on what you
+actually control:
+
+- **You own the deployment** (build your own Docker image, control
+  `nuxeo.conf`): pass
+  `-Dlog4j2.configurationFile=<default-path>,<your-fragment-path>` via a
+  `JAVA_OPTS` line appended in `nuxeo.conf` (or a file dropped under
+  `docker-entrypoint-initnuxeo.d/` for the official image). Simple, but
+  ties the addon's logging setup to how a specific image/environment is
+  built — every deployment target has to remember to wire it.
+- **You only own the addon bundle** (the usual case): ship the fragment as
+  a plain classpath resource inside the addon jar — never named
+  `log4j2.xml`, which would collide with Nuxeo's own file — and merge it
+  programmatically at `applicationStarted`, the same post-boot hook
+  already used elsewhere in this skill:
+
+```java
+public class MyAddonComponent extends DefaultComponent {
+
+    @Override
+    public void applicationStarted(ComponentContext context) {
+        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        ConfigurationSource current = ctx.getConfiguration().getConfigurationSource();
+        ConfigurationSource mine = new ConfigurationSource(
+                getClass().getResourceAsStream("/log4j2-myaddon.xml"));
+
+        List<AbstractConfiguration> configs = List.of(
+                (AbstractConfiguration) ConfigurationFactory.getInstance().getConfiguration(ctx, current),
+                (AbstractConfiguration) ConfigurationFactory.getInstance().getConfiguration(ctx, mine));
+
+        Configurator.reconfigure(new CompositeConfiguration(configs));
+    }
+}
+```
+
+Prefer the second form: it's self-contained in the addon artifact and
+works identically wherever the addon gets deployed — raw install,
+Marketplace package, or someone else's custom Docker image — with no
+environment-specific wiring to remember, the same "not env-dependent"
+payoff the interface-based patterns elsewhere in this skill earn.
+
+**Tradeoff that comes with the self-contained form: the jar-embedded
+fragment is not hot-editable.** Log4j2's `monitorInterval` file-watcher
+needs a real filesystem `File` with a checkable mtime to detect changes;
+a classpath resource packed inside a jar can't provide that. Editing the
+fragment's content means rebuilding and redeploying the addon — a direct
+consequence of the choice above, not a separate limitation to work
+around.
+
+**A runtime debug bump is a different concern from the baseline config —
+don't reach for file-editing to solve it.** The baseline (what logs
+during normal operation) and a temporary incident-response bump (DEBUG
+for twenty minutes) have opposite lifetimes: the baseline should survive
+restarts unchanged, the bump specifically shouldn't. Give whoever
+operates the addon both live-change mechanisms, built once, and let them
+pick per their own environment's constraints rather than picking one for
+them:
+
+- **JMX** (Log4j2's built-in MBeans, `Configurator` underneath) — zero
+  extra code, since Log4j2 exposes this by default. Needs a JMX port
+  reachable from wherever the change is being made, which is often
+  blocked in a containerized/production Nuxeo deployment.
+- **An Automation operation wrapping `Configurator.setLevel(...)`** —
+  a small addition, but only needs network access to Nuxeo's own REST
+  API (already available to on-call), is trivially securable to
+  Administrators, and reverts with the same call. The more practical
+  default for "need DEBUG right now" in most Nuxeo production setups —
+  no exec/file access into the running container needed, and nothing
+  left behind to forget about afterward the way a hand-edited file can be.
+
+```java
+@Operation(id = SetLogLevel.ID, category = Constants.CAT_SERVICES,
+        label = "Set Logger Level", description = "Change a logger's level at runtime, no restart.")
+public class SetLogLevel {
+    public static final String ID = "MyAddon.SetLogLevel";
+
+    @Param(name = "logger") protected String loggerName;
+    @Param(name = "level") protected String level;
+
+    @OperationMethod
+    public void run() {
+        Configurator.setLevel(loggerName, Level.toLevel(level));
+    }
+}
+```
+
+Reach for an external override path instead (checked at
+`applicationStarted`, falling back to the jar-embedded fragment when
+absent) only when the actual need is structural — a new appender or
+filter added live — not a level bump. That's the one case where
+`monitorInterval`'s file-watching genuinely earns back the
+env-dependency the jar-embedded form was chosen to avoid.
+
 ### Testing across the seam
 
 Two tiers, not one:
