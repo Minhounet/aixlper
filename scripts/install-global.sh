@@ -32,8 +32,11 @@ ENV_FILE="$TARGET_DIR/aixlper.env"
 DRY_RUN=0
 
 # Files copied verbatim. CLAUDE.md pulls in the other two via @-imports, so a
-# partial install would leave those imports dangling.
-CONFIG_FILES=(CLAUDE.md java.md nuxeo.md)
+# partial install would leave those imports dangling. litellm-budget.py is the
+# statusLine/SessionStart-hook script settings.template.json wires in below;
+# it needs its executable bit preserved, which the copy loop below handles
+# for any file in this list, not just this one.
+CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py)
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -167,11 +170,16 @@ for f in "${CONFIG_FILES[@]}"; do
   [ -f "$src" ] || die "missing $src"
   if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
     act "$f unchanged"
-    continue
+  else
+    backup_if_needed "$dest"
+    act "write $f"
+    [ "$DRY_RUN" -eq 1 ] || cp "$src" "$dest"
   fi
-  backup_if_needed "$dest"
-  act "write $f"
-  [ "$DRY_RUN" -eq 1 ] || cp "$src" "$dest"
+  # cmp only checks content, so an unchanged file with the wrong mode (e.g.
+  # restored from a backup, or copied by hand) would otherwise stay non-executable.
+  if [ "$DRY_RUN" -eq 0 ] && [ -x "$src" ] && [ ! -x "$dest" ]; then
+    chmod +x "$dest"
+  fi
 done
 
 # settings.json is generated, not copied, so the template can stay secret-free.

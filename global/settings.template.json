@@ -30,6 +30,24 @@
     ]
   },
   "model": "opus[1m]",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/litellm-budget.py\" --hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 \"$HOME/.claude/litellm-budget.py\" --statusline",
+    "refreshInterval": 60
+  },
   "syntaxHighlightingDisabled": true,
   "tui": "fullscreen",
   "theme": "dark"

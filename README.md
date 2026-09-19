@@ -62,8 +62,9 @@ internally. `--auto-update` keeps it in sync with the repo.
 ### Global config (personal machines)
 
 The skills above are for anyone. This part is the repo author's own machine
-setup — global `CLAUDE.md` (plus the `java.md` / `nuxeo.md` it imports) and a
-generated `settings.json`:
+setup — global `CLAUDE.md` (plus the `java.md` / `nuxeo.md` it imports), the
+`litellm-budget.py` script that backs the statusline/session-start budget
+display, and a generated `settings.json` wiring both in:
 
 ```bash
 ./scripts/install-global.sh            # from a clone
@@ -90,6 +91,11 @@ is what a personal machine with no corporate gateway wants. Existing files are
 backed up to `.bak.<epoch>` before being replaced, re-running changes nothing if
 nothing differs, and `--dry-run` reports without writing.
 
+`settings.template.json` also pins `model` to `opus[1m]`. Re-running the
+installer restores that value, so a temporary model override made outside this
+repo (by hand, or by the client itself) does not survive a re-install — edit
+the template if you want a different default to stick.
+
 ### Marketplace distribution (optional, not set up)
 
 Claude Code also supports a plugin-marketplace mechanism
@@ -108,6 +114,7 @@ skills/<skill-name>/scripts/      # optional scripts the skill runs
 skills/<skill-name>/evals/        # claude plugin eval cases for the skill
 
 global/                           # author's global ~/.claude config
+global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/settings.template.json     # public-safe; secrets injected at install
 ```
 
