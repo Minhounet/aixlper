@@ -17,6 +17,22 @@ Portability rules for every skill in this repo:
   a specific client's tool names, unless a step genuinely differs per
   client (call that out explicitly).
 
+## Skill vs. agent: is this even a candidate?
+
+Before writing a new `SKILL.md`, check whether the thing being asked for
+actually fits the Skill shape. A Skill is packaged, on-demand
+*instructions* — declarative, portable, loaded into the calling session so
+the main Claude follows them itself with its own context and tools. If
+what's being described instead needs its own isolated context, its own
+tool allowlist or model, or genuinely separate/parallel execution
+(delegated work, not followed instructions) — that's a Claude Code
+**subagent** (`.claude/agents/*.md`), a different mechanism entirely.
+Subagents aren't portable to Gemini CLI, so they're structurally out of
+scope for this repo even when they'd be the better tool for the job.
+
+When a request is ambiguous, say which shape it looks like and why before
+starting, rather than force-fitting it into a `SKILL.md`.
+
 ## Active work: igiari-tdd and chottomatte-archi
 
 These two skills are being designed iteratively, directly with the repo's
