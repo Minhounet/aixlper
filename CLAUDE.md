@@ -44,9 +44,10 @@ when it hits one of these, not on vibes ("this feels agentic"):
 
 None of these apply → the step stays inline, followed by whichever Claude
 is running the skill. One or more apply → the skill's own instructions can
-still tell it to spawn a subagent for just that step (see `mr`'s
-background-draft step) without the skill itself stopping to be a portable
-`SKILL.md` — spawning the subagent is one instruction inside the recipe,
+still tell it to spawn a subagent for just that step — e.g. "draft this in
+the background when nobody's watching, then continue inline once it
+reports back" — without the skill itself stopping to be a portable
+`SKILL.md`. Spawning the subagent is one instruction inside the recipe,
 not what the recipe *is*.
 
 When a request is ambiguous, say which shape it looks like and why before
