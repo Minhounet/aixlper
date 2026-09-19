@@ -804,33 +804,71 @@ actually control:
 - **You only own the addon bundle** (the usual case): ship the fragment as
   a plain classpath resource inside the addon jar — never named
   `log4j2.xml`, which would collide with Nuxeo's own file — and merge it
-  programmatically at `applicationStarted`, the same post-boot hook
-  already used elsewhere in this skill:
+  programmatically when your component starts:
 
 ```java
 public class MyAddonComponent extends DefaultComponent {
 
-    @Override
-    public void applicationStarted(ComponentContext context) {
-        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
-        ConfigurationSource current = ctx.getConfiguration().getConfigurationSource();
-        ConfigurationSource mine = new ConfigurationSource(
-                getClass().getResourceAsStream("/log4j2-myaddon.xml"));
+    private static final String FRAGMENT = "/log4j2-myaddon.xml";
 
+    private static final Logger log = LogManager.getLogger(MyAddonComponent.class);
+
+    @Override
+    public void start(ComponentContext context) {
+        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+
+        if (ctx.getConfiguration() instanceof CompositeConfiguration) {
+            log.warn("Log4j2 config is already composite; not merging {}", FRAGMENT);
+            return;
+        }
+
+        ConfigurationSource base = ctx.getConfiguration().getConfigurationSource().resetInputStream();
+        InputStream fragment = getClass().getResourceAsStream(FRAGMENT);
+        if (base == null || fragment == null) {
+            log.warn("Not merging {}: base re-readable={}, fragment present={}",
+                    FRAGMENT, base != null, fragment != null);
+            return;
+        }
+
+        ConfigurationFactory factory = ConfigurationFactory.getInstance();
         List<AbstractConfiguration> configs = List.of(
-                (AbstractConfiguration) ConfigurationFactory.getInstance().getConfiguration(ctx, current),
-                (AbstractConfiguration) ConfigurationFactory.getInstance().getConfiguration(ctx, mine));
+                (AbstractConfiguration) factory.getConfiguration(ctx, base),
+                (AbstractConfiguration) factory.getConfiguration(ctx, new ConfigurationSource(fragment)));
 
         Configurator.reconfigure(new CompositeConfiguration(configs));
     }
 }
 ```
 
-Prefer the second form: it's self-contained in the addon artifact and
-works identically wherever the addon gets deployed — raw install,
-Marketplace package, or someone else's custom Docker image — with no
-environment-specific wiring to remember, the same "not env-dependent"
-payoff the interface-based patterns elsewhere in this skill earn.
+Three details in there are load-bearing, and each one fails **silently** if
+dropped — the merge replaces Nuxeo's real configuration with an empty one,
+so CONSOLE and FILE both vanish with no error logged anywhere:
+
+- **`start`, not `applicationStarted`.** The latter no longer exists on
+  `DefaultComponent` in current LTS; only `start(ComponentContext)` remains.
+- **`resetInputStream()`, never the live `ConfigurationSource`.**
+  `XmlConfiguration`'s constructor drains the source via `toByteArray` and
+  then closes it, and never calls `setData` — so handing that same source
+  back to the factory re-reads a *closed* stream. `resetInputStream()`
+  reopens it from the underlying file or URL, and returns `null` when it can
+  do neither.
+- **The `CompositeConfiguration` guard.** If the deployment already passes a
+  *multi-path* `-Dlog4j2.configurationFile`, the live configuration is
+  itself a composite, and `getConfigurationSource()` then answers
+  `ConfigurationSource.COMPOSITE_SOURCE` — an empty byte array. The two
+  forms above are therefore mutually exclusive: adopting this one means
+  cutting that flag back to a single path.
+
+**Scale the choice to how often the fragment actually changes.** The
+self-contained form is genuinely env-independent, but what buys that is a
+merge against global mutable state carrying the three silent failure modes
+above — spent to avoid editing a deployment descriptor. It earns its keep
+when appenders or layout change often, or when the deployment is truly not
+yours. It does not earn it when the recurring need is "give me DEBUG right
+now": that is a level bump, which the Automation operation below delivers on
+its own, with no merge, no guard, and nothing to change outside the addon.
+Reach for the operation first, and add the merge only once a concrete need
+to reshape the fragment outlives it.
 
 **Tradeoff that comes with the self-contained form: the jar-embedded
 fragment is not hot-editable.** Log4j2's `monitorInterval` file-watcher
@@ -871,11 +909,26 @@ public class SetLogLevel {
     @Param(name = "level") protected String level;
 
     @OperationMethod
-    public void run() {
-        Configurator.setLevel(loggerName, Level.toLevel(level));
+    public String run() {
+        return Option.of(Level.getLevel(level))
+                     .toEither(() -> new InvalidLevel(level))
+                     .peek(parsed -> Configurator.setLevel(loggerName, parsed))
+                     .fold(invalid -> {
+                         throw new NuxeoException("Unknown log level: " + invalid.levelName());
+                     }, applied -> loggerName + " -> " + applied);
     }
 }
 ```
+
+**`Level.getLevel`, never `Level.toLevel`.** The single-argument
+`toLevel(String)` answers `DEBUG` for any name it doesn't recognise, so an
+operator's typo — `"WARNING"`, or a trailing space — silently switches
+production to DEBUG instead of being rejected. `getLevel(String)` returns
+`null` for an unknown name, which is what lets the operation fail loudly.
+Keeping the parse in a small owned class (here, whatever produces
+`InvalidLevel`) rather than inline in the operation is what makes that
+rejection unit-testable without a Nuxeo runtime — the operation stays a thin
+adapter, per "the entry point isn't always yours" above.
 
 Reach for an external override path instead only when the actual need is
 structural — a new appender or filter added live — not a level bump.
@@ -888,7 +941,7 @@ environment can't tolerate a restart.** An ephemeral/immutable container
 orchestrator destroys and recreates it from the image, wiping anything
 placed by hand) can't use "drop the file in later" — Log4j2 only watches
 a `ConfigurationSource` it already loaded into the composite at
-`applicationStarted`; a file that didn't exist at boot was never handed
+component `start`; a file that didn't exist at boot was never handed
 to it, so creating one afterward inside the still-running container is
 invisible, restart or not. The fix is to always include the override
 path in the composite from boot — even as an empty/minimal stub config —
