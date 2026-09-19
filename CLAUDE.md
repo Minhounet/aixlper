@@ -306,6 +306,50 @@ permanently-maintained variants selected by config, but the fix — the `if`
 belongs at the composition point, never inside the use case — is the same
 either way.
 
+Latest addition (this session): a real question from Nuxeo addon work —
+how to activate a custom log4j2 config without ever touching Nuxeo's
+shipped `log4j2.xml` — settled as a new "Nuxeo addon logging" subsection
+under *Framework examples*. The mechanism is Log4j2's own Composite
+Configuration (not Nuxeo-specific), triggered one of two ways depending
+on what you control: `-Dlog4j2.configurationFile=file1,file2` via
+`JAVA_OPTS` in `nuxeo.conf`/the Docker image if you own the deployment,
+or — the addon-native, env-independent default — a fragment shipped as a
+classpath resource inside the addon jar, merged programmatically at
+`applicationStarted` via `Configurator.reconfigure(new
+CompositeConfiguration(...))`. Follow-up surfaced a real tradeoff: the
+jar-embedded form isn't hot-editable, since Log4j2's `monitorInterval`
+file-watcher needs a real filesystem `File` a jar resource can't provide
+— rebuilding/redeploying is the only way to change its content. That
+prompted separating two concerns with opposite lifetimes: the baseline
+config (survives restarts, defined programmatically) versus a temporary
+production debug bump (should *not* survive, reached for only during an
+incident). Per the author's explicit call, the skill documents both live
+level-change mechanisms — JMX (free, needs a reachable JMX port) and a
+small Automation operation wrapping `Configurator.setLevel(...)` (needs
+only Nuxeo's REST API, securable to Administrators, no exec/file access
+into the container) — as options with named tradeoffs for whoever
+operates the addon to pick between, rather than the skill prescribing one.
+An external-override-file variant is named as the escape hatch for the
+narrower case of needing live *structural* changes (new
+appenders/filters), not just a level bump.
+
+Immediate follow-up correction, from a real integration-environment
+constraint the author raised: that override-file variant, as first
+worded ("checked at `applicationStarted`, falling back to the
+jar-embedded default"), silently breaks in an ephemeral/immutable
+container — ops has exec access into the running instance, but
+restarting means the orchestrator destroys and recreates it from the
+image, so anything placed by hand has to survive with *zero* restart of
+anything, ever. Log4j2 only watches a `ConfigurationSource` already
+loaded into the composite at boot; a file that didn't exist yet at
+`applicationStarted` was never handed to it, so creating one afterward
+inside the still-running container is invisible regardless of restarts.
+Fixed by flipping the rule: the override path must always be seeded into
+the composite at boot (even as an empty stub) with `monitorInterval` set
+on it, never created on demand — that's what makes "exec in, edit the
+file, no restart of app or container" actually true rather than only
+true when a restart happens to be available.
+
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,
 and don't remove or "clean up" sections without the author asking.
