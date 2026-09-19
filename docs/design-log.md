@@ -2,8 +2,8 @@
 
 Session-by-session history for the repo's actively-evolving skills: every
 rule addition, correction, and worked example, with the reasoning behind
-it, in the order it happened. `CLAUDE.md` keeps a condensed, current
-settled-state summary for each of these skills (so a fresh session isn't
+it, in the order it happened. `CLAUDE.md`'s "Active work" section keeps
+only a one-line pointer to each of these skills (so a fresh session isn't
 paying to load all of this every time); this file is where the *why*
 behind a given rule lives, and where the running history keeps growing so
 sessions don't re-litigate settled decisions. Each `SKILL.md` remains the
