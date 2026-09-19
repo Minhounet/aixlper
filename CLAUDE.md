@@ -329,10 +329,26 @@ small Automation operation wrapping `Configurator.setLevel(...)` (needs
 only Nuxeo's REST API, securable to Administrators, no exec/file access
 into the container) — as options with named tradeoffs for whoever
 operates the addon to pick between, rather than the skill prescribing one.
-An external-override-file variant (checked at `applicationStarted`,
-falling back to the jar-embedded default) is named as the escape hatch
-for the narrower case of needing live *structural* changes (new
+An external-override-file variant is named as the escape hatch for the
+narrower case of needing live *structural* changes (new
 appenders/filters), not just a level bump.
+
+Immediate follow-up correction, from a real integration-environment
+constraint the author raised: that override-file variant, as first
+worded ("checked at `applicationStarted`, falling back to the
+jar-embedded default"), silently breaks in an ephemeral/immutable
+container — ops has exec access into the running instance, but
+restarting means the orchestrator destroys and recreates it from the
+image, so anything placed by hand has to survive with *zero* restart of
+anything, ever. Log4j2 only watches a `ConfigurationSource` already
+loaded into the composite at boot; a file that didn't exist yet at
+`applicationStarted` was never handed to it, so creating one afterward
+inside the still-running container is invisible regardless of restarts.
+Fixed by flipping the rule: the override path must always be seeded into
+the composite at boot (even as an empty stub) with `monitorInterval` set
+on it, never created on demand — that's what makes "exec in, edit the
+file, no restart of app or container" actually true rather than only
+true when a restart happens to be available.
 
 Expect both files to keep growing with more rules, examples, and
 preferences from ongoing conversation — don't treat either as complete,

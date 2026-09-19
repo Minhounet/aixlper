@@ -877,12 +877,27 @@ public class SetLogLevel {
 }
 ```
 
-Reach for an external override path instead (checked at
-`applicationStarted`, falling back to the jar-embedded fragment when
-absent) only when the actual need is structural — a new appender or
-filter added live — not a level bump. That's the one case where
-`monitorInterval`'s file-watching genuinely earns back the
-env-dependency the jar-embedded form was chosen to avoid.
+Reach for an external override path instead only when the actual need is
+structural — a new appender or filter added live — not a level bump.
+That's the one case where `monitorInterval`'s file-watching genuinely
+earns back the env-dependency the jar-embedded form was chosen to avoid.
+
+**This route must be seeded at boot, not created on demand, if the
+environment can't tolerate a restart.** An ephemeral/immutable container
+(ops has exec access into the running instance, but restarting means the
+orchestrator destroys and recreates it from the image, wiping anything
+placed by hand) can't use "drop the file in later" — Log4j2 only watches
+a `ConfigurationSource` it already loaded into the composite at
+`applicationStarted`; a file that didn't exist at boot was never handed
+to it, so creating one afterward inside the still-running container is
+invisible, restart or not. The fix is to always include the override
+path in the composite from boot — even as an empty/minimal stub config —
+with `monitorInterval` set on that source. Then a later exec-in-and-edit
+is picked up by Log4j2's own watcher with zero restart of the app or the
+container, which is the actual requirement in that kind of environment.
+"Checked at startup, falls back to the jar-embedded default if absent" is
+the wrong shape here — it silently drops this capability exactly where
+it's needed most.
 
 ### Testing across the seam
 
