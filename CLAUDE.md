@@ -30,6 +30,25 @@ tool allowlist or model, or genuinely separate/parallel execution
 Subagents aren't portable to Gemini CLI, so they're structurally out of
 scope for this repo even when they'd be the better tool for the job.
 
+Most requests are the "recipe" case: the whole thing is a Skill, and the
+decision is per-*step*, not per-skill — does any individual step need to
+be delegated rather than followed inline? A step needs an actual subagent
+when it hits one of these, not on vibes ("this feels agentic"):
+1. It needs a tool allowlist narrower or different from the calling
+   session's (e.g. a reviewer that must never get `Edit`/`Write`).
+2. It needs a different model (cheaper/faster for one narrow job).
+3. It needs to run in parallel or in the background without its
+   intermediate noise polluting the caller's context.
+4. It needs to be addressable on its own — resumed later, messaged,
+   named independently of whoever invoked it first.
+
+None of these apply → the step stays inline, followed by whichever Claude
+is running the skill. One or more apply → the skill's own instructions can
+still tell it to spawn a subagent for just that step (see `mr`'s
+background-draft step) without the skill itself stopping to be a portable
+`SKILL.md` — spawning the subagent is one instruction inside the recipe,
+not what the recipe *is*.
+
 When a request is ambiguous, say which shape it looks like and why before
 starting, rather than force-fitting it into a `SKILL.md`.
 
