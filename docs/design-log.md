@@ -777,3 +777,57 @@ session hygiene (the global "warn when context is heavy" rule is advisory;
 making it a concrete threshold would likely beat everything done here) and
 model routing (`settings.template.json` pins one model, but validation,
 commit messages and log edits don't need the largest one).
+
+### Running the inner loop through the IDE instead of the build tool
+
+Author's idea, from the same session: TDD is normally done in the IDE — could
+`igiari-tdd`'s cycle use it, and would it save tokens? Yes on both, and it is
+probably the largest saving still available in this skill, because it applies
+*per cycle* rather than once.
+
+What you pay per cycle is whatever the test run returns. A bounded build run
+(`mvn -B --no-transfer-progress test -Dtest=X | tail -30`) still costs ~20-30
+lines of surefire banner, reactor summary, BUILD SUCCESS and timing — roughly
+300-600 tokens. An IDE runner reached over MCP returns a structured result —
+test name, status, and on failure the assertion message and line — for perhaps
+30-80 tokens green. Call it 5-10× per cycle, multiplied by cycle count, and it
+recurs on every task, unlike the one-time file trimming. A build tool spends
+most of its output describing the build; the IDE already compiled and indexed,
+so it only describes the test.
+
+A cost already sunk in this author's case, worth stating because it is not
+obvious: connecting an MCP server puts its tool schemas in the system prompt of
+*every* session, a fixed resident cost. Adding the JetBrains server purely for
+this could fail to pay off. `kaizen-refactor` already uses it for inspections,
+so the overhead is paid and the per-cycle saving is pure gain.
+
+Written into the skill as **unverified**, the same status as
+`mujitsu-documentum`, gated on two one-time checks per project:
+
+1. **Does the server expose a test runner at all?** `kaizen-refactor` only
+   documents `mcp__idea__lint_files` and `mcp__idea__get_file_problems` —
+   inspection, not execution. Unconfirmed from this session, which had no IDE
+   MCP reachable.
+2. **Does the IDE runner agree with the build?** The one that actually
+   matters. An IDE run may not apply surefire's `argLine` (JaCoCo,
+   `--add-opens`), system properties, active profiles or resource filtering.
+   If the IDE passes where `mvn test` fails, every red and green in the cycle
+   is unreliable and the skill's core guarantee is gone. Settled rule:
+   **correctness of the red is not negotiable for a token saving** — where
+   they diverge, the build tool wins.
+
+Scope limit recorded with it: this replaces the *scoped* run only. Rule 7's
+terminal full build and `chottomatte-archi`'s post-structural-change build stay
+build-tool jobs, since an IDE run proves a test passes, not that the reactor,
+packaging and composition root still build. The bounded commands stay as the
+fallback for no-IDE, CI and fresh-machine cases — framed portably ("if your
+client exposes an IDE integration") per the repo's tool-agnostic rule, with
+`kaizen-refactor`'s naming of `mcp__idea__*` as the precedent.
+
+**Separate finding, larger than the skills.** `global/settings.template.json`
+pins `"model": "opus[1m]"`. The cached pricing table puts Opus 5 at $5/$25 per
+MTok with 1M context standard, and no long-context premium was confirmed — so
+the cost issue is not the rate but the *ceiling*: a 200K window forces a fresh
+session, while 1M lets one balloon five times larger, with every turn
+re-sending all of it. Flagged to the author as plausibly outweighing everything
+done in this repo, and left as their decision.
