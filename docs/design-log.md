@@ -612,3 +612,168 @@ have no accessor), and the worked example no longer claims a clean pass on
 all three checks — it routes through the same section's "say so explicitly"
 clause instead. Settled rule: a Tier 1 entry may carry a precondition the
 reader can check at the call site, never an unstated one.
+
+## Token cost: progressive disclosure and output discipline
+
+Cross-cutting session, triggered by the author reporting roughly **$100/day**
+on Claude while doing genuinely heavy work. The brief was to analyse all
+skills and cut token cost drastically. Unlike the sections above this one
+touches every skill plus `global/`, so it lives on its own.
+
+**Where the tokens actually were.** An audit found ~28,500 tokens resident
+before a single line of the author's code was read: ~4,100 always-on
+(`global/CLAUDE.md` plus the `java.md` and `nuxeo.md` it `@`-imported, and
+the eight skill descriptions, which are permanently resident by design),
+and ~24,400 more the moment a Java session triggered `chottomatte-archi` +
+`igiari-tdd` + `kanpeki-fp` together. All of it re-sent every turn.
+
+**Root cause: `references/` was documented but unused.** `CLAUDE.md` listed
+`skills/<name>/references/` in the repository layout, and
+`validate_skills.py` only ever checks `SKILL.md`, so the directory was
+available and validated — but not one skill had one. Every skill loaded
+whole. The clearest case was `chottomatte-archi`: of 59KB, ~23KB was
+Nuxeo-specific (composite log4j2, platform-seeded vocabularies, addon Maven
+packaging) loading on *every* Java session, including plain-Java and Spring
+work where it is dead weight.
+
+**Decision: relocate, never delete.** The standing rule that active-work
+skills don't get "cleaned up" without the author asking stays in force under
+a token brief. Nothing was removed — content moved to `references/` behind a
+pointer, and the totals show it: 157.5KB of `SKILL.md` became 130KB resident
+plus 47KB of references, i.e. the corpus *grew* by the pointer tables while
+what loads shrank.
+
+### The correction: a reference is only cheaper if it's read *sometimes*
+
+The first pass split `igiari-tdd`'s Maven/Gradle build commands into
+`references/build-commands.md`. The author asked the right question — *"do
+you think that reading gradle or maven costs?"* — and the answer exposed a
+real error.
+
+Settled rule, now in every skill's self-audit: **content read on
+essentially every trigger costs more split out than inline.** Inline, it
+sits in the cached prefix and is charged at the cache-read rate on every
+later turn. Split, the same tokens arrive via the tool result anyway, *plus*
+an extra assistant turn to decide to read it (output tokens, the most
+expensive kind), plus the tool-call overhead, plus they land after the
+prefix instead of inside it. `igiari-tdd`'s cycle runs a scoped build every
+step, so that reference would have opened in ~100% of sessions. The ~15
+lines of actual invocations came back inline; the reference kept only what
+is genuinely occasional — the evidence escalation ladder, mvnd daemon
+timings, Gradle cache-honesty analysis, the Maven crossover math.
+
+A second instance of the same mistake, found by applying the new rule to
+the other five references: `testing-across-the-seam.md` is ~90% Nuxeo
+`FeaturesRunner` and Documentum/DFC detail and *is* correctly conditional,
+but its pointer read "writing tests that cross the interface boundary" —
+broad enough to open it on every seam test. Corollary rule: **the split can
+be right and the pointer still wrong.** A pointer must name the condition
+narrowly enough to decide from without opening the file. The universal
+two-tier rule (use case tests stay pure unit tests; adapter tests only prove
+translation) moved inline, and the pointer now names the framework case.
+
+Read-rate estimates for the remaining references are just that — estimates.
+`ecm-ports.md` and `spring.md` are the ones to watch: if the author is
+nearly always on Nuxeo/Documentum, `ecm-ports.md` will open most sessions
+and belongs back inline by the rule above. With no `evals/` directory on any
+skill there is no automated way to measure this; a real session opening a
+reference you expected it to skip is the signal.
+
+### Command output is tokens too — and it repeats
+
+The author's follow-up — *"gradle command display lots of log, is it
+considered as token?"* — turned out to be the larger lever, and reframed the
+whole exercise.
+
+It is, and it is worse than skill text in three ways: skill text is a stable
+cached prefix (paid once, ~10% thereafter) while build output lands in the
+growing suffix at full rate; it repeats **every cycle**, and `igiari-tdd`
+builds on every red and every green; and it scales with the size of the
+author's project rather than the size of the skill. Ten cycles of a chatty
+Gradle run can plausibly out-cost the entire trimmed skill set. Sharpest
+detail: `igiari-tdd`'s own evidence escalation ladder recommended
+`./gradlew ... -i` as its *first* rung — INFO logs every task and every
+dependency resolution, a token bomb sitting inside a loop. Now gated behind
+plain console genuinely showing nothing, for one diagnostic run, then
+dropped.
+
+Standing rules added: Maven always `-B --no-transfer-progress`, Gradle
+always `--console=plain`, both bounded with `tail`; and **on green, the
+summary line plus exit 0 is sufficient evidence for rule 8** — don't echo
+the run. Unfiltered output only while diagnosing an actual failure, and only
+for that run. (Accepted trade: `2>&1 | tail -30` can truncate a startup or
+dependency-resolution failure, which needs one unfiltered rerun. Fine for an
+assertion failure, where the message is at the end.)
+
+An audit of all eight skills for commands whose output reaches context then
+found three more, and the three recurring *shapes* are the useful outcome:
+
+1. **A verbosity flag inside a loop** — Gradle `-i`, `idea inspect -v2`.
+   Cost multiplies by iteration count.
+2. **A machine-readable report read raw** — `kaizen-refactor` pointed at
+   `qodana.sarif.json` as "a report you can read and triage". SARIF nests
+   every finding and repeats full rule metadata, so a whole-project report
+   reaches megabytes and can cost more than the refactor it is guiding. Now:
+   scope the scan, `uniq -c` by `ruleId` first to see the shape, then one
+   line per finding via `jq`.
+3. **Per-item success logging** — `kurae-bash`'s `expect_eq` printed a line
+   per *passing* assertion (200 lines of nothing for a 200-test suite); a
+   Documentum bulk loop echoing per object over 100k objects is 100k lines.
+   Report failures plus a one-line total; let exit status carry the verdict;
+   echo once per packet, never once per object.
+
+`chottomatte-archi` was the miss worth recording: it mandates a full build
+after any structural change, gave no command, and — by its own rules — that
+build's *expected* first result is mass failure, since every test
+constructing the changed class breaks at once. The default path was
+therefore "run unbounded, read hundreds of stack traces, learn what you
+already knew". It now greps the broken call sites out, works that list, and
+reads a full trace only for a failure that is not a mechanical constructor
+mismatch. `mujitsu-documentum` was already disciplined by habit (`COUNT(*)`,
+`grep` at the source, `head -1`) — made deliberate rather than changed.
+`gyakuten-ddd`, `kanpeki-fp` and `objection-conception` run no commands.
+
+### The self-audit section, and its honest cost
+
+Every skill gained a **"Token self-audit"** section at the author's request:
+is anything here needed only *sometimes* (→ `references/`); is any reference
+opened on almost every trigger (→ back inline); does any step run a command
+(→ its output owes the same discipline). Plus the two invariants: never
+split a rule from its own statement, and relocate rather than delete, since
+dropping guidance to save tokens is a regression, not a saving.
+
+This is self-referentially expensive and was accepted knowingly: ~1,100
+chars per skill, so a three-skill Java session gives back ~830 tokens
+against ~10,000 saved, about 8%. Justified as the mechanism that stops the
+files regrowing — but it is a real cost, and trimming it to two bullets is a
+legitimate future call.
+
+### Global config
+
+`global/CLAUDE.md` `@`-imported `java.md` and `nuxeo.md` unconditionally, so
+8.5KB of Java and Nuxeo platform rules loaded into every session regardless
+of subject — including bash, markdown and Python work, and including
+sessions in this markdown-only repo. Both are now pointed at, to be read on
+demand when a session turns out to match. They still install verbatim;
+`install-global.sh` keeps copying them, since a missing file would leave the
+pointers dangling.
+
+`CLAUDE.md`'s four "Active work" blocks, which restated rules each
+`SKILL.md` already owns and this log already explains, were condensed to a
+state table plus the cross-skill rules that live nowhere else (19.5KB →
+12.7KB). The progressive-disclosure convention itself was written into
+`CLAUDE.md`'s layout section so new skills keep `SKILL.md` small instead of
+regrowing.
+
+**Net:** a Java session went from ~97.7KB to ~65.9KB of resident
+instructions (~24,400 → ~16,500 tokens), after deliberately spending some of
+the saving back on inlined hot-path commands and the self-audit blocks.
+
+**Flagged, not done.** The skill descriptions (~4,645 chars, permanently
+resident across all eight) are a real target but trimming them is a rewrite
+that risks mis-triggering, so it was left under the session's relocate-only
+brief. Beyond the repo, the two larger levers on a $100/day habit are
+session hygiene (the global "warn when context is heavy" rule is advisory;
+making it a concrete threshold would likely beat everything done here) and
+model routing (`settings.template.json` pins one model, but validation,
+commit messages and log edits don't need the largest one).

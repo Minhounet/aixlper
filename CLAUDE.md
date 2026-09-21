@@ -143,6 +143,15 @@ when..."; and make the pointer specific enough to decide from without
 opening the file. A `SKILL.md` past ~20KB almost certainly has a reference
 hiding in it.
 
+The inverse matters just as much: a reference opened on almost every
+trigger costs *more* than inline — the tokens arrive via the tool result
+anyway, plus an extra turn to decide to read it and a lost prefix cache.
+And a step that runs a command owes the same discipline to its **output**,
+which is charged per run and kept for the session: suppress progress and
+debug noise, and bound what gets echoed. Every `SKILL.md` carries a "Token
+self-audit" section stating these; `docs/design-log.md` has the full
+reasoning, including the two cases where this repo got it wrong first.
+
 ## Build / CI
 
 There's nothing to compile — skills are plain markdown+YAML read directly
