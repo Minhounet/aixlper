@@ -146,6 +146,22 @@ over-trusting-your-own-read failure mode the test run exists to catch.
      ```bash
      qodana scan --results-dir ./qodana-results
      ```
+     **Never read `qodana.sarif.json` directly.** SARIF wraps every finding
+     in deeply nested JSON and repeats full rule metadata, so a
+     whole-project report can run to megabytes — reading it raw can cost
+     more tokens than the entire refactor. Scan the package under review
+     rather than the whole project where you can, then extract only what
+     triage needs. Count by rule first, to see the shape before reading
+     anything individually:
+     ```bash
+     jq -r '.runs[].results[].ruleId' qodana-results/qodana.sarif.json \
+       | sort | uniq -c | sort -rn
+
+     # then the findings themselves, one line each
+     jq -r '.runs[].results[]
+            | "\(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine) \(.ruleId) \(.message.text)"' \
+       qodana-results/qodana.sarif.json
+     ```
    - **`idea inspect`** — bundled with the IDE itself, as `inspect.sh` /
      `inspect.bat` in its `bin/` directory (or the `inspect` subcommand of
      an `idea` launcher already on PATH):
@@ -154,7 +170,10 @@ over-trusting-your-own-read failure mode the test run exists to catch.
      ```
      Requires a project with its SDK properly configured, and won't run
      while another instance of the same IDE is open. Results land as one
-     XML file per inspection ID under `<output-path>`.
+     XML file per inspection ID under `<output-path>`. Scope it with
+     `-d <subdirectory-path>`, read the per-inspection files you actually
+     need rather than the whole output directory, and prefer `-v1` over
+     `-v2` — the extra verbosity is progress chatter, not findings.
 2. Triage every finding into Tier 1 or Tier 2 before applying any of
    them. Don't act on a finding while still triaging the next one.
 3. Apply all Tier 1 findings, then run the test suite once.

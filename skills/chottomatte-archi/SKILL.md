@@ -339,6 +339,24 @@ test coverage to justify — "no behavior changed" is not a reason to leave
 a test broken, since a broken build is exactly what the rule above exists
 to catch.
 
+**Bound the full build's output.** A full build prints far more than a
+scoped run, and here mass failure is the *expected* first result — every
+test constructing the changed class breaks at once. Reading hundreds of
+stack traces to learn that costs a great deal and tells you nothing: what
+you need is the list of broken call sites.
+
+```bash
+# Maven — the call sites to fix, not the traces
+mvn -B --no-transfer-progress test 2>&1 | grep -E "^\[ERROR\].*\.java" | sort -u
+
+# Gradle
+./gradlew build --console=plain 2>&1 | grep -E "\.java:[0-9]+" | sort -u
+```
+
+Work that list, re-run, and only read a full trace for a failure that is
+*not* a mechanical constructor mismatch. Once green, the summary line
+alone is sufficient evidence — don't echo the suite.
+
 ## Repository return types
 
 - A repository method returns the domain object itself — an

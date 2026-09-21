@@ -221,12 +221,22 @@ source "path/to/module_under_test.sh"
 
 PASS=0; FAIL=0
 expect_eq() {
-  if [[ "$2" == "$3" ]]; then echo "  ✅ $1"; PASS=$((PASS+1))
+  if [[ "$2" == "$3" ]]; then PASS=$((PASS+1))            # quiet on pass
   else echo "  ❌ $1: got [$2] want [$3]"; FAIL=$((FAIL+1)); fi
 }
 
 expect_eq "my case" "$(my_function arg)" "expected output"
+
+echo "${PASS} passed, ${FAIL} failed"
+[[ $FAIL -eq 0 ]]   # exit status carries the result
 ```
+
+- **Report failures, not passes.** A line per passing assertion turns a
+  200-test suite into 200 lines that say nothing — noise in a terminal,
+  and billable context when an agent is the one reading it. Print only
+  failures plus a one-line total, and let the exit status carry the
+  verdict. Add a `VERBOSE=1` opt-in if you want the per-case ✅ back while
+  debugging a single file.
 
 ## 9. Strict mode as the default posture
 
