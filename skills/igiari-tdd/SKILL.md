@@ -358,10 +358,20 @@ one. On that same project the two together took the cycle from 21.9s to 6.5s.
 `-DforkCount=0` is a cycle-only flag, and only once you have checked its two
 conditions: no `argLine` and no jacoco anywhere in the build. Surefire discards both
 without warning when it does not fork, so you would keep green tests and silently
-lose coverage. Never use it for the end-of-task full build. Note too that under
-`mvnd` the daemon outlives the cycle, so with no fork, JVM-global state (static
-registries, counters, caches) now persists across runs — `mvnd --stop` clears it when
-results look impossible.
+lose coverage. Never use it for the end-of-task full build.
+
+**Never use it for a test that boots an application runtime in-JVM** — a Nuxeo
+`FeaturesRunner` test, an embedded container, anything that stands a framework up
+inside the test JVM. With no fork that runtime boots inside the `mvnd` daemon, and the
+daemon outlives the cycle, so the *second* run in the same daemon fails where the first
+passed. Measured on one such class: 5 tests green in 4.8s on a cold daemon, then
+`Error while invoking start on features: [...]` with 1 test reported on every run after,
+until `mvnd --stop`. It does not degrade gracefully and it does not look like a
+build-tool problem — it looks like the code under test broke, which in a TDD loop is the
+most expensive possible lie. Plain unit tests are unaffected; keep the flag for those.
+
+More generally, with no fork JVM-global state (static registries, counters, caches)
+persists across runs — `mvnd --stop` clears it when results look impossible.
 
 **Do not buy the last second by dropping `-am`.** It is measurably faster, but the
 module then compiles against the sibling's jar in the local repository, which goes
@@ -375,9 +385,45 @@ speedup that can make a green cycle lie to you.
 ./gradlew test --tests "com.example.ClassNameTest"
 ./gradlew test --tests "com.example.ClassNameTest.methodName"
 
+# continuous — re-runs that scoped test on every save; the closest fit to this loop
+./gradlew test --tests "com.example.ClassNameTest" --continuous
+
 # full (end of task only, once)
 ./gradlew build
 ```
+
+`--continuous` (short `-t`) is the nearest thing either tool has to a TDD mode: it
+watches the task's inputs and re-runs on save, so red and green cost no command at all.
+Rule 8 is unchanged — quote the output of each re-run.
+
+**A green Gradle run does not always mean the test ran — but it is usually still honest.**
+An edit that changes bytecode always re-runs the test, so the normal red/green cycle is
+safe. What Gradle skips is the cases where skipping is correct: a comment-only edit leaves
+the task `UP-TO-DATE`, and reverting to a state it already tested comes back `FROM-CACHE`
+in a fraction of a second — in both the compiled program is identical to one that genuinely
+passed.
+
+The real exposure is inputs Gradle does not track: a file read from outside the task's
+declared inputs, an environment variable, the clock, or an external service (a database, a
+container, a remote endpoint). Those can change while Gradle's inputs do not, and it will
+serve a cached green.
+
+When a checkpoint has to be trustworthy, force execution with `--rerun` (one task) or
+`--no-build-cache`:
+
+```bash
+./gradlew test --tests "com.example.ClassNameTest" --rerun
+```
+
+**Not `cleanTest`** — it deletes the task's outputs, and with the cache on Gradle simply
+restores them: `> Task :…:test FROM-CACHE`, 927ms, nothing executed.
+
+**Gradle loses each inner-loop run and wins the session.** Measured on one multi-module
+project: 3217ms median per single-test run against Maven's 2840ms, but 7.6s against
+26.7s on the full suite, since it runs each module's tests in parallel in reused JVMs.
+The crossover is roughly 50 single-test runs per full-suite run — below that Gradle is
+ahead across a whole task, which a cycle with a refactor checkpoint comfortably is. This
+is not a reason to introduce Gradle: use whichever build the project already has.
 
 ## Getting evidence when the build tool fights you
 
