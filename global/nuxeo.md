@@ -30,6 +30,41 @@ Always add a `<documentation>` tag inside every OSGI-INF component definition. I
 </component>
 ```
 
+## Audit events: contributing the name is not enough
+
+Declaring an event under `org.nuxeo.audit.service.AuditComponent` / `event`
+makes it persist. It does **not** make it reachable from the UI, and the two
+registries are unrelated — nothing warns you about the gap.
+
+The Web UI **History tab and `/admin/audit` are the same element**
+(`nuxeo-audit-search`; the `DOCUMENT_VIEWS_PAGES` slot renders it with a
+`document` bound). Its two filters are `nuxeo-directory-suggestion` widgets
+over the `eventTypes` and `eventCategories` vocabularies, with no free-text
+fallback — so an event missing from those vocabularies **cannot be selected
+at all**, however well it persists. Adding the rows is a separate piece of
+work from contributing the event; see chottomatte-archi's *Nuxeo
+platform-seeded vocabularies* for how to add them without destroying the
+platform's own.
+
+Labels are a third, separate thing, and there are two different key shapes:
+
+| Where | Key | Fallback when missing |
+|---|---|---|
+| Filter dropdown | the row's own `label` field, resolved as an i18n key (platform rows set `label` == `id`, e.g. `eventDocumentCategory=Document`) | the raw id |
+| History "Performed action" column | `eventType.<eventId>` | the literal key |
+| History "Category" column | `eventCategory.<category>` | the literal key |
+
+The column keys fall back to the **key itself**, not the id, so an untranslated
+custom event reads as `eventType.myCustomEvent` on screen. Contribute all
+three in the Studio project's `data/i18n`, which is where a Studio-based
+project normally owns its translations.
+
+One thing no filter can fix: a purged document's audit entries are
+unreachable from any document-scoped screen — `GET /api/v1/id/{docId}` and
+`/@audit` both return 404 once the document is gone, even though the entries
+survive with that `docUUID`. A destruction event is therefore never visible
+in the History tab, and needs its own screen.
+
 ## Gradle for dev speed, Maven mandatory for release
 
 A Nuxeo addon can never fully drop Maven: the marketplace package and the OSGi

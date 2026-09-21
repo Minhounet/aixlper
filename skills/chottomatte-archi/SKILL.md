@@ -594,6 +594,25 @@ core:
   general-purpose repository mirroring the whole SDK API. A narrow port is
   cheap to adapt; a wide, speculative one is the expensive one people run
   into.
+
+  Narrowness also buys **safety**, not only cost. An operation the port
+  does not declare is one no adapter can perform and no later change can
+  reintroduce by accident — the guarantee is enforced by the compiler
+  instead of by everyone remembering it. So when a seam has an operation
+  that must *never* happen, the way to express that is to leave it out of
+  the interface, not to document it. A port that appends rows to a
+  platform-owned vocabulary and declares `contains` + `add` and nothing
+  else cannot delete or overwrite one, whatever a future adapter does:
+
+  ```java
+  public interface AuditVocabulary {
+      boolean contains(String directoryName, String entryId);
+      void add(String directoryName, String entryId, int ordering);
+  }
+  ```
+
+  Write the dangerous method only when a use case genuinely needs it —
+  and then it arrives reviewed, rather than sitting there available.
 - One adapter class maps the SDK type ↔ your domain object, touching only
   the fields the use case needs — the same per-entity mapper pattern as
   the `Response` mapping above, reused here on the inbound side.
@@ -618,6 +637,15 @@ core:
   translation happens — which means the repository/gateway adapters and
   the use case itself are constructed per-invocation in `handleEvent`,
   not once in the listener's constructor.
+- Nuxeo, same family of lifecycle trap, different entry point: code
+  running in a component's `start(...)` has **no principal logged in**.
+  A permission-checked call there — a directory write, for instance —
+  fails with `User null does not have Write permission`, and wrapping it
+  in `TransactionHelper.runInTransaction(...)` does not help, because the
+  missing thing is an identity, not a transaction. Wrap the body in
+  `Framework.doPrivileged(...)` as well. No unit test can catch this: the
+  adapter is exercised through an in-memory fake, so it only ever shows up
+  on a real instance.
 
 ```java
 public class ContractStatusListener implements EventListener {
@@ -951,6 +979,62 @@ container, which is the actual requirement in that kind of environment.
 "Checked at startup, falls back to the jar-embedded default if absent" is
 the wrong shape here — it silently drops this capability exactly where
 it's needed most.
+
+### Nuxeo platform-seeded vocabularies: append at runtime, never take over the dataFile
+
+Same principle as the log4j2 case above, on a different platform-owned
+resource. Some Nuxeo vocabularies are the platform's, not yours —
+`eventTypes` and `eventCategories` are seeded from CSVs shipped inside
+`nuxeo-platform-audit-core`. An addon that contributes its own audit events
+has to get them into those vocabularies or they are invisible to anything
+reading the vocabulary, but it must not take ownership of them.
+
+The obvious declarative move is the destructive one:
+
+```xml
+<!-- WRONG: replaces the platform CSV, does not add to it -->
+<directory name="eventTypes" extends="template-vocabulary">
+  <dataFile>directories/my-event-types.csv</dataFile>
+</directory>
+```
+
+`BaseDirectoryDescriptor` holds a **single `dataFileName`** field, so a
+second contribution for the same directory overrides the platform's rather
+than merging with it. What makes this genuinely dangerous is *when* it
+fails: `createTablePolicy` is `on_missing_columns`, so on an existing
+database the table is already populated and nothing appears to happen —
+the override looks harmless. The built-in rows vanish only when the table
+is next created, i.e. on a fresh environment or a rebuilt one, long after
+the change was reviewed and merged.
+
+Append at runtime instead, from a `DefaultComponent` whose
+`getApplicationStartedOrder()` puts it after the directory service, behind
+a narrow port that cannot do anything but add (see *keep the port narrow*
+above — this is the safety argument, not the cost one):
+
+```java
+@Override
+public void start(ComponentContext context) {
+    super.start(context);
+    // doPrivileged as well as runInTransaction: component start has no principal.
+    TransactionHelper.runInTransaction(() -> Framework.doPrivileged(this::seed));
+}
+```
+
+Make the seeding **idempotent by construction** — read the entry, add only
+what is absent — because it runs on every start, and a blind
+`createEntry` throws a duplicate-key `DirectoryException` the second time.
+Verify it on a real instance rather than by reasoning: diff the full set of
+row ids before and after, not the row count, then restart once to prove
+idempotence, then delete one seeded row and restart to prove the component
+actually still runs and re-adds only that one. Unchanged counts alone
+cannot distinguish "correctly did nothing" from "never executed".
+
+One thing this does *not* buy: the vocabulary row makes the value
+selectable, not readable. Nuxeo resolves a row's `label` field as an i18n
+key, and platform rows set `label` equal to `id` — so an unseeded
+translation shows the raw id. That part is a translation contribution, not
+an architecture concern.
 
 ### Testing across the seam
 
