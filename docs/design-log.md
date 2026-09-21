@@ -831,3 +831,61 @@ the cost issue is not the rate but the *ceiling*: a 200K window forces a fresh
 session, while 1M lets one balloon five times larger, with every turn
 re-sending all of it. Flagged to the author as plausibly outweighing everything
 done in this repo, and left as their decision.
+
+### Eval suites for the two Java skills, and the model question
+
+`make eval` had been wired up since the start with no skill ever having an
+`evals/` directory — the infrastructure existed, unused. Written now because
+the session's open question ("should I move to Sonnet?") is a measurable one
+and guessing at it is exactly what that infrastructure was built to avoid.
+
+Six cases, three per skill, chosen so each targets a rule the skill uniquely
+causes — which is what makes the with/without ablation delta mean anything. A
+case testing "writes a test first" would score well without the skill too and
+tell us nothing.
+
+**`igiari-tdd`** — `plan-then-one-test` (the test-plan approval gate, exactly
+one failing test first, `should<X>_when<Y>` naming; the grader explicitly
+states that stopping at the plan is a PASS, not an incomplete answer, and that
+delivering the whole feature is the failure being detected);
+`triangulate-before-generalizing` (one red test for `RomanNumeral.of(1)` — a
+loop or lookup table fails the case even though it is correct code, since
+solving ahead of the current test is the defect); `scoped-build-and-evidence`
+(scoped to one test, `-B`/`--no-transfer-progress`, bounded output, and a real
+observed red rather than a non-zero exit code).
+
+**`chottomatte-archi`** — `plan-structure-first` (the structural approval gate,
+plus Spring kept out of core and the existing `MailSender` bean reached through
+an owned interface); `invert-nondeterministic-dependency` (the skill's precise
+line: `Instant.now()` and `UUID.randomUUID()` go behind owned ports while
+`Math.max` is deliberately left alone — the case fails an answer that wraps
+`Math.max`, or that justifies wrapping on "static" rather than
+non-determinism); `repository-returns-domain` (a `String
+findCustomerNameById` that must become a `Customer`, with the use case
+mapping to its own `Response` rather than returning the entity).
+
+Validated rather than handed over untested: one case run end to end scored 1.00
+at **$0.27 for a single run**. That price is the thing to note — the default is
+3 runs per case and the ablation adds a second arm, so a full `make eval` over
+six cases is roughly **36 runs, on the order of $10**. Not a per-commit CI
+check at that cost; `--case`, `--runs 1` and `--ablation none` are the cheap
+smoke-test path, and `--max-cost-usd` bounds any run. `skills/*/evals/results/`
+is gitignored — transcripts and the HTML report are regenerated output.
+
+The model question these exist to settle: `claude plugin eval --model <model>`
+runs the same suite against a different model, so "does Sonnet follow these
+skills as well as Opus?" becomes a score comparison rather than a judgment
+call.
+
+**Asked and answered: should the skills detect the model and adapt?** No, and
+they should not try. A skill is markdown with no runtime — it cannot query the
+serving model, and self-reported identity is unreliable in exactly the way that
+matters (a session's configured model and the model actually serving a turn can
+differ, through fallback or a mid-session switch). Even given a reliable
+answer, branching a skill on model identity doubles its behavioral surface and
+leaves the branch that runs on the cheaper model the less-tested one — the
+opposite of what these skills are for, which is removing judgment from the
+model by writing the rule down once. The routing decision belongs outside the
+skill, with the person choosing the model, informed by eval scores. What a
+skill may legitimately carry is a statement of what it *assumes* — and both
+already do, in their non-negotiable rules.
