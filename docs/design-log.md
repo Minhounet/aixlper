@@ -889,3 +889,69 @@ model by writing the rule down once. The routing decision belongs outside the
 skill, with the person choosing the model, informed by eval scores. What a
 skill may legitimately carry is a statement of what it *assumes* — and both
 already do, in their non-negotiable rules.
+
+### First eval run: Sonnet vs Opus, and what it actually measured
+
+Ran both suites against both models, `--ablation none --runs 3`. Total spend
+about $10. Headline: **the Sonnet-vs-Opus question is not settled by this run**,
+because grader wording moved the scores more than model choice did.
+
+Raw numbers (igiari-tdd on its original graders; chottomatte-archi's
+`invert` case on its third grader revision):
+
+| case | Sonnet | Opus |
+|---|---|---|
+| `triangulate-before-generalizing` | 1.00 | 1.00 |
+| `plan-then-one-test` | 0.75 | 0.50 |
+| `scoped-build-and-evidence` | 0.89 | 0.89 |
+| `repository-returns-domain` | 1.00 | 1.00 |
+| `plan-structure-first` | 0.67 | 0.87 |
+| `invert-nondeterministic-dependency` | 0.67 | 1.00 |
+
+Cost per suite run: igiari-tdd $1.46 Sonnet / $2.95 Opus; chottomatte-archi
+$1.03 / $2.76. Consistently ~2x, as list pricing predicts.
+
+**Two grader bugs, both of which penalised the *better* answer.** This is the
+run's real finding and it generalises beyond this repo.
+
+`invert-nondeterministic-dependency` went 0.00 → 1.00 → 0.67 for Sonnet and
+0.33 → 0.33 → 1.00 for Opus across three grader revisions, with no change to
+the skill or the prompt:
+
+1. The first grader said `Math.max` must be "left alone", and the judge read
+   *any* discussion of it as a violation. Both models had correctly declined to
+   wrap it while separately arguing the clamp is a correctness bug —
+   `nextNumber(c, 0)` and `nextNumber(c, -5)` both mint invoice `00001`, so a
+   caller bug is laundered into a duplicate invoice number. A real catch, and
+   the grader failed it. Narrowed to judge dependency direction only.
+2. The second grader required `UUID.randomUUID()` to be "moved behind a port".
+   Opus argued instead that the suffix should be **deleted** — 4 hex chars is
+   ~50% collision probability at roughly 300 invoices sharing a
+   `(customer, year, sequence)` tuple, so it earns nothing and uniqueness
+   belongs in the sequence plus a database constraint. That is a better answer
+   than wrapping, and the skill's own logic agrees: a dependency you do not
+   need beats a port around one. The grader now accepts removal.
+
+Settled rule for writing graders here: **encode the rule, not the expected
+answer.** The failure mode is systematic rather than random — a stronger model
+is more likely to produce the better-but-unexpected answer, so a
+narrowly-specified grader under-scores it. An eval written this way will
+quietly argue for the cheaper model on the strength of its own defects.
+
+**What survived and looks real:** `triangulate-before-generalizing` at 1.00 on
+both — Sonnet holds the hardest and most distinctive TDD rule (no loop, no
+lookup table, no generalising on one test's strength) as reliably as Opus.
+`repository-returns-domain` 1.00 on both. Those two are stable signal for the
+hypothesis that `igiari-tdd`'s rule-following survives a cheaper model, while
+`chottomatte-archi`'s judgment cases (`plan-structure-first`,
+`invert-nondeterministic-dependency`) favour Opus.
+
+**Known-suspect, not yet fixed:** `scoped-build-and-evidence` scores 0.89 on
+*both* models with the `real-red` grader failing identically in both. Two
+models failing a grader the same way is the signature of the bug above, not of
+a shared model weakness — treat that grader as unverified until it is read
+again.
+
+Three runs per case is too few to separate a real gap from variance. Before
+this decides anything, the graders need the "encode the rule" pass and the runs
+need raising.
