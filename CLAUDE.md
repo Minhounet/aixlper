@@ -53,198 +53,55 @@ not what the recipe *is*.
 When a request is ambiguous, say which shape it looks like and why before
 starting, rather than force-fitting it into a `SKILL.md`.
 
-## Active work: igiari-tdd and chottomatte-archi
+## Active work: skills still being designed
 
-These two skills are being designed iteratively, directly with the repo's
-author, across many sessions — they are **not** finished/stable in the way
-the rest of this file is. Each `SKILL.md` is the source of truth for the
-exact current rules; this section is a condensed settled-state summary so
-a fresh session doesn't lose the thread. The full session-by-session
-history — every rule addition, correction, and worked example, with the
-reasoning behind each — lives in `docs/design-log.md`; read it when you
-need the *why* behind a rule, not just the rule itself. Keep this section
-and the log in sync whenever either skill changes.
+Five skills are in active design and are **not** stable. For each, the
+`SKILL.md` is the source of truth for its current rules, and
+`docs/design-log.md` holds the session-by-session history — every rule
+addition, correction and worked example, with the reasoning behind it.
+Read the `SKILL.md` when you need the rule; read the log when you need the
+*why*. Don't restate either here: this section is a map, not a summary.
+Keep the log updated whenever a skill changes.
 
-They're deliberately kept as two separate skills: TDD governs *how you
-write code over time* (the workflow), Clean Architecture governs *how the
-code is structured* (the dependency rule) — orthogonal, composable, and
-you shouldn't have to pull in architecture rules just to fix a bug in an
-unstructured script. Both carry a one-line "Related skill" cross-reference
-to each other and to `gyakuten-ddd` (DDD strategic patterns).
+For all five: expect them to keep growing from ongoing conversation with
+the author. Don't treat any as complete, and **don't remove or "clean up"
+sections without the author asking.**
 
-**`skills/igiari-tdd/`** — one-test-per-step TDD, framed for an AI
-specifically: baby steps exist for *containment* (capping the blast
-radius of a confidently-wrong diff), not *design-discovery*. The cycle is
-Red / **Super Green** / **Refining Refactor** (not classic dirty-green) —
-an AI should write minimal *and* clean on the first pass. Non-negotiable
-rules: one test per step, real red before any production code,
-minimal-only implementation with a "triangulate before generalizing"
-clause (never introduce a loop/recursion/abstraction on one test's
-strength — wait for a second test that a hardcoded implementation
-genuinely can't satisfy), a mandatory checklist-bounded refactor pass
-every cycle plus an "advanced refinement" tier gated by concrete trigger
-thresholds (3rd same-type conditional → polymorphism, duplicated
-validation across 2+ call sites → value object, 3rd reason-to-change on a
-class → split it, 3+ branches on the same discriminant → Strategy), with
-a "log, don't ask" rule for anything below threshold (rolled into a
-"Deferred refinement notes" list at end of task), test-scoped builds
-during the loop with one full build at the end,
-`should<ExpectedResult>_when<Condition>` naming, never sourcing a test's
-expected value from the implementation, and a "plan the tests before the
-first cycle" approval gate (name + one-line intent per test, one
-approval, then cycles run straight through — the plan is visibility, not
-license to build ahead of the current test). The mechanical syntax
-checklist (stream `.toList()`, lambda cleanup, method references, `var`,
-diamond operator, pattern-matching `instanceof`) now lives in
-`kaizen-refactor`'s "Tier 1" section as the single source of truth.
-Author preferences: in-memory repositories over real adapters,
-Mockito for collaborators not owned by the codebase (repositories are the
-one exception) with `@ExtendWith(MockitoExtension.class)`, Vavr in
-implementation code, `null` disallowed (`Option` is the default), build
-the SUT in `@BeforeEach` unconditionally — never a field initializer
-(captures `null` for `@Mock` fields), never inline per test method.
+| Skill | State | Notes |
+|---|---|---|
+| `igiari-tdd` | Co-designed across many sessions | One-test-per-step TDD framed for an AI: baby steps for *containment*, not design-discovery. Red / Super Green / Refining Refactor. |
+| `chottomatte-archi` | Co-designed across many sessions | Dependency inversion via interfaces; everything else follows from it. |
+| `mujitsu-documentum` | **Unverified** | Written from general DQL/API knowledge, never run against a real docbase. Treat every pattern as a draft; don't cite it as settled. Known-weak spot: pattern 4's `get_type_attr_count` is a named placeholder, not confirmed DQL. |
+| `gyakuten-ddd` | New, not dogfooded | DDD *strategic* patterns only (Bounded Context, Context Map, ACL...). Tactical patterns stay in `chottomatte-archi`. Doubles as a learning aid — explaining a term on request is a valid trigger. |
+| `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
 
-**`skills/chottomatte-archi/`** — dependency inversion via interfaces is
-the one rule everything else follows from. Constructor injection always
-(setter injection only as a narrow legacy-framework-wiring exception);
-the use case is the entry point, taking repository/service/logger
-interfaces via the constructor; on legacy code, dependency inversion
-still applies at whatever seam *is* owned. Spring: no framework
-annotations in core classes, wiring via `@Configuration`/`@Bean` at the
-composition root. The actual line for "needs wrapping behind an
-interface" is determinism, not "static" — a pure static call (`Math.max`)
-is fine directly, a non-deterministic one (`Instant.now()`,
-`UUID.randomUUID()`) always needs an owned interface (`Clock`,
-`IdGenerator`). Repositories return the domain object itself, never a
-primitive/partial projection; the use case builds its own `Response` via
-an explicit mapper (CQRS-flavored naming: `Command`/`Query`/`Request`),
-one mapper per domain type reused both directions. An **orchestrator use
-case** routes a single infrastructure entry point to distinct
-typed-`Command` use cases when it discriminates multiple business
-operations (split when a variant develops its own validation/error
-handling; stay merged when variants only differ in which fields are
-sent). Heavy ECM/legacy SDKs (Nuxeo, Documentum): narrowly-scoped ports,
-not relaxed dependency rules; framework-forced static lookups
-(`Framework.getService(...)`) and `CoreSession` resolution happen inside
-`handleEvent`, never an `EventListener` constructor (services/session
-aren't available yet at construction time); a "Syncing Nuxeo to an
-external system" pattern needs two separate ports (`DocumentRepository`
-for reads, a distinctly-named `SyncGateway` for pushes), not one
-repository stretched both ways. Deterministic computation embedded in a
-framework action (e.g. assembling a business ID from date + random
-fragment) gets pulled out into a plain, directly-unit-tested policy
-class — only genuine reads/writes stay behind the port. Gateway stand-ins
-(`LoggingX`/`NoOpX` implementations) are ordinary placeholder
-implementations of the same interface, swapped for the real adapter
-later. Config values threaded through a call chain become a named
-Parameter Object behind an interface (never a loose primitive/
-collection) — a constructor dependency like any other, same
-interface-not-concrete-class rule; if the class can stop being
-static-only, inject the config object via constructor instead of
-threading it as a parameter. A structural change (new interface,
-constructor signature change, `@Bean` rewiring) needs a full build, not
-just the scoped test, and fixing every test call site it breaks is
-mandatory even with no behavior change. "Plan the structure before
-implementing" gate: classes/interfaces/ports, constructor dependencies,
-composition-root wiring, and public method signatures, one approval
-before implementation starts.
+`igiari-tdd` and `chottomatte-archi` are deliberately **two** skills: TDD
+governs *how you write code over time*, Clean Architecture governs *how the
+code is structured* — orthogonal and composable, and you shouldn't need
+architecture rules to fix a bug in an unstructured script. Both
+cross-reference each other and `gyakuten-ddd`. When both are loaded, the
+clean-architecture structural plan comes first and the TDD test plan is
+written against it rather than re-derived. Each allows exactly one further
+pause after its plan is approved: a genuine deviation discovered during
+implementation, shown and re-approved — never silent substitution.
 
-Both skills' plans allow exactly one further pause each: a genuine
-deviation from the approved plan discovered during implementation, shown
-and re-approved before resuming — never silent substitution. When both
-skills are loaded, the clean-architecture structural plan comes first and
-the TDD test plan is written against it rather than re-derived.
+### Testing method
 
-**Testing method: dogfood via kata.** Beyond `make validate`/`make eval`,
-these two skills are pressure-tested by actually using them: pick a small
-kata, set it up in a throwaway scratch directory (not committed), and
-solve it while following the target skill's rules literally, showing real
-command output at every red/green checkpoint. Choose the kata to fit
-whichever skill is under test: numeric/parsing katas for `igiari-tdd`,
-something with real collaborators (repository, service, logger) for
-`chottomatte-archi`. Treat any friction as a direct signal to fix the
-`SKILL.md`, not just the kata code. Three dogfooding runs so far (roman
-numeral, String Calculator, a Gradle project) each surfaced a real gap
-now documented in the skill, including a "Getting evidence when the build
-tool fights you" escalation ladder in `igiari-tdd` for when
-`build`/`target` output is gitignored and unreadable — see
-`docs/design-log.md` for what each run found and how it was fixed.
-
-Expect both files to keep growing with more rules, examples, and
-preferences from ongoing conversation — don't treat either as complete,
-and don't remove or "clean up" sections without the author asking.
-
-## Active work: mujitsu-documentum
-
-`skills/mujitsu-documentum/` is unverified — written from
-general Documentum DQL/API knowledge, not yet run against a real docbase.
-Treat every pattern in it as a draft until the author reports back from
-real usage; don't cite it as settled the way the two Java skills above are.
-
-The gap it targets: individually, DQL and the API (`iapi`/`idql`) are
-well-documented and widely known; composing the two into a bash script
-that's safe to re-run — existence-check before `create`, surviving a
-partial failure, converging to the same end state across dev/test/prod —
-is the part that isn't.
-
-**Testing method: real docbase, not kata.** Unlike the Java skills' kata
-dogfooding, there's no throwaway-project equivalent for a Documentum
-skill — it needs a live docbase to mean anything. The author validates it
-by using it against a real Documentum environment and reporting friction
-back. Known-weak spot going in: pattern 4's `get_type_attr_count` is a
-named placeholder, not confirmed real DQL. Any correction from real usage
-should land as an edit to `skills/mujitsu-documentum/SKILL.md` plus a log
-entry, the same discipline as the Java skills.
-
-Ten patterns total as of now (including trusted-login password hygiene,
-and set-based vs. ID-batch bulk update/delete loops) — see
-`docs/design-log.md` for how patterns 8-10 were added.
-
-## Active work: gyakuten-ddd
-
-`skills/gyakuten-ddd/` is new and not yet dogfooded; treat it the same as
-`mujitsu-documentum`'s unverified status until it's been exercised on a
-real multi-context design.
-
-**Scope:** covers DDD's *strategic* patterns only (Bounded Context,
-Context Map, Shared Kernel, Anticorruption Layer, etc. — the boundaries
-*between* models). Tactical patterns (Entity, Value Object, Aggregate,
-Repository) stay in `chottomatte-archi`'s "Relationship to DDD" section,
-since they're inseparable from that skill's Java-specific
-dependency-direction rules; strategic design is language-agnostic and got
-its own skill for that reason — see `docs/design-log.md` for the full
-reasoning.
-
-**Trigger design:** also works as a learning aid (explaining a term on
-request, e.g. "what's a bounded context"), not just enforcement during
-real design work. Cross-referenced from `chottomatte-archi`. No testing
-method decided yet beyond `make validate`.
-
-## Active work: kaizen-refactor
-
-`skills/kaizen-refactor/` is new and not yet dogfooded. It covers
-refactoring code that already *exists* — surfaced by an IDE inspection,
-not a failing test — which doesn't fit `igiari-tdd`'s refactor step
-(fires only on code just written this cycle) or `kanpeki-fp` (not every
-refactor is FP-flavored).
-
-**Two-tier split:** Tier 1 (IDE-verified mechanical refactorings —
-rename, extract, inline, move, plus the fixed syntax-level checklist
-moved here from `igiari-tdd` as the single source of truth) applies
-directly, no gate. Tier 2 (judgment-call refactors — polymorphism, value
-object, split class, Strategy, or any `kanpeki-fp`-governed style move)
-stays gated by the same trigger-threshold discipline as `igiari-tdd`'s
-advanced refinement, plus a test-coverage safety net (green baseline, one
-change at a time, re-verify green after each).
-
-Headless inspection: `qodana scan` (preferred) or `idea inspect`/
-`inspect.sh` — see the skill for the command-line workflow. A "Recognizing
-new Tier 1 candidates" section governs how the fixed mechanical list
-grows (three checks: fixed input → fixed output, JDK/library-guaranteed
-equivalence, recurs across classes — a candidate may state a documented
-precondition at the call site, never an unstated one; the `getFirst()`/
-`getLast()` entry is the worked example). Full history:
-`docs/design-log.md`.
+- **The two Java skills: dogfood via kata.** Beyond `make validate` /
+  `make eval`, pressure-test them by actually using them — pick a small
+  kata, set it up in a throwaway scratch directory (not committed), and
+  solve it following the skill's rules literally, showing real command
+  output at every red/green checkpoint. Numeric/parsing katas for
+  `igiari-tdd`; something with real collaborators for `chottomatte-archi`.
+  Treat any friction as a signal to fix the `SKILL.md`, not just the kata
+  code. Three runs so far, each surfacing a real gap now documented — see
+  `docs/design-log.md`.
+- **`mujitsu-documentum`: real docbase, not kata.** There's no
+  throwaway-project equivalent; the author validates it against a real
+  Documentum environment and reports friction back. Corrections land as an
+  edit to the `SKILL.md` plus a log entry, same discipline as above.
+- **`gyakuten-ddd` / `kaizen-refactor`:** nothing decided yet beyond
+  `make validate`.
 
 ## Repository layout
 
@@ -260,6 +117,31 @@ global/settings.template.json     # public-safe; secrets injected at install
 
 docs/design-log.md                # session-by-session history for active-work skills
 ```
+
+### Keeping SKILL.md small: progressive disclosure
+
+A `SKILL.md` is loaded **in full** the moment the skill triggers, and stays
+resident for the rest of the session. `references/` files are not — they're
+read only if and when the body points at one. That difference is the whole
+token budget, so it decides what goes where.
+
+Keep in `SKILL.md` the rules that apply *whatever* the framework, plus a
+short pointer table saying which reference to read and when. Move out
+anything conditional or lookup-shaped:
+
+- framework- or vendor-specific material (Spring wiring, Nuxeo packaging,
+  a particular SDK's seams) — it's dead weight on every session that
+  doesn't use that framework;
+- exact command invocations and their troubleshooting ladders;
+- meta-sections about extending the skill itself, which aren't needed while
+  *applying* it.
+
+Rules of thumb: never split a rule from its own statement — a reference
+shows how to satisfy a rule in one environment, it never holds the rule;
+write each reference to stand alone, with a title and a one-line "read this
+when..."; and make the pointer specific enough to decide from without
+opening the file. A `SKILL.md` past ~20KB almost certainly has a reference
+hiding in it.
 
 ## Build / CI
 

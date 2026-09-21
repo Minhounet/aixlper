@@ -61,6 +61,20 @@ When flagging, suggest a concrete break point: "finish X, then start a fresh ses
 
 The user should never have to ask.
 
-@~/.claude/java.md
+---
 
-@~/.claude/nuxeo.md
+# Language- and platform-specific rules — read on demand
+
+These are **not** `@`-imported, deliberately: an unconditional import loads
+them into every session regardless of what the session is about, which is
+pure resident cost on a bash, markdown or Python task. Read the file
+yourself, with your file-reading tool, the first time a session turns out
+to match — then treat its rules as binding for the rest of that session.
+
+| Read | When |
+|---|---|
+| `~/.claude/java.md` | The session touches Java source: injected fields, the 121-char line limit, log levels, TDD ordering. Read it before writing or changing any `.java` file. |
+| `~/.claude/nuxeo.md` | The session touches a Nuxeo project: listener event filtering, component documentation, contributing audit events, and when Gradle is allowed for dev speed vs. Maven being mandatory for release. Read it before changing a listener, a component contribution, or the build. |
+
+Read the file once per session, not once per edit. If a session starts as
+something else and *becomes* Java or Nuxeo work, read it at that point.
