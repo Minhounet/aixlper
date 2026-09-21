@@ -131,3 +131,24 @@ have helped next time.
 
 - <what happened>: <why it was a problem, and how it got resolved (or didn't)>
 ```
+
+## Token self-audit
+
+This file loads **in full** whenever the skill triggers and stays resident
+for the rest of the session; `references/` files load only if the body
+points at one. When asked to reduce token cost — or before adding anything
+here — audit in this order and report what you would move, and why:
+
+- **Needed only sometimes?** Material for one framework, one tool's exact
+  commands, or a section about extending the skill itself → move to
+  `references/` behind a pointer that names the condition precisely.
+- **A reference opened on almost every trigger?** Then it costs *more*
+  there than inline — a tool call, an extra assistant turn, and a lost
+  prefix cache. Bring it back inline.
+- **Does a step here run a command?** Its output is tokens too, charged
+  every run and kept for the session. Suppress progress/debug noise and
+  bound what gets echoed.
+
+Never split a rule from its own statement: a reference shows how to satisfy
+a rule in one environment, it never holds the rule. **Relocate, never
+delete** — removing guidance to save tokens is a regression, not a saving.

@@ -301,34 +301,49 @@ Rule 7: scoped builds during the loop, exactly one full build at the end.
 **Prefer `mvnd` over `mvn` whenever `command -v mvnd` resolves** — drop-in,
 identical flags, keeps the JVM warm. Check once per task.
 
+**Every line the build prints is tokens.** Build output enters the
+conversation and stays there for the rest of the session, and this loop
+runs a build *every cycle* — so verbose output compounds faster than
+anything else here. Always suppress the noise that carries no evidence:
+
+- **Maven:** `-B --no-transfer-progress` (kills progress bars and
+  download spam). Never `-X`/`--debug` in the loop.
+- **Gradle:** `--console=plain` (no ANSI redraw). **Never `-i`/`--info`
+  or `--debug` in the loop** — INFO logs every task and every dependency
+  resolution, and can cost more tokens in one run than this whole skill.
+- **Bound the output.** Pipe through `tail -30`, and on a green run the
+  summary line plus exit 0 is sufficient evidence for rule 8 — don't echo
+  the full run. Reach for unfiltered output only while diagnosing an
+  actual failure, and only for that run.
+
 **Maven**
 ```bash
 # scoped (during the cycle) — one test class, or one method
-mvn test -Dtest=ClassNameTest
-mvn test -Dtest=ClassNameTest#methodName
+mvn -B --no-transfer-progress test -Dtest=ClassNameTest 2>&1 | tail -30
+mvn -B --no-transfer-progress test -Dtest=ClassNameTest#methodName 2>&1 | tail -30
 
 # full (end of task only, once)
-mvn test
+mvn -B --no-transfer-progress test 2>&1 | tail -40
 
 # multi-module: when the test's module depends on an uninstalled sibling
-mvn -o test -pl <module> -am -Dtest=ClassNameTest \
-    -Dsurefire.failIfNoSpecifiedTests=false
+mvn -o -B --no-transfer-progress test -pl <module> -am -Dtest=ClassNameTest \
+    -Dsurefire.failIfNoSpecifiedTests=false 2>&1 | tail -30
 ```
 
 **Gradle**
 ```bash
 # scoped (during the cycle) — one test class, or one method
-./gradlew test --tests "com.example.ClassNameTest"
-./gradlew test --tests "com.example.ClassNameTest.methodName"
+./gradlew test --tests "com.example.ClassNameTest" --console=plain 2>&1 | tail -30
+./gradlew test --tests "com.example.ClassNameTest.methodName" --console=plain 2>&1 | tail -30
 
 # continuous — re-runs on every save; the closest thing to a TDD mode
-./gradlew test --tests "com.example.ClassNameTest" --continuous
+./gradlew test --tests "com.example.ClassNameTest" --continuous --console=plain
 
 # force execution when a checkpoint must be trustworthy
-./gradlew test --tests "com.example.ClassNameTest" --rerun
+./gradlew test --tests "com.example.ClassNameTest" --rerun --console=plain 2>&1 | tail -30
 
 # full (end of task only, once)
-./gradlew build
+./gradlew build --console=plain 2>&1 | tail -40
 ```
 
 Surefire fails on its own when `-Dtest=` matches nothing
@@ -458,6 +473,27 @@ non-negotiable regardless.
   the edges rather than scattering them through the logic being tested.
 
 <!-- Add further code style preferences here as they come up. -->
+
+## Token self-audit
+
+This file loads **in full** whenever the skill triggers and stays resident
+for the rest of the session; `references/` files load only if the body
+points at one. When asked to reduce token cost — or before adding anything
+here — audit in this order and report what you would move, and why:
+
+- **Needed only sometimes?** Material for one framework, one tool's exact
+  commands, or a section about extending the skill itself → move to
+  `references/` behind a pointer that names the condition precisely.
+- **A reference opened on almost every trigger?** Then it costs *more*
+  there than inline — a tool call, an extra assistant turn, and a lost
+  prefix cache. Bring it back inline.
+- **Does a step here run a command?** Its output is tokens too, charged
+  every run and kept for the session. Suppress progress/debug noise and
+  bound what gets echoed.
+
+Never split a rule from its own statement: a reference shows how to satisfy
+a rule in one environment, it never holds the rule. **Relocate, never
+delete** — removing guidance to save tokens is a regression, not a saving.
 
 ## When this skill doesn't cover the case
 

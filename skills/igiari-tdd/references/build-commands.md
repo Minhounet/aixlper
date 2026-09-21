@@ -146,9 +146,15 @@ order.
 
 1. **Read evidence from console output, not report files.** This alone
    satisfies rule 8 without touching the filesystem at all:
-   - Gradle: `./gradlew test --tests "com.example.ClassNameTest" --console=plain -i`
+   - Gradle: `./gradlew test --tests "com.example.ClassNameTest" --console=plain`
+     — start without `-i`. Plain console already prints the per-test result.
+     Add `-i` **only** if that genuinely showed nothing, and only for the one
+     diagnostic run: INFO logs every task and dependency resolution, which is
+     a large token cost inside a loop that builds every cycle. Drop it again
+     immediately afterwards.
    - Maven: prints per-test results to console by default; add `-e` for
-     failure detail.
+     failure detail (cheap — stack trace only, unlike `-X`, which must not
+     be used in the loop).
 2. **If the scoped run reports zero tests executed**, don't jump straight to
    a full build — check these in order:
    - **Filter mismatch first.** Confirm the fully-qualified class name in
