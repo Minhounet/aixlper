@@ -430,11 +430,22 @@ with this skill — read the file only when the case at hand calls for it.
 | `references/spring.md` | The project uses Spring, or config values must be resolved at the composition root (`@Configuration`/`@Bean`, binding a logger's injection point, environment-driven config objects, and the no-Spring resolver equivalent). |
 | `references/ecm-ports.md` | Wrapping a heavy concrete SDK (Nuxeo `DocumentModel`, Documentum `IDfSysObject`) behind a narrow port — including the two-port rule for syncing to an external system, and pulling deterministic computation out of the seam. |
 | `references/nuxeo-addon.md` | Packaging a Nuxeo addon: enforcing dependency direction with Maven modules, composite log4j2, platform-seeded vocabularies. |
-| `references/testing-across-the-seam.md` | Writing tests that cross the interface boundary. |
+| `references/testing-across-the-seam.md` | Proving an **adapter or listener** translates correctly at the seam — Nuxeo `FeaturesRunner`/`@Deploy` integration tests (including the per-branch checklist for listener changes), and the unresolved Documentum/DFC case. Not needed for ordinary use case tests: those are covered by the two-tier rule just below. |
 
 The dependency rule itself never lives in those files — it is stated above
 and applies whatever the framework. A reference only shows how to satisfy
 it in one specific environment.
+
+### Testing across the seam: two tiers
+
+- **Use case tests** stay pure unit tests — no framework runtime, an
+  in-memory repository and Mockito per `igiari-tdd`'s preferences. This is
+  where most tests live, and it needs no reference.
+- **Adapter/listener integration tests** exist only to prove the seam's
+  translation is correct (event → `Command`, SDK type ↔ domain object, a
+  static lookup actually resolving) — never to re-test business rules the
+  use case's unit tests already cover. How to write one is
+  framework-specific: see `references/testing-across-the-seam.md`.
 
 ### Setter injection: narrow legacy exception
 

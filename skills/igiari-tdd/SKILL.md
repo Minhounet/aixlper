@@ -297,17 +297,57 @@ above) — explicitly say "none" if nothing was logged.
 
 ## Build commands — scoped during the cycle, full only at the end
 
-The rule is rule 7 above: scoped builds during the loop, exactly one full
-build at the end. The concrete invocations are not loaded with this skill —
-read `references/build-commands.md` when you need them. It covers:
+Rule 7: scoped builds during the loop, exactly one full build at the end.
+**Prefer `mvnd` over `mvn` whenever `command -v mvnd` resolves** — drop-in,
+identical flags, keeps the JVM warm. Check once per task.
 
-- Maven, `mvnd` (prefer it whenever installed) and Gradle, each with its
-  scoped-to-one-test-class form and its full-build form.
-- **Getting evidence when the build tool fights you** — the escalation
-  ladder for when report files are gitignored and unreadable, or a scoped
-  run reports zero tests executed. Read this one *before* concluding a
-  scoped run cannot produce evidence; falling back to a full build is the
-  last rung, and must be logged in that cycle's summary.
+**Maven**
+```bash
+# scoped (during the cycle) — one test class, or one method
+mvn test -Dtest=ClassNameTest
+mvn test -Dtest=ClassNameTest#methodName
+
+# full (end of task only, once)
+mvn test
+
+# multi-module: when the test's module depends on an uninstalled sibling
+mvn -o test -pl <module> -am -Dtest=ClassNameTest \
+    -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+**Gradle**
+```bash
+# scoped (during the cycle) — one test class, or one method
+./gradlew test --tests "com.example.ClassNameTest"
+./gradlew test --tests "com.example.ClassNameTest.methodName"
+
+# continuous — re-runs on every save; the closest thing to a TDD mode
+./gradlew test --tests "com.example.ClassNameTest" --continuous
+
+# force execution when a checkpoint must be trustworthy
+./gradlew test --tests "com.example.ClassNameTest" --rerun
+
+# full (end of task only, once)
+./gradlew build
+```
+
+Surefire fails on its own when `-Dtest=` matches nothing
+(`failIfNoSpecifiedTests` defaults to `true`), so a filter typo is already
+loud. Gradle is the opposite: it can serve a cached green — safe for the
+normal cycle, since any bytecode change re-runs the test, but not when the
+test depends on something Gradle doesn't track (the clock, a container, an
+env var). Use `--rerun` there.
+
+Read `references/build-commands.md` only in these cases — not routinely:
+
+- **A scoped run reports zero tests executed**, or the test report files
+  are gitignored and unreadable. The reference holds the escalation ladder;
+  work it *before* concluding scoped evidence is impossible, because
+  falling back to a full build is the last rung and must be logged in that
+  cycle's summary.
+- You need the reasoning rather than the command: `mvnd` daemon behavior
+  and measured timings, what `--continuous` does to the loop, exactly when
+  Gradle's cache is and isn't honest, and the Gradle-vs-Maven crossover.
 
 ## Author's preferences
 
