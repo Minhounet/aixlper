@@ -38,6 +38,14 @@ Use [gitmoji](https://gitmoji.dev) to pick the right emoji (e.g. 🚑 hotfix, �
 
 Always report the full commit message to the user immediately after committing.
 
+## Squash before merging to a shared branch
+
+Before a local feature branch is merged into a shared/main branch (`main`, `integration`, `develop`, ...), squash its commits into a single commit. The intermediate red/green/refactor or work-in-progress commits are useful while working locally; they add noise once the branch lands on a branch other people build on top of.
+
+- If the shared branch has moved since the feature branch forked, rebase onto it first, then squash.
+- If it hasn't moved (verify with `git merge-base <shared-branch> HEAD` vs `git rev-parse <shared-branch>`), squash directly with `git reset --soft <shared-branch-or-merge-base>` followed by one `git commit` — do not use `git rebase -i`, which needs interactive input this tooling can't provide.
+- The squashed commit message still follows the format in "Commit messages" above. If the work has no associated ticket, drop the `<JIRA ID>|` segment rather than inventing one.
+- This produces a single rewritten commit — never force-push it to the shared branch itself, and confirm with the user whether to push the feature branch, open a merge/pull request, or both before doing either.
 
 ---
 
