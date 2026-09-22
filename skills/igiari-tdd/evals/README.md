@@ -2,18 +2,32 @@
 
 Cases are discovered by `prompt.md`, so this file is not a case.
 
-## `plan-then-one-test` — confounded, do not read as a model signal
+## Case strength
 
-This case scores ~0.25 on **both** Sonnet and Opus, identically. That is the
-signature of a case defect, not a capability gap.
+| Case | Signal |
+|---|---|
+| `triangulate-before-generalizing` | **Strong.** 1.00 on both models; clean, unambiguous rule. |
+| `scoped-build-and-evidence` | **Strong.** 1.00 on both models. |
+| `one-test-per-step` | **Weak — do not read as a model signal.** |
 
-The cause is structural: the eval sandbox is an empty directory, so no build
-can run. The skill's approval gate exists to stop work *before doing it* — but
-with nothing to run, the honest response is to present the test plan and then
-narrate all the cycles in one reply, which is exactly what both models do.
-They are not ignoring the gate; the gate has nothing to hold back.
+## `one-test-per-step` — weak discriminator
 
-Fixing it properly needs a `scaffold_script` that lays down a minimal Maven
-project, run with `--scaffold`, plus `Write`/`Edit`/`Bash` in `allowed_tools`
-so a real red/green cycle is possible. Until then, exclude this case when
-comparing models — the other two in this suite are sound.
+It scores mid-range on *both* models (~0.70 Sonnet, ~0.75 Opus) and they sit
+close together, which indicates the case is hard to grade rather than that the
+models differ.
+
+The difficulty is real, not a wording bug: the case asks whether the agent
+advanced "one step", and a good answer can legitimately split an over-broad
+planned test into two smaller cycles — which is the triangulation rule applied
+*more* carefully, while superficially looking like "wrote several tests". The
+grader was rewritten once to stop penalising exactly that, which lifted both
+scores, but judging "one step" reliably from prose remains fuzzy.
+
+It replaced an earlier case, `plan-then-one-test`, which was unsalvageable
+without a scaffold: it tested an approval gate that pauses work *before doing
+it*, in a sandbox where no work can be done, so both models scored ~0.25
+identically. Note that `--scaffold` is off by default, so adding a
+`scaffold_script` would not have fixed it under a plain `make eval` either.
+
+Use the two strong cases for model comparison. Treat this one as a regression
+check on the skill's wording, not as a measurement.

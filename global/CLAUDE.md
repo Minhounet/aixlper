@@ -84,6 +84,23 @@ changes what the user would do, a limit on what was verified, or a real
 disagreement still gets said. Brevity is about removing what adds nothing, not
 about withholding what matters.
 
+## Delegate reading-heavy work
+
+When a task needs a lot of *reading* to produce a little *conclusion* —
+locating a symbol across an unfamiliar codebase, working out how a legacy
+component is wired, trawling a long log — delegate it to a subagent rather
+than doing it inline.
+
+The saving is not the subagent's own tokens; it is that everything it reads
+stays in its context and never enters this one. A dozen file dumps become one
+paragraph of findings. The cost compounds, because context already loaded is
+re-sent on every later turn of the session.
+
+The trade is real and worth stating: you get the conclusion, not the evidence.
+Delegate the search, keep the decision — and when the finding is surprising or
+load-bearing, verify the specific file or line yourself rather than taking the
+summary on trust.
+
 ## Effort level
 
 `claude --effort <low|medium|high|xhigh|max>` sets thinking depth and overall

@@ -1134,3 +1134,55 @@ Two deliberate omissions, both security rather than oversight:
 
 `python3` is likewise excluded — arbitrary code execution is not an
 inspection command, whatever it is being used for.
+
+### Replacing the confounded case, and the fourth instance of the same bug
+
+`plan-then-one-test` was unsalvageable and is gone. It tested an approval gate
+that pauses work *before doing it*, inside a sandbox where no work can be done,
+so both models scored ~0.25 identically. A `scaffold_script` would not have
+rescued it either: `--scaffold` is off by default, so a plain `make eval` would
+still have run it against an empty directory.
+
+Replaced by `one-test-per-step`, which asks what happens next given an approved
+plan, a passing test 1 and a hardcoded implementation — measurable without a
+repository, because the answer is a decision rather than a build.
+
+**The grader failed the best answer, for the fourth time in this exercise.**
+The strongest run closed cycle 1's refactor checkpoint, then noticed that the
+planned test 2 (`shouldChargeNothing_whenOrderTotalIsAtOrAboveThreshold`) names
+*two* behaviors — the boundary and above it — and that one test cannot force
+the general comparison without anticipating it. It split the test into two
+sequential cycles and flagged the split as a deviation from the approved plan,
+which is what the skill requires. That is the triangulation rule applied more
+carefully than the plan itself managed. The grader read "two cycles" as "writes
+several tests at once" and failed it. Rewriting it to judge whether work is
+done *ahead of a failing test*, rather than counting cycles, lifted Sonnet
+0.55 → 0.70 and Opus 0.35 → 0.75.
+
+**Stopped there deliberately.** Both models now sit mid-range and close
+together, which indicates a case that is hard to grade rather than a capability
+difference, and about $5 had gone into iterating this one case. It ships marked
+**weak** in `skills/igiari-tdd/evals/README.md`: a regression check on the
+skill's wording, not a measurement. `triangulate-before-generalizing` and
+`scoped-build-and-evidence` are the two strong cases and are what model
+comparison should use.
+
+Worth naming the pattern, since it recurred four times across two sessions of
+eval work: **every single grader defect found here penalised a response that
+was better than the one the grader imagined.** Not one was a model doing
+something dumb that the grader wrongly accepted. A hand-written LLM grader
+encodes its author's expected answer, and the ways a strong response exceeds
+that expectation all look like deviations.
+
+### Last cost lever: delegate reading-heavy work
+
+Added to `global/CLAUDE.md`. When a task needs a lot of reading to produce a
+little conclusion — locating a symbol in an unfamiliar codebase, tracing how a
+legacy component is wired, trawling a log — hand it to a subagent. The saving
+is not the subagent's own tokens but that everything it reads stays in its
+context and never enters the caller's, where it would be re-sent every
+subsequent turn.
+
+Stated with its trade rather than as a free win: you get the conclusion, not
+the evidence. Delegate the search, keep the decision, and verify the specific
+file or line yourself when a finding is surprising or load-bearing.
