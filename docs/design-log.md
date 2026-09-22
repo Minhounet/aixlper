@@ -1093,3 +1093,44 @@ correctness. The rule is explicit that it does not license dropping a caveat, a
 limit on what was verified, or a disagreement — brevity removes what adds
 nothing, not what matters. Written partly against the evidence of this session,
 whose own replies were considerably longer than they needed to be.
+
+### Permission allowlist: 10 entries to 36
+
+Every Bash call outside the allowlist interrupts the turn and costs a
+round-trip on the full context, so the allowlist is a pure saving — it changes
+nothing about what gets decided. The template carried 10 entries.
+
+Not built from real transcripts: `/fewer-permission-prompts` scans local
+session history and writes to a project `.claude/settings.json`, and neither
+fits — this work happened in a remote container whose transcripts are not the
+author's real usage, and the right target is `global/settings.template.json`.
+Derived instead from two sources that are actually grounded: the commands the
+skills in this repo instruct running (`./gradlew` 11 times, `mvn` 9,
+`command -v` 4, `jq` 2, `qodana`, `idea`), and the read-only inspection
+commands used throughout this session. **Running
+`/fewer-permission-prompts` locally would still be worth it** — it sees the
+Nuxeo and Documentum work this repo cannot.
+
+Added: the toolchain the skills name (`mvnd`, `./mvnw`, `make`, `command -v`,
+`jq` — `mvnd` was missing although `igiari-tdd` explicitly prefers it, and
+`jq` was missing although `kaizen-refactor` now depends on it for SARIF
+extraction); read-only inspection (`find`, `head`, `tail`, `wc`, `sort`,
+`uniq`, `cut`, `stat`, `file`, `diff`, `basename`, `dirname`, `date`); and the
+git verbs the workflow actually uses, including `show`, `rev-parse` and
+`merge-base`, which the global squash-before-merge rule calls for by name.
+
+Two deliberate omissions, both security rather than oversight:
+
+- **`git add` and `git commit` are allowed; `git push` is not.** That mirrors
+  the stated policy exactly — commit automatically, never push automatically.
+  `push` is left *unlisted* rather than denied: `deny` is absolute and would
+  block it even when the author explicitly asks, which is not the rule. Absent
+  from both lists means "prompt every time", which is.
+- **`idql` and `iapi` are not allowed**, despite `mujitsu-documentum` using
+  them 3 times. That skill's whole subject is scripts that create, alter and
+  bulk-delete repository objects against a live docbase. A blanket allow would
+  let destructive DQL run unprompted. The prompt is the safety rail there and
+  is worth its cost.
+
+`python3` is likewise excluded — arbitrary code execution is not an
+inspection command, whatever it is being used for.
