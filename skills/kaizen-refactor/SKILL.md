@@ -81,83 +81,18 @@ These are safe enough to apply in a batch — fix every Tier 1 finding
 across the file/class under review, run the existing test suite once at
 the end to confirm nothing broke, and move on.
 
-### Recognizing new Tier 1 candidates
+### Extending Tier 1, and the record-class case
 
-The list above isn't closed. While triaging a report or refactoring by
-hand, you'll sometimes hit a transformation that isn't listed yet but
-clearly belongs there. Check it against the same bar every listed entry
-already meets, all three:
+Two sections are kept out of this skill's always-loaded body and live in
+`references/tier1-candidates.md` — read it when either applies:
 
-- **Fixed input → fixed output.** The rewrite takes one shape to another
-  with no branching judgment about the surrounding code — nothing to
-  decide, only to apply.
-- **Guaranteed equivalence.** The JDK or library spec guarantees the two
-  forms behave identically — not "usually," not "in this codebase," not
-  "as long as the collection isn't empty."
-- **Recurs.** The pattern shows up across many classes, not just the one
-  in front of you — a true one-off doesn't earn a permanent list entry.
-
-A candidate that clears all three gets added to the fixed list above, used
-for the rest of the current pass, and logged via the "Skill improvement
-proposal" format below so the addition is recorded, not just applied and
-forgotten. A candidate that fails any of them isn't Tier 1 — if it's still
-worth doing, gate it as a Tier 2 judgment call instead; if the equivalence
-only holds "usually" (depends on nullability, ordering, an edge case), say
-so explicitly rather than promoting it.
-
-This is exactly how the `.getFirst()`/`.getLast()` entry above was added:
-`list.get(list.size() - 1)` and `list.get(0)` are a fixed rewrite, the
-`SequencedCollection` contract (Java 21+) guarantees the values match on a
-non-empty collection, and the first/last idiom recurs constantly. It does
-*not* clear the equivalence bar unconditionally, though — on an empty
-collection the two forms throw different exception types — so it went into
-the fixed list with that precondition stated on the entry itself, which is
-what the "say so explicitly" clause above asks for. That is the line to
-hold: an entry may carry a precondition a reader can check at the call
-site, but never an unstated one.
-
-**Tier 2 — judgment-call refactors.** Anything that changes shape rather
-than syntax — replacing a conditional with polymorphism, promoting a
-primitive to a value object, extracting a Strategy, splitting a class on
-SRP, or any style-level move `kanpeki-fp` governs — is not mechanically
-guaranteed safe, so it doesn't get applied on sight. Gate it the same way
-igiari-tdd's refactor step gates its own advanced refinements: only act
-when a concrete trigger is actually met by the code in front of you (see
-igiari-tdd's "Advanced refinement — triggered, not anticipated" section
-for the current threshold list — same triggers, same discipline, not
-duplicated here). A candidate that doesn't meet a trigger gets logged, not
-applied and not asked about — same "log, don't ask" rule as igiari-tdd.
-
-### "Class can be record class" — the accessor shape decides the risk
-
-This finding recurs on any codebase with value holders, and its cost varies
-enormously depending on one detail the inspection does not mention: **what
-the existing accessors are called.**
-
-- Accessors already named like record components (`statusCode()`, `body()`,
-  `endpointUrl()`) → the generated accessors have identical names, so the
-  conversion touches **no call site at all**. Near-mechanical; the risk is
-  only the added `equals`/`hashCode`/`toString` and the fields becoming
-  final. Check nothing relies on identity semantics, then convert.
-- Accessors in getter style (`getEdfUuid()`) → a record **renames every
-  one**, so each call site changes. That is an API change, not a cleanup,
-  and it is genuinely Tier 2 however small the class is.
-- Methods that are constants (`isSuccess()` always false) or whose name does
-  not match a component (`isRetryable()` vs component `retryable`) have to
-  be written out explicitly. Still fine, but the gain shrinks — weigh it.
-
-**Also check the siblings before converting one class.** An inspection sees
-one file at a time. Converting one of three parallel Command/Response types
-leaves the family inconsistent, which costs a reader more than the record
-saves. Convert the whole family deliberately, or none of it — and say which
-you chose.
-
-One difference from igiari-tdd's version of this gate: there, the trigger
-list is checked against code just written this cycle. Here it's checked
-against a whole file or class you're reviewing, so triggers like "3rd
-same-type conditional" or "3rd reason to change" are far more likely to
-already be met — don't let the higher hit rate become a reason to loosen
-the gate itself.
+- **Recognizing new Tier 1 candidates** — the three checks a proposed
+  mechanical refactoring must pass before it may join the fixed list above
+  (fixed input → fixed output; JDK/library-guaranteed equivalence; recurs
+  across classes). Required reading before you add anything to Tier 1 —
+  never promote a refactoring into Tier 1 from memory.
+- **"Class can be record class"** — why the accessor shape decides whether
+  that specific inspection finding is Tier 1 or Tier 2.
 
 ## The safety net: test coverage before Tier 2
 
@@ -211,6 +146,22 @@ over-trusting-your-own-read failure mode the test run exists to catch.
      ```bash
      qodana scan --results-dir ./qodana-results
      ```
+     **Never read `qodana.sarif.json` directly.** SARIF wraps every finding
+     in deeply nested JSON and repeats full rule metadata, so a
+     whole-project report can run to megabytes — reading it raw can cost
+     more tokens than the entire refactor. Scan the package under review
+     rather than the whole project where you can, then extract only what
+     triage needs. Count by rule first, to see the shape before reading
+     anything individually:
+     ```bash
+     jq -r '.runs[].results[].ruleId' qodana-results/qodana.sarif.json \
+       | sort | uniq -c | sort -rn
+
+     # then the findings themselves, one line each
+     jq -r '.runs[].results[]
+            | "\(.locations[0].physicalLocation.artifactLocation.uri):\(.locations[0].physicalLocation.region.startLine) \(.ruleId) \(.message.text)"' \
+       qodana-results/qodana.sarif.json
+     ```
    - **`idea inspect`** — bundled with the IDE itself, as `inspect.sh` /
      `inspect.bat` in its `bin/` directory (or the `inspect` subcommand of
      an `idea` launcher already on PATH):
@@ -219,7 +170,10 @@ over-trusting-your-own-read failure mode the test run exists to catch.
      ```
      Requires a project with its SDK properly configured, and won't run
      while another instance of the same IDE is open. Results land as one
-     XML file per inspection ID under `<output-path>`.
+     XML file per inspection ID under `<output-path>`. Scope it with
+     `-d <subdirectory-path>`, read the per-inspection files you actually
+     need rather than the whole output directory, and prefer `-v1` over
+     `-v2` — the extra verbosity is progress chatter, not findings.
 2. Triage every finding into Tier 1 or Tier 2 before applying any of
    them. Don't act on a finding while still triaging the next one.
 3. Apply all Tier 1 findings, then run the test suite once.
@@ -255,6 +209,27 @@ Two other shapes recur and must never be auto-applied:
   breaks the contract: the string is an identifier that is never fetched.
 - **Anything under generated sources.** The fix belongs in the generator or
   its configuration; edits to the output are overwritten on the next build.
+
+## Token self-audit
+
+This file loads **in full** whenever the skill triggers and stays resident
+for the rest of the session; `references/` files load only if the body
+points at one. When asked to reduce token cost — or before adding anything
+here — audit in this order and report what you would move, and why:
+
+- **Needed only sometimes?** Material for one framework, one tool's exact
+  commands, or a section about extending the skill itself → move to
+  `references/` behind a pointer that names the condition precisely.
+- **A reference opened on almost every trigger?** Then it costs *more*
+  there than inline — a tool call, an extra assistant turn, and a lost
+  prefix cache. Bring it back inline.
+- **Does a step here run a command?** Its output is tokens too, charged
+  every run and kept for the session. Suppress progress/debug noise and
+  bound what gets echoed.
+
+Never split a rule from its own statement: a reference shows how to satisfy
+a rule in one environment, it never holds the rule. **Relocate, never
+delete** — removing guidance to save tokens is a regression, not a saving.
 
 ## When this skill doesn't cover the case
 

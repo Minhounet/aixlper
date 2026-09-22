@@ -221,12 +221,22 @@ source "path/to/module_under_test.sh"
 
 PASS=0; FAIL=0
 expect_eq() {
-  if [[ "$2" == "$3" ]]; then echo "  ✅ $1"; PASS=$((PASS+1))
+  if [[ "$2" == "$3" ]]; then PASS=$((PASS+1))            # quiet on pass
   else echo "  ❌ $1: got [$2] want [$3]"; FAIL=$((FAIL+1)); fi
 }
 
 expect_eq "my case" "$(my_function arg)" "expected output"
+
+echo "${PASS} passed, ${FAIL} failed"
+[[ $FAIL -eq 0 ]]   # exit status carries the result
 ```
+
+- **Report failures, not passes.** A line per passing assertion turns a
+  200-test suite into 200 lines that say nothing — noise in a terminal,
+  and billable context when an agent is the one reading it. Print only
+  failures plus a one-line total, and let the exit status carry the
+  verdict. Add a `VERBOSE=1` opt-in if you want the per-case ✅ back while
+  debugging a single file.
 
 ## 9. Strict mode as the default posture
 
@@ -260,3 +270,24 @@ this value, nothing that merely resembles it."
 ```bash
 grep -vxF "$value" "$list_file" > "$tmp" && mv "$tmp" "$list_file"   # combine with pattern 6
 ```
+
+## Token self-audit
+
+This file loads **in full** whenever the skill triggers and stays resident
+for the rest of the session; `references/` files load only if the body
+points at one. When asked to reduce token cost — or before adding anything
+here — audit in this order and report what you would move, and why:
+
+- **Needed only sometimes?** Material for one framework, one tool's exact
+  commands, or a section about extending the skill itself → move to
+  `references/` behind a pointer that names the condition precisely.
+- **A reference opened on almost every trigger?** Then it costs *more*
+  there than inline — a tool call, an extra assistant turn, and a lost
+  prefix cache. Bring it back inline.
+- **Does a step here run a command?** Its output is tokens too, charged
+  every run and kept for the session. Suppress progress/debug noise and
+  bound what gets echoed.
+
+Never split a rule from its own statement: a reference shows how to satisfy
+a rule in one environment, it never holds the rule. **Relocate, never
+delete** — removing guidance to save tokens is a regression, not a saving.

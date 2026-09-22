@@ -31,8 +31,10 @@ TARGET_DIR="${AIXLPER_HOME_TARGET:-$HOME/.claude}"
 ENV_FILE="$TARGET_DIR/aixlper.env"
 DRY_RUN=0
 
-# Files copied verbatim. CLAUDE.md pulls in the other two via @-imports, so a
-# partial install would leave those imports dangling. litellm-budget.py is the
+# Files copied verbatim. java.md and nuxeo.md are no longer @-imported by
+# CLAUDE.md — it points at them to be read on demand — but they must still be
+# installed, since a missing file would leave those pointers dangling.
+# litellm-budget.py is the
 # statusLine/SessionStart-hook script settings.template.json wires in below;
 # it needs its executable bit preserved, which the copy loop below handles
 # for any file in this list, not just this one.

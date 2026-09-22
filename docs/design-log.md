@@ -612,3 +612,577 @@ have no accessor), and the worked example no longer claims a clean pass on
 all three checks — it routes through the same section's "say so explicitly"
 clause instead. Settled rule: a Tier 1 entry may carry a precondition the
 reader can check at the call site, never an unstated one.
+
+## Token cost: progressive disclosure and output discipline
+
+Cross-cutting session, triggered by the author reporting roughly **$100/day**
+on Claude while doing genuinely heavy work. The brief was to analyse all
+skills and cut token cost drastically. Unlike the sections above this one
+touches every skill plus `global/`, so it lives on its own.
+
+**Where the tokens actually were.** An audit found ~28,500 tokens resident
+before a single line of the author's code was read: ~4,100 always-on
+(`global/CLAUDE.md` plus the `java.md` and `nuxeo.md` it `@`-imported, and
+the eight skill descriptions, which are permanently resident by design),
+and ~24,400 more the moment a Java session triggered `chottomatte-archi` +
+`igiari-tdd` + `kanpeki-fp` together. All of it re-sent every turn.
+
+**Root cause: `references/` was documented but unused.** `CLAUDE.md` listed
+`skills/<name>/references/` in the repository layout, and
+`validate_skills.py` only ever checks `SKILL.md`, so the directory was
+available and validated — but not one skill had one. Every skill loaded
+whole. The clearest case was `chottomatte-archi`: of 59KB, ~23KB was
+Nuxeo-specific (composite log4j2, platform-seeded vocabularies, addon Maven
+packaging) loading on *every* Java session, including plain-Java and Spring
+work where it is dead weight.
+
+**Decision: relocate, never delete.** The standing rule that active-work
+skills don't get "cleaned up" without the author asking stays in force under
+a token brief. Nothing was removed — content moved to `references/` behind a
+pointer, and the totals show it: 157.5KB of `SKILL.md` became 130KB resident
+plus 47KB of references, i.e. the corpus *grew* by the pointer tables while
+what loads shrank.
+
+### The correction: a reference is only cheaper if it's read *sometimes*
+
+The first pass split `igiari-tdd`'s Maven/Gradle build commands into
+`references/build-commands.md`. The author asked the right question — *"do
+you think that reading gradle or maven costs?"* — and the answer exposed a
+real error.
+
+Settled rule, now in every skill's self-audit: **content read on
+essentially every trigger costs more split out than inline.** Inline, it
+sits in the cached prefix and is charged at the cache-read rate on every
+later turn. Split, the same tokens arrive via the tool result anyway, *plus*
+an extra assistant turn to decide to read it (output tokens, the most
+expensive kind), plus the tool-call overhead, plus they land after the
+prefix instead of inside it. `igiari-tdd`'s cycle runs a scoped build every
+step, so that reference would have opened in ~100% of sessions. The ~15
+lines of actual invocations came back inline; the reference kept only what
+is genuinely occasional — the evidence escalation ladder, mvnd daemon
+timings, Gradle cache-honesty analysis, the Maven crossover math.
+
+A second instance of the same mistake, found by applying the new rule to
+the other five references: `testing-across-the-seam.md` is ~90% Nuxeo
+`FeaturesRunner` and Documentum/DFC detail and *is* correctly conditional,
+but its pointer read "writing tests that cross the interface boundary" —
+broad enough to open it on every seam test. Corollary rule: **the split can
+be right and the pointer still wrong.** A pointer must name the condition
+narrowly enough to decide from without opening the file. The universal
+two-tier rule (use case tests stay pure unit tests; adapter tests only prove
+translation) moved inline, and the pointer now names the framework case.
+
+Read-rate estimates for the remaining references are just that — estimates.
+`ecm-ports.md` and `spring.md` are the ones to watch: if the author is
+nearly always on Nuxeo/Documentum, `ecm-ports.md` will open most sessions
+and belongs back inline by the rule above. With no `evals/` directory on any
+skill there is no automated way to measure this; a real session opening a
+reference you expected it to skip is the signal.
+
+### Command output is tokens too — and it repeats
+
+The author's follow-up — *"gradle command display lots of log, is it
+considered as token?"* — turned out to be the larger lever, and reframed the
+whole exercise.
+
+It is, and it is worse than skill text in three ways: skill text is a stable
+cached prefix (paid once, ~10% thereafter) while build output lands in the
+growing suffix at full rate; it repeats **every cycle**, and `igiari-tdd`
+builds on every red and every green; and it scales with the size of the
+author's project rather than the size of the skill. Ten cycles of a chatty
+Gradle run can plausibly out-cost the entire trimmed skill set. Sharpest
+detail: `igiari-tdd`'s own evidence escalation ladder recommended
+`./gradlew ... -i` as its *first* rung — INFO logs every task and every
+dependency resolution, a token bomb sitting inside a loop. Now gated behind
+plain console genuinely showing nothing, for one diagnostic run, then
+dropped.
+
+Standing rules added: Maven always `-B --no-transfer-progress`, Gradle
+always `--console=plain`, both bounded with `tail`; and **on green, the
+summary line plus exit 0 is sufficient evidence for rule 8** — don't echo
+the run. Unfiltered output only while diagnosing an actual failure, and only
+for that run. (Accepted trade: `2>&1 | tail -30` can truncate a startup or
+dependency-resolution failure, which needs one unfiltered rerun. Fine for an
+assertion failure, where the message is at the end.)
+
+An audit of all eight skills for commands whose output reaches context then
+found three more, and the three recurring *shapes* are the useful outcome:
+
+1. **A verbosity flag inside a loop** — Gradle `-i`, `idea inspect -v2`.
+   Cost multiplies by iteration count.
+2. **A machine-readable report read raw** — `kaizen-refactor` pointed at
+   `qodana.sarif.json` as "a report you can read and triage". SARIF nests
+   every finding and repeats full rule metadata, so a whole-project report
+   reaches megabytes and can cost more than the refactor it is guiding. Now:
+   scope the scan, `uniq -c` by `ruleId` first to see the shape, then one
+   line per finding via `jq`.
+3. **Per-item success logging** — `kurae-bash`'s `expect_eq` printed a line
+   per *passing* assertion (200 lines of nothing for a 200-test suite); a
+   Documentum bulk loop echoing per object over 100k objects is 100k lines.
+   Report failures plus a one-line total; let exit status carry the verdict;
+   echo once per packet, never once per object.
+
+`chottomatte-archi` was the miss worth recording: it mandates a full build
+after any structural change, gave no command, and — by its own rules — that
+build's *expected* first result is mass failure, since every test
+constructing the changed class breaks at once. The default path was
+therefore "run unbounded, read hundreds of stack traces, learn what you
+already knew". It now greps the broken call sites out, works that list, and
+reads a full trace only for a failure that is not a mechanical constructor
+mismatch. `mujitsu-documentum` was already disciplined by habit (`COUNT(*)`,
+`grep` at the source, `head -1`) — made deliberate rather than changed.
+`gyakuten-ddd`, `kanpeki-fp` and `objection-conception` run no commands.
+
+### The self-audit section, and its honest cost
+
+Every skill gained a **"Token self-audit"** section at the author's request:
+is anything here needed only *sometimes* (→ `references/`); is any reference
+opened on almost every trigger (→ back inline); does any step run a command
+(→ its output owes the same discipline). Plus the two invariants: never
+split a rule from its own statement, and relocate rather than delete, since
+dropping guidance to save tokens is a regression, not a saving.
+
+This is self-referentially expensive and was accepted knowingly: ~1,100
+chars per skill, so a three-skill Java session gives back ~830 tokens
+against ~10,000 saved, about 8%. Justified as the mechanism that stops the
+files regrowing — but it is a real cost, and trimming it to two bullets is a
+legitimate future call.
+
+### Global config
+
+`global/CLAUDE.md` `@`-imported `java.md` and `nuxeo.md` unconditionally, so
+8.5KB of Java and Nuxeo platform rules loaded into every session regardless
+of subject — including bash, markdown and Python work, and including
+sessions in this markdown-only repo. Both are now pointed at, to be read on
+demand when a session turns out to match. They still install verbatim;
+`install-global.sh` keeps copying them, since a missing file would leave the
+pointers dangling.
+
+`CLAUDE.md`'s four "Active work" blocks, which restated rules each
+`SKILL.md` already owns and this log already explains, were condensed to a
+state table plus the cross-skill rules that live nowhere else (19.5KB →
+12.7KB). The progressive-disclosure convention itself was written into
+`CLAUDE.md`'s layout section so new skills keep `SKILL.md` small instead of
+regrowing.
+
+**Net:** a Java session went from ~97.7KB to ~65.9KB of resident
+instructions (~24,400 → ~16,500 tokens), after deliberately spending some of
+the saving back on inlined hot-path commands and the self-audit blocks.
+
+**Flagged, not done.** The skill descriptions (~4,645 chars, permanently
+resident across all eight) are a real target but trimming them is a rewrite
+that risks mis-triggering, so it was left under the session's relocate-only
+brief. Beyond the repo, the two larger levers on a $100/day habit are
+session hygiene (the global "warn when context is heavy" rule is advisory;
+making it a concrete threshold would likely beat everything done here) and
+model routing (`settings.template.json` pins one model, but validation,
+commit messages and log edits don't need the largest one).
+
+### Running the inner loop through the IDE instead of the build tool
+
+Author's idea, from the same session: TDD is normally done in the IDE — could
+`igiari-tdd`'s cycle use it, and would it save tokens? Yes on both, and it is
+probably the largest saving still available in this skill, because it applies
+*per cycle* rather than once.
+
+What you pay per cycle is whatever the test run returns. A bounded build run
+(`mvn -B --no-transfer-progress test -Dtest=X | tail -30`) still costs ~20-30
+lines of surefire banner, reactor summary, BUILD SUCCESS and timing — roughly
+300-600 tokens. An IDE runner reached over MCP returns a structured result —
+test name, status, and on failure the assertion message and line — for perhaps
+30-80 tokens green. Call it 5-10× per cycle, multiplied by cycle count, and it
+recurs on every task, unlike the one-time file trimming. A build tool spends
+most of its output describing the build; the IDE already compiled and indexed,
+so it only describes the test.
+
+A cost already sunk in this author's case, worth stating because it is not
+obvious: connecting an MCP server puts its tool schemas in the system prompt of
+*every* session, a fixed resident cost. Adding the JetBrains server purely for
+this could fail to pay off. `kaizen-refactor` already uses it for inspections,
+so the overhead is paid and the per-cycle saving is pure gain.
+
+Written into the skill as **unverified**, the same status as
+`mujitsu-documentum`, gated on two one-time checks per project:
+
+1. **Does the server expose a test runner at all?** `kaizen-refactor` only
+   documents `mcp__idea__lint_files` and `mcp__idea__get_file_problems` —
+   inspection, not execution. Unconfirmed from this session, which had no IDE
+   MCP reachable.
+2. **Does the IDE runner agree with the build?** The one that actually
+   matters. An IDE run may not apply surefire's `argLine` (JaCoCo,
+   `--add-opens`), system properties, active profiles or resource filtering.
+   If the IDE passes where `mvn test` fails, every red and green in the cycle
+   is unreliable and the skill's core guarantee is gone. Settled rule:
+   **correctness of the red is not negotiable for a token saving** — where
+   they diverge, the build tool wins.
+
+Scope limit recorded with it: this replaces the *scoped* run only. Rule 7's
+terminal full build and `chottomatte-archi`'s post-structural-change build stay
+build-tool jobs, since an IDE run proves a test passes, not that the reactor,
+packaging and composition root still build. The bounded commands stay as the
+fallback for no-IDE, CI and fresh-machine cases — framed portably ("if your
+client exposes an IDE integration") per the repo's tool-agnostic rule, with
+`kaizen-refactor`'s naming of `mcp__idea__*` as the precedent.
+
+**Separate finding, larger than the skills.** `global/settings.template.json`
+pins `"model": "opus[1m]"`. The cached pricing table puts Opus 5 at $5/$25 per
+MTok with 1M context standard, and no long-context premium was confirmed — so
+the cost issue is not the rate but the *ceiling*: a 200K window forces a fresh
+session, while 1M lets one balloon five times larger, with every turn
+re-sending all of it. Flagged to the author as plausibly outweighing everything
+done in this repo, and left as their decision.
+
+### Eval suites for the two Java skills, and the model question
+
+`make eval` had been wired up since the start with no skill ever having an
+`evals/` directory — the infrastructure existed, unused. Written now because
+the session's open question ("should I move to Sonnet?") is a measurable one
+and guessing at it is exactly what that infrastructure was built to avoid.
+
+Six cases, three per skill, chosen so each targets a rule the skill uniquely
+causes — which is what makes the with/without ablation delta mean anything. A
+case testing "writes a test first" would score well without the skill too and
+tell us nothing.
+
+**`igiari-tdd`** — `plan-then-one-test` (the test-plan approval gate, exactly
+one failing test first, `should<X>_when<Y>` naming; the grader explicitly
+states that stopping at the plan is a PASS, not an incomplete answer, and that
+delivering the whole feature is the failure being detected);
+`triangulate-before-generalizing` (one red test for `RomanNumeral.of(1)` — a
+loop or lookup table fails the case even though it is correct code, since
+solving ahead of the current test is the defect); `scoped-build-and-evidence`
+(scoped to one test, `-B`/`--no-transfer-progress`, bounded output, and a real
+observed red rather than a non-zero exit code).
+
+**`chottomatte-archi`** — `plan-structure-first` (the structural approval gate,
+plus Spring kept out of core and the existing `MailSender` bean reached through
+an owned interface); `invert-nondeterministic-dependency` (the skill's precise
+line: `Instant.now()` and `UUID.randomUUID()` go behind owned ports while
+`Math.max` is deliberately left alone — the case fails an answer that wraps
+`Math.max`, or that justifies wrapping on "static" rather than
+non-determinism); `repository-returns-domain` (a `String
+findCustomerNameById` that must become a `Customer`, with the use case
+mapping to its own `Response` rather than returning the entity).
+
+Validated rather than handed over untested: one case run end to end scored 1.00
+at **$0.27 for a single run**. That price is the thing to note — the default is
+3 runs per case and the ablation adds a second arm, so a full `make eval` over
+six cases is roughly **36 runs, on the order of $10**. Not a per-commit CI
+check at that cost; `--case`, `--runs 1` and `--ablation none` are the cheap
+smoke-test path, and `--max-cost-usd` bounds any run. `skills/*/evals/results/`
+is gitignored — transcripts and the HTML report are regenerated output.
+
+The model question these exist to settle: `claude plugin eval --model <model>`
+runs the same suite against a different model, so "does Sonnet follow these
+skills as well as Opus?" becomes a score comparison rather than a judgment
+call.
+
+**Asked and answered: should the skills detect the model and adapt?** No, and
+they should not try. A skill is markdown with no runtime — it cannot query the
+serving model, and self-reported identity is unreliable in exactly the way that
+matters (a session's configured model and the model actually serving a turn can
+differ, through fallback or a mid-session switch). Even given a reliable
+answer, branching a skill on model identity doubles its behavioral surface and
+leaves the branch that runs on the cheaper model the less-tested one — the
+opposite of what these skills are for, which is removing judgment from the
+model by writing the rule down once. The routing decision belongs outside the
+skill, with the person choosing the model, informed by eval scores. What a
+skill may legitimately carry is a statement of what it *assumes* — and both
+already do, in their non-negotiable rules.
+
+### First eval run: Sonnet vs Opus, and what it actually measured
+
+Ran both suites against both models, `--ablation none --runs 3`. Total spend
+about $10. Headline: **the Sonnet-vs-Opus question is not settled by this run**,
+because grader wording moved the scores more than model choice did.
+
+Raw numbers (igiari-tdd on its original graders; chottomatte-archi's
+`invert` case on its third grader revision):
+
+| case | Sonnet | Opus |
+|---|---|---|
+| `triangulate-before-generalizing` | 1.00 | 1.00 |
+| `plan-then-one-test` | 0.75 | 0.50 |
+| `scoped-build-and-evidence` | 0.89 | 0.89 |
+| `repository-returns-domain` | 1.00 | 1.00 |
+| `plan-structure-first` | 0.67 | 0.87 |
+| `invert-nondeterministic-dependency` | 0.67 | 1.00 |
+
+Cost per suite run: igiari-tdd $1.46 Sonnet / $2.95 Opus; chottomatte-archi
+$1.03 / $2.76. Consistently ~2x, as list pricing predicts.
+
+**Two grader bugs, both of which penalised the *better* answer.** This is the
+run's real finding and it generalises beyond this repo.
+
+`invert-nondeterministic-dependency` went 0.00 → 1.00 → 0.67 for Sonnet and
+0.33 → 0.33 → 1.00 for Opus across three grader revisions, with no change to
+the skill or the prompt:
+
+1. The first grader said `Math.max` must be "left alone", and the judge read
+   *any* discussion of it as a violation. Both models had correctly declined to
+   wrap it while separately arguing the clamp is a correctness bug —
+   `nextNumber(c, 0)` and `nextNumber(c, -5)` both mint invoice `00001`, so a
+   caller bug is laundered into a duplicate invoice number. A real catch, and
+   the grader failed it. Narrowed to judge dependency direction only.
+2. The second grader required `UUID.randomUUID()` to be "moved behind a port".
+   Opus argued instead that the suffix should be **deleted** — 4 hex chars is
+   ~50% collision probability at roughly 300 invoices sharing a
+   `(customer, year, sequence)` tuple, so it earns nothing and uniqueness
+   belongs in the sequence plus a database constraint. That is a better answer
+   than wrapping, and the skill's own logic agrees: a dependency you do not
+   need beats a port around one. The grader now accepts removal.
+
+Settled rule for writing graders here: **encode the rule, not the expected
+answer.** The failure mode is systematic rather than random — a stronger model
+is more likely to produce the better-but-unexpected answer, so a
+narrowly-specified grader under-scores it. An eval written this way will
+quietly argue for the cheaper model on the strength of its own defects.
+
+**What survived and looks real:** `triangulate-before-generalizing` at 1.00 on
+both — Sonnet holds the hardest and most distinctive TDD rule (no loop, no
+lookup table, no generalising on one test's strength) as reliably as Opus.
+`repository-returns-domain` 1.00 on both. Those two are stable signal for the
+hypothesis that `igiari-tdd`'s rule-following survives a cheaper model, while
+`chottomatte-archi`'s judgment cases (`plan-structure-first`,
+`invert-nondeterministic-dependency`) favour Opus.
+
+**Known-suspect, not yet fixed:** `scoped-build-and-evidence` scores 0.89 on
+*both* models with the `real-red` grader failing identically in both. Two
+models failing a grader the same way is the signature of the bug above, not of
+a shared model weakness — treat that grader as unverified until it is read
+again.
+
+Three runs per case is too few to separate a real gap from variance. Before
+this decides anything, the graders need the "encode the rule" pass and the runs
+need raising.
+
+### Second eval run (`--runs 5`): the suite was measuring its own sandbox
+
+Fixed the graders flagged above, re-ran both suites against both models at
+`--runs 5`, and got a result that invalidates the run rather than settling
+anything. Worth recording in full, because the mistake is the useful part.
+
+| case | Sonnet | Opus |
+|---|---|---|
+| `plan-then-one-test` | 0.20 | 0.55 |
+| `scoped-build-and-evidence` | **1.00** | 0.80 |
+| `triangulate-before-generalizing` | 0.60 | 0.80 |
+| `invert-nondeterministic-dependency` | **1.00** | 0.80 |
+| `plan-structure-first` | 0.88 | *invalid* |
+| `repository-returns-domain` | **1.00** | *invalid* |
+
+Two Opus cells are rate-limit artifacts — the run hit a session limit, so one
+grader threw and one case exited 1 and scored 0.00. Not model performance.
+
+**The `real-red` fix worked** (Sonnet 0.89 → 1.00): that grader had been
+failing responses for citing a non-zero exit status *alongside* three other
+signals, because its FAIL clause said "treats a non-zero exit code alone as
+proof". Same defect class as the two before it — the judge pattern-matched on
+mention rather than on the rule.
+
+**Two of my own changes made things worse, in different ways.**
+
+`plan-then-one-test` fell 0.75 → 0.20 on Sonnet. That was a prompt edit, not a
+model result: the note I added said "no code needs to be written to disk or
+run", which undercuts the premise of a TDD case and removed the reason to pause
+at an approval gate.
+
+`triangulate-before-generalizing` fell 1.00 → 0.60 on Sonnet and 1.00 → 0.80 on
+Opus **with no change to its grader or prompt at all**. That looked like
+run-to-run variance big enough to make the whole suite useless for ranking
+models. It was not. Reading a failing run showed the agent had asked where the
+project was, because the eval sandbox is an empty directory and the prompt
+implies an existing codebase ("Continuing a TDD session on a `RomanNumeral`
+converter"). The ambiguity fires probabilistically, so it presents as noise.
+
+Settled rule, alongside "encode the rule, not the expected answer": **an eval
+prompt must not be ambiguous about its own environment.** Every prompt now
+states there is no repository and nothing to run. A case that sometimes gets a
+clarifying question instead of an answer is measuring the sandbox, not the
+skill, and it will read as variance and get blamed on the model.
+
+**Status: no model recommendation is supported by either run.** The first
+measured three grader defects; the second measured a sandbox defect and a
+prompt regression of mine. Scores either side of these fixes are not
+comparable. What has held across both runs, and looks like genuine signal, is
+`repository-returns-domain` and `invert-nondeterministic-dependency` at 1.00 on
+Sonnet — but two cases are not an answer.
+
+Cost note, recorded because it is the subject of the session: the two sweeps
+came to roughly $23. `--runs 5` across six cases and two models is about $13 of
+that. An eval suite is cheap to write and not cheap to iterate on; budget it
+as a calibration exercise that takes several passes, not a check you run
+casually.
+
+### Third eval run: the sandbox fix held, and the split is real
+
+Re-ran both suites, both models, `--runs 5`, with the empty-sandbox note on
+every prompt and the three grader fixes in place. First run of the three that
+is internally consistent and interpretable.
+
+| case | Sonnet | Opus |
+|---|---|---|
+| `triangulate-before-generalizing` | **1.00** | **1.00** |
+| `scoped-build-and-evidence` | **1.00** | **1.00** |
+| `repository-returns-domain` | **1.00** | **1.00** |
+| `invert-nondeterministic-dependency` | 0.80 | **1.00** |
+| `plan-structure-first` | 0.76 | **1.00** |
+| `plan-then-one-test` | 0.25 | 0.25 | *(confounded — see below)* |
+
+Suite cost: Sonnet $4.04, Opus $8.58 — a 2.1x ratio, matching list pricing.
+
+**The sandbox diagnosis was right.** `triangulate-before-generalizing` went
+0.60 → 1.00 on Sonnet from the prompt note alone, with no grader change. What
+had looked like variance large enough to sink the suite was the agent asking
+where the project was.
+
+**The result supports the split the author proposed.** On `igiari-tdd` the two
+models are indistinguishable — both perfect on the two sound cases, including
+`triangulate-before-generalizing`, the hardest and most distinctive rule in the
+skill (no loop, no lookup table, no generalising on one test's strength). On
+`chottomatte-archi` Opus is ahead on the two judgment-shaped cases
+(`plan-structure-first` 1.00 vs 0.76, `invert-nondeterministic-dependency` 1.00
+vs 0.80) and level on the third. Rule-following survives the cheaper model;
+structural judgment does not, quite.
+
+**`plan-then-one-test` stays confounded and was excluded.** It scores 0.25 on
+both models identically — the signature of a case defect, and the third time
+that signature has appeared in this exercise. The cause is structural rather
+than a grader wording bug: the sandbox is an empty directory, so no build can
+run, and the skill's approval gate exists to stop work *before doing it*. With
+nothing to run, the honest answer is to present the plan and narrate the cycles
+in one reply, which is what both models do. The gate is not being ignored; it
+has nothing to hold back. Fixing it needs a `scaffold_script` laying down a
+minimal Maven project plus write/shell tools, noted in
+`skills/igiari-tdd/evals/README.md`.
+
+Three passes of calibration to get one usable comparison, at about $35 total.
+The generalisable lesson is that an eval's first few runs measure the eval:
+each of the three defect classes found here — a grader encoding the expected
+answer, a prompt ambiguous about its environment, a case whose premise the
+sandbox cannot support — produced scores that looked like model differences and
+would have been acted on as such.
+
+### Effort level: a real lever, not measurable with this suite
+
+`claude --effort <low|medium|high|xhigh|max>` sets thinking depth and token
+spend within one model; Claude Code defaults to `xhigh`. It matters here for a
+reason the model-routing discussion missed: **prompt caches are model-scoped**,
+so a Sonnet/Opus split forfeits cache reuse every time work crosses models,
+while an effort change does not. The capable model at lower effort is therefore
+the cheaper thing to try *before* routing work to a smaller model — one cache
+namespace, and no capability cliff to fall off.
+
+Attempted to measure it with the eval suite and could not. `claude plugin eval`
+does not accept `--effort`, and `effort` is not a valid case frontmatter key —
+the harness lists exactly: `schema_version, name, description, tags, plugins,
+runs, expected_outcome, model, max_turns, timeout_seconds, allowed_tools,
+artifact_publish, growthbook_overrides, append_system_prompt, env`. `model` is
+per-case, effort is not. Claimed it was measurable before checking; it is not.
+
+So effort stays a judgement call for now: `high` for routine work where the
+rules are already written down, `xhigh`/`max` where the judgment is the point.
+Recorded in `global/CLAUDE.md` on that basis. The `env` key is the only
+plausible route to sweeping it, if an environment variable controlling effort
+exists — unverified, and not guessed at here.
+
+Also added to `global/CLAUDE.md`: a **response length** rule. Output tokens
+cost about five times input and are paid fresh every turn with nothing caching
+them, which makes length the one cost lever that trades nothing for
+correctness. The rule is explicit that it does not license dropping a caveat, a
+limit on what was verified, or a disagreement — brevity removes what adds
+nothing, not what matters. Written partly against the evidence of this session,
+whose own replies were considerably longer than they needed to be.
+
+### Permission allowlist: 10 entries to 36
+
+Every Bash call outside the allowlist interrupts the turn and costs a
+round-trip on the full context, so the allowlist is a pure saving — it changes
+nothing about what gets decided. The template carried 10 entries.
+
+Not built from real transcripts: `/fewer-permission-prompts` scans local
+session history and writes to a project `.claude/settings.json`, and neither
+fits — this work happened in a remote container whose transcripts are not the
+author's real usage, and the right target is `global/settings.template.json`.
+Derived instead from two sources that are actually grounded: the commands the
+skills in this repo instruct running (`./gradlew` 11 times, `mvn` 9,
+`command -v` 4, `jq` 2, `qodana`, `idea`), and the read-only inspection
+commands used throughout this session. **Running
+`/fewer-permission-prompts` locally would still be worth it** — it sees the
+Nuxeo and Documentum work this repo cannot.
+
+Added: the toolchain the skills name (`mvnd`, `./mvnw`, `make`, `command -v`,
+`jq` — `mvnd` was missing although `igiari-tdd` explicitly prefers it, and
+`jq` was missing although `kaizen-refactor` now depends on it for SARIF
+extraction); read-only inspection (`find`, `head`, `tail`, `wc`, `sort`,
+`uniq`, `cut`, `stat`, `file`, `diff`, `basename`, `dirname`, `date`); and the
+git verbs the workflow actually uses, including `show`, `rev-parse` and
+`merge-base`, which the global squash-before-merge rule calls for by name.
+
+Two deliberate omissions, both security rather than oversight:
+
+- **`git add` and `git commit` are allowed; `git push` is not.** That mirrors
+  the stated policy exactly — commit automatically, never push automatically.
+  `push` is left *unlisted* rather than denied: `deny` is absolute and would
+  block it even when the author explicitly asks, which is not the rule. Absent
+  from both lists means "prompt every time", which is.
+- **`idql` and `iapi` are not allowed**, despite `mujitsu-documentum` using
+  them 3 times. That skill's whole subject is scripts that create, alter and
+  bulk-delete repository objects against a live docbase. A blanket allow would
+  let destructive DQL run unprompted. The prompt is the safety rail there and
+  is worth its cost.
+
+`python3` is likewise excluded — arbitrary code execution is not an
+inspection command, whatever it is being used for.
+
+### Replacing the confounded case, and the fourth instance of the same bug
+
+`plan-then-one-test` was unsalvageable and is gone. It tested an approval gate
+that pauses work *before doing it*, inside a sandbox where no work can be done,
+so both models scored ~0.25 identically. A `scaffold_script` would not have
+rescued it either: `--scaffold` is off by default, so a plain `make eval` would
+still have run it against an empty directory.
+
+Replaced by `one-test-per-step`, which asks what happens next given an approved
+plan, a passing test 1 and a hardcoded implementation — measurable without a
+repository, because the answer is a decision rather than a build.
+
+**The grader failed the best answer, for the fourth time in this exercise.**
+The strongest run closed cycle 1's refactor checkpoint, then noticed that the
+planned test 2 (`shouldChargeNothing_whenOrderTotalIsAtOrAboveThreshold`) names
+*two* behaviors — the boundary and above it — and that one test cannot force
+the general comparison without anticipating it. It split the test into two
+sequential cycles and flagged the split as a deviation from the approved plan,
+which is what the skill requires. That is the triangulation rule applied more
+carefully than the plan itself managed. The grader read "two cycles" as "writes
+several tests at once" and failed it. Rewriting it to judge whether work is
+done *ahead of a failing test*, rather than counting cycles, lifted Sonnet
+0.55 → 0.70 and Opus 0.35 → 0.75.
+
+**Stopped there deliberately.** Both models now sit mid-range and close
+together, which indicates a case that is hard to grade rather than a capability
+difference, and about $5 had gone into iterating this one case. It ships marked
+**weak** in `skills/igiari-tdd/evals/README.md`: a regression check on the
+skill's wording, not a measurement. `triangulate-before-generalizing` and
+`scoped-build-and-evidence` are the two strong cases and are what model
+comparison should use.
+
+Worth naming the pattern, since it recurred four times across two sessions of
+eval work: **every single grader defect found here penalised a response that
+was better than the one the grader imagined.** Not one was a model doing
+something dumb that the grader wrongly accepted. A hand-written LLM grader
+encodes its author's expected answer, and the ways a strong response exceeds
+that expectation all look like deviations.
+
+### Last cost lever: delegate reading-heavy work
+
+Added to `global/CLAUDE.md`. When a task needs a lot of reading to produce a
+little conclusion — locating a symbol in an unfamiliar codebase, tracing how a
+legacy component is wired, trawling a log — hand it to a subagent. The saving
+is not the subagent's own tokens but that everything it reads stays in its
+context and never enters the caller's, where it would be re-sent every
+subsequent turn.
+
+Stated with its trade rather than as a free win: you get the conclusion, not
+the evidence. Delegate the search, keep the decision, and verify the specific
+file or line yourself when a finding is surprising or load-bearing.

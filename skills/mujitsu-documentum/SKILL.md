@@ -251,6 +251,26 @@ doesn't apply to it). A script meant to also run remotely, as a different
 user, or in CI needs a real credential path (pattern 7) and should not
 assume a bare connect proves anything about which one it used.
 
+## 8b. Bound what a query returns, not just what it locks
+
+`RETURN_TOP` in pattern 9 exists to bound the *lock* a bulk statement
+holds. Bounding the **output** is a separate concern with the same shape:
+a bare `SELECT r_object_id FROM ...` over a populated docbase can return
+tens of thousands of rows, and every one of them lands in whatever is
+reading the script — a terminal, a log, or an agent's context window,
+where it is billable.
+
+The patterns above already do this by habit; keep it deliberate:
+
+- Ask for a count (`SELECT COUNT(*) AS cnt`) when the count is the
+  question. Never fetch rows to measure how many there are.
+- Extract the one value you need at the source (`grep -oE ... | head -1`),
+  rather than echoing a result set and reading it back.
+- Inside a bulk loop, echo once per *packet* — a running total — never
+  once per object. A per-object line over 100k objects is 100k lines.
+- Redirect a full result set to a file when you genuinely need it all, and
+  query that file, instead of putting it on stdout.
+
 ## 9. Bulk update/delete in packets: `ENABLE (RETURN_TOP n)`, looped
 
 **Failure mode:** a single `UPDATE ... OBJECTS SET ...` or
@@ -331,3 +351,24 @@ is processed (`a_status` moves off `pending`) so the candidate set shrinks
 on its own across reruns — the `$PROCESSED_LOG` is still needed as a
 finer-grained marker for a failure *inside* a batch, which the `WHERE`
 clause alone can't detect until the whole object is actually updated.
+
+## Token self-audit
+
+This file loads **in full** whenever the skill triggers and stays resident
+for the rest of the session; `references/` files load only if the body
+points at one. When asked to reduce token cost — or before adding anything
+here — audit in this order and report what you would move, and why:
+
+- **Needed only sometimes?** Material for one framework, one tool's exact
+  commands, or a section about extending the skill itself → move to
+  `references/` behind a pointer that names the condition precisely.
+- **A reference opened on almost every trigger?** Then it costs *more*
+  there than inline — a tool call, an extra assistant turn, and a lost
+  prefix cache. Bring it back inline.
+- **Does a step here run a command?** Its output is tokens too, charged
+  every run and kept for the session. Suppress progress/debug noise and
+  bound what gets echoed.
+
+Never split a rule from its own statement: a reference shows how to satisfy
+a rule in one environment, it never holds the rule. **Relocate, never
+delete** — removing guidance to save tokens is a regression, not a saving.

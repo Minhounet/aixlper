@@ -339,6 +339,24 @@ test coverage to justify — "no behavior changed" is not a reason to leave
 a test broken, since a broken build is exactly what the rule above exists
 to catch.
 
+**Bound the full build's output.** A full build prints far more than a
+scoped run, and here mass failure is the *expected* first result — every
+test constructing the changed class breaks at once. Reading hundreds of
+stack traces to learn that costs a great deal and tells you nothing: what
+you need is the list of broken call sites.
+
+```bash
+# Maven — the call sites to fix, not the traces
+mvn -B --no-transfer-progress test 2>&1 | grep -E "^\[ERROR\].*\.java" | sort -u
+
+# Gradle
+./gradlew build --console=plain 2>&1 | grep -E "\.java:[0-9]+" | sort -u
+```
+
+Work that list, re-run, and only read a full trace for a failure that is
+*not* a mechanical constructor mismatch. Once green, the summary line
+alone is sufficient evidence — don't echo the suite.
+
 ## Repository return types
 
 - A repository method returns the domain object itself — an
@@ -422,154 +440,30 @@ an aggregate leak past its boundary), not only a Clean Architecture one.
 
 ## Framework examples
 
-### Spring: keep it out of the core, prefer bean configuration
+Framework-specific material lives in `references/` and is **not** loaded
+with this skill — read the file only when the case at hand calls for it.
 
-Default preference: use case / domain / service classes carry **no Spring
-annotations** — no `@Component`, `@Service`, `@Autowired`. They stay the
-plain, constructor-injected classes described above. Wiring happens in
-explicit `@Configuration` classes with `@Bean` methods at the composition
-root, so the dependency graph is visible in one place you can read like a
-plan, and the core stays runnable/testable outside a Spring context.
+| Read this | When |
+|---|---|
+| `references/spring.md` | The project uses Spring, or config values must be resolved at the composition root (`@Configuration`/`@Bean`, binding a logger's injection point, environment-driven config objects, and the no-Spring resolver equivalent). |
+| `references/ecm-ports.md` | Wrapping a heavy concrete SDK (Nuxeo `DocumentModel`, Documentum `IDfSysObject`) behind a narrow port — including the two-port rule for syncing to an external system, and pulling deterministic computation out of the seam. |
+| `references/nuxeo-addon.md` | Packaging a Nuxeo addon: enforcing dependency direction with Maven modules, composite log4j2, platform-seeded vocabularies. |
+| `references/testing-across-the-seam.md` | Proving an **adapter or listener** translates correctly at the seam — Nuxeo `FeaturesRunner`/`@Deploy` integration tests (including the per-branch checklist for listener changes), and the unresolved Documentum/DFC case. Not needed for ordinary use case tests: those are covered by the two-tier rule just below. |
 
-```java
-// core — no Spring
-public class RegisterUserUseCase {
-    private final UserRepository userRepository;
-    private final Logger logger;
+The dependency rule itself never lives in those files — it is stated above
+and applies whatever the framework. A reference only shows how to satisfy
+it in one specific environment.
 
-    public RegisterUserUseCase(UserRepository userRepository, Logger logger) {
-        this.userRepository = userRepository;
-        this.logger = logger;
-    }
-}
+### Testing across the seam: two tiers
 
-// composition root — Spring lives here, not in the core
-@Configuration
-public class UseCaseConfig {
-
-    @Bean
-    public RegisterUserUseCase registerUserUseCase(UserRepository userRepository, Logger logger) {
-        return new RegisterUserUseCase(userRepository, logger);
-    }
-}
-```
-
-**Reality check:** you'll sometimes land in a project that already
-annotates domain/use-case classes directly (`@Service` + `@Autowired`
-constructor). That's not the preferred shape, but ripping it out
-project-wide is a different task from whatever you were asked to do.
-Same seam rule as legacy entry points: don't fight the codebase's
-existing convention in the middle of an unrelated task; prefer bean
-configuration going forward when you're adding something genuinely new
-and it's practical to do so.
-
-### Logger: bind the injection point to the right class
-
-A single shared `Logger` bean can't be scoped to the class using it. Use
-Spring's `InjectionPoint` to hand each constructor the logger for its own
-declaring class:
-
-```java
-@Configuration
-public class LoggerConfig {
-
-    @Bean
-    @Scope("prototype")
-    public Logger logger(InjectionPoint injectionPoint) {
-        return LoggerFactory.getLogger(injectionPoint.getMember().getDeclaringClass());
-    }
-}
-```
-
-Every class with a `Logger` constructor parameter gets a logger bound to
-itself, without hand-writing `LoggerFactory.getLogger(ThisClass.class)`
-in every constructor. Outside Spring (or without bean config), the
-hand-written form is the equivalent and is perfectly fine.
-
-### Environment-driven config objects: resolve properties at the composition root
-
-When a parameter object (see *Threading shared configuration* under
-*Author's preferences* below) needs its values from environment/properties
-rather than a literal in code, the core class still never sees `@Value`
-or `@Component` — only the `@Configuration` class touches Spring's
-`Environment`:
-
-```java
-// core — a plain POJO, still no Spring
-public interface ProcessingConfig {
-    Set<String> attributesToKeepEmpty();
-}
-
-public class DefaultProcessingConfig implements ProcessingConfig {
-    private final Set<String> attributesToKeepEmpty;
-
-    public DefaultProcessingConfig(Set<String> attributesToKeepEmpty) {
-        this.attributesToKeepEmpty = attributesToKeepEmpty;
-    }
-
-    @Override
-    public Set<String> attributesToKeepEmpty() {
-        return attributesToKeepEmpty;
-    }
-}
-
-// composition root — the Environment lookup lives here, not in the core
-@Configuration
-public class ProcessingConfiguration {
-
-    @Bean
-    public ProcessingConfig processingConfig(Environment environment) {
-        String raw = environment.getProperty("app.processing.keep-empty-attributes", "");
-        Set<String> attributes = Arrays.stream(raw.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toSet());
-        return new DefaultProcessingConfig(attributes);
-    }
-}
-```
-
-The interface here is the same one the config object always has, per
-"Constructor injection, always" — this pattern is just one concrete
-implementation of it. The composition root turns a raw property string
-into `DefaultProcessingConfig`; a test can turn a literal `Set.of(...)`
-into a different `ProcessingConfig` implementation just as easily,
-without either one touching the use case's constructor.
-
-### Without Spring (e.g. Nuxeo): a plain resolver instead of `@Profile`
-
-Spring's `@Profile` picks which `@Bean` method runs based on an active
-profile — the same job as an `if (useLegacy)` scattered through business
-code, done once, outside the core. Without Spring, the fix is the same
-shape, just without the annotation: put the branch in exactly one
-resolver function at the composition point, reading whatever config
-mechanism the framework offers instead of Spring's `Environment`. In
-Nuxeo, that's `Framework.getProperty(...)` (backed by `nuxeo.conf`), read
-at the same seam the "Heavy ECM/legacy SDKs" section above already uses
-for `Framework.getService(...)` — inside `handleEvent`, never the
-listener's constructor:
-
-```java
-// composition code, inside handleEvent — the only place the flag is read
-private PaymentGateway resolvePaymentGateway() {
-    boolean useLegacy = Boolean.parseBoolean(
-            Framework.getProperty("myaddon.payment.legacy", "false"));
-    return useLegacy
-            ? new LegacyPaymentGateway(Framework.getService(LegacySoapClient.class))
-            : new RealPaymentGateway(Framework.getService(PaymentHttpClient.class));
-}
-```
-
-`PaymentGateway`'s consumers — the use case, its tests — never see the
-flag; the constructor only ever takes the interface. If more than one
-gateway flips on the same flag, pull the read into its own small resolver
-class instead of repeating `Framework.getProperty` per call site, same
-reasoning as the Parameter Object rule under *Author's preferences*: one
-read, one place, reused. This is the general-purpose version of "Gateway
-stand-ins" above — there the two implementations are a stopgap for a
-not-yet-available integration; here they're two permanently-maintained
-variants selected by config — but the fix is identical either way: the
-`if` belongs at the composition point, never inside the use case.
+- **Use case tests** stay pure unit tests — no framework runtime, an
+  in-memory repository and Mockito per `igiari-tdd`'s preferences. This is
+  where most tests live, and it needs no reference.
+- **Adapter/listener integration tests** exist only to prove the seam's
+  translation is correct (event → `Command`, SDK type ↔ domain object, a
+  static lookup actually resolving) — never to re-test business rules the
+  use case's unit tests already cover. How to write one is
+  framework-specific: see `references/testing-across-the-seam.md`.
 
 ### Setter injection: narrow legacy exception
 
@@ -581,509 +475,6 @@ arguments). Scope the exception to that one seam — it doesn't reopen
 constructor injection as a general choice elsewhere in the same class or
 codebase.
 
-### Heavy ECM/legacy SDKs (Nuxeo, Documentum, etc.): keep the port narrow, translate at the seam
-
-Frameworks like Nuxeo or Documentum expose large, concrete SDK types
-(`DocumentModel`, `IDfSysObject`) that are genuinely expensive to fully
-wrap. The dependency rule doesn't relax because the SDK is big — the fix
-for the cost is to scope the port down, not to let the SDK type into the
-core:
-
-- Define the repository interface with only the methods the current use
-  case(s) actually call (`findContractById`, `save`) — not a
-  general-purpose repository mirroring the whole SDK API. A narrow port is
-  cheap to adapt; a wide, speculative one is the expensive one people run
-  into.
-
-  Narrowness also buys **safety**, not only cost. An operation the port
-  does not declare is one no adapter can perform and no later change can
-  reintroduce by accident — the guarantee is enforced by the compiler
-  instead of by everyone remembering it. So when a seam has an operation
-  that must *never* happen, the way to express that is to leave it out of
-  the interface, not to document it. A port that appends rows to a
-  platform-owned vocabulary and declares `contains` + `add` and nothing
-  else cannot delete or overwrite one, whatever a future adapter does:
-
-  ```java
-  public interface AuditVocabulary {
-      boolean contains(String directoryName, String entryId);
-      void add(String directoryName, String entryId, int ordering);
-  }
-  ```
-
-  Write the dangerous method only when a use case genuinely needs it —
-  and then it arrives reviewed, rather than sitting there available.
-- One adapter class maps the SDK type ↔ your domain object, touching only
-  the fields the use case needs — the same per-entity mapper pattern as
-  the `Response` mapping above, reused here on the inbound side.
-- A framework-instantiated entry point (a Nuxeo `EventListener`, a
-  Documentum event handler) is the legacy-entry-point seam already
-  described above: it stays framework-flavored at its outer edge, but the
-  first thing it does is translate the framework event into a
-  `Command`/`Request` and hand off to a real use case that has never heard
-  of the framework.
-- Where the SDK forces a static lookup (`Framework.getService(...)`)
-  because the framework — not you — instantiates the class, confine that
-  lookup to the listener's translation code. Never let it reach into the
-  use case; the use case still only sees interfaces via its constructor.
-- Nuxeo specifically: never call `Framework.getService(...)` in the
-  listener's constructor, and never build a `CoreSession`-backed adapter
-  there either. Listener instances are created during component/bundle
-  registration, before the runtime guarantees every service has started,
-  so a service resolved in the constructor can come back `null` or
-  half-initialized; `CoreSession` is scoped to the current
-  request/transaction and doesn't exist yet at construction time either.
-  Both are resolved inside `handleEvent`, at the same point the
-  translation happens — which means the repository/gateway adapters and
-  the use case itself are constructed per-invocation in `handleEvent`,
-  not once in the listener's constructor.
-- Nuxeo, same family of lifecycle trap, different entry point: code
-  running in a component's `start(...)` has **no principal logged in**.
-  A permission-checked call there — a directory write, for instance —
-  fails with `User null does not have Write permission`, and wrapping it
-  in `TransactionHelper.runInTransaction(...)` does not help, because the
-  missing thing is an identity, not a transaction. Wrap the body in
-  `Framework.doPrivileged(...)` as well. No unit test can catch this: the
-  adapter is exercised through an in-memory fake, so it only ever shows up
-  on a real instance.
-
-```java
-public class ContractStatusListener implements EventListener {
-    @Override
-    public void handleEvent(Event event) {
-        DocumentModel doc = ((DocumentEventContext) event.getContext()).getSourceDocument();
-
-        ContractRepository repository = Framework.getService(ContractRepository.class);
-        Logger logger = LoggerFactory.getLogger(ChangeContractStatusUseCase.class);
-
-        new ChangeContractStatusUseCase(repository, logger).execute(toCommand(doc));
-    }
-
-    private ChangeContractStatusCommand toCommand(DocumentModel doc) { /* mapping */ }
-}
-```
-
-**Exception, judgment call:** when a step has no independent domain concept
-beyond the ECM's own model — e.g. a workflow transition that's genuinely
-just `documentModel.followTransition(...)` with no rule layered on top —
-forcing a full domain wrapper is ceremony with no payoff, same spirit as
-the pure-static-call exception under *Author's preferences* below. Don't
-decide this silently every time it comes up: log it with the "Skill
-improvement proposal" format further down, so the threshold gets reviewed
-rather than reinvented per use case.
-
-### Syncing Nuxeo to an external system: two ports, not one
-
-A common real case: an `EventListener` needs to push a changed document to
-another system over REST. Unlike the trivial-transition exception above,
-this is a genuine clean-architecture candidate — there's real logic to
-isolate (what to sync, how to map it, how to handle failure) — but it
-needs two separate ports, not one repository stretched to cover both
-directions:
-
-- **`DocumentRepository`** (or similarly named) — reads the domain object
-  out of Nuxeo. This is the repository: it reconstructs *your* domain
-  entity from the system of record, same as any other repository in this
-  skill.
-- **A gateway/service port** (`SyncGateway`, `ExternalSystemService`) —
-  pushes to the external system. Name and treat this as a gateway, not a
-  repository, even though the instinct is to call it "the other
-  repository": it's a one-way call to a system you don't own, not a
-  reconstruction of your domain entity. The distinction also drives
-  testing — the Nuxeo repository gets `igiari-tdd`'s
-  in-memory-fake treatment, the external-system gateway gets Mockito, same
-  as any other service/gateway/client collaborator.
-
-The use case takes both through its constructor, with an outbound mapper
-(the same per-domain-type mapper convention as the `Response` mapping
-elsewhere in this skill) turning the domain object into the external
-system's shape:
-
-```java
-class SyncDocumentUseCase {
-    SyncDocumentUseCase(DocumentRepository repository, SyncGateway gateway) { ... }
-
-    void execute(SyncDocumentCommand command) {
-        Document doc = repository.findById(command.documentId());
-        ExternalDto dto = mapper.toExternal(doc);
-        gateway.push(dto);
-    }
-}
-```
-
-The Nuxeo `EventListener` stays the thin translation entry point from the
-pattern above, wired inside `handleEvent`. The REST client adapter behind
-`SyncGateway` is a plain Java HTTP client needing no Nuxeo test harness at
-all — Mockito or a wiremock-style test is enough for it.
-
-### Pulling deterministic computation out of the seam: a business-ID example
-
-A recurring case inside a Nuxeo listener or use case: a document's business
-ID is assembled from today's date, a random or sequence fragment, and
-maybe a prefix — e.g. `DOC-20260910-fa3c9e1b`. The instinct is to compute
-it inline, right where `LocalDate.now()`/`UUID.randomUUID()` are easiest to
-reach for — which makes the whole thing untestable without either running
-Nuxeo or mocking those statics directly.
-
-Split it per the determinism rule above instead of treating "ID
-computation" as one lump:
-
-- The **inputs that vary** (today's date, the random fragment) are
-  non-deterministic — wrap them behind the same owned interfaces the
-  determinism rule already names: `Clock` (or a domain-flavored
-  `DateProvider`) and `IdGenerator`.
-- The **assembly logic** — how the date, fragment, and prefix combine into
-  the final string (format, separators, padding) — is pure once it
-  receives those values as arguments. It needs no port, no mock, no Nuxeo
-  at all: a plain class or Value Object, given inputs, returns a string.
-
-```java
-class DocumentBusinessIdPolicy {
-    private final Clock clock;
-    private final IdGenerator idGenerator;
-
-    DocumentBusinessIdPolicy(Clock clock, IdGenerator idGenerator) { ... }
-
-    String generate(String prefix) {
-        LocalDate today = clock.today();
-        String random = idGenerator.next();
-        return prefix + "-" + today.format(BASIC_ISO_DATE) + "-" + random;
-    }
-}
-```
-
-Tested with a fixed `Clock`/`IdGenerator` fake, the assembly is asserted
-exactly — no Nuxeo, no repository fake, no `FeaturesRunner` for this class
-at all:
-
-```java
-@Test
-void shouldBuildId_whenGivenFixedDateAndRandomFragment() {
-    Clock fixedClock = () -> LocalDate.of(2026, 9, 10);
-    IdGenerator fixedId = () -> "fa3c9e1b";
-    DocumentBusinessIdPolicy policy = new DocumentBusinessIdPolicy(fixedClock, fixedId);
-
-    assertThat(policy.generate("DOC")).isEqualTo("DOC-20260910-fa3c9e1b");
-}
-```
-
-The use case takes `DocumentBusinessIdPolicy` as one more constructor
-dependency alongside `DocumentRepository`. Only the actual Nuxeo write
-(`repository.save(document)`) needs the in-memory-fake/`FeaturesRunner`
-tiers from "Testing across the seam" below — the ID computation is already
-fully covered before either tier runs. This is the general shape of
-"extract deterministic computation before reaching for a port": the more
-of a listener's logic reduces to a function of already-known values, the
-smaller the surface that actually needs a fake repository or a real Nuxeo
-integration test — even as the number of genuine Nuxeo actions in the use
-case grows.
-
-### Nuxeo addon packaging: enforcing dependency direction with Maven modules
-
-Nuxeo deploys addons as a collection of OSGi bundles — not an uber-JAR. The addon
-marketplace package (ZIP) contains:
-
-- `bundles/` — OSGi JARs with `Bundle-SymbolicName` in `MANIFEST.MF`; Nuxeo-aware components
-- `lib/` — plain library JARs; visible to all bundles via Nuxeo's classloader
-
-This is an opportunity to enforce the dependency direction at the **Maven compiler
-level**, not just by convention. Split the addon into two Maven modules:
-
-- **Core/adapter module** (e.g. `my-addon-core`, `my-addon-soap`): model classes, use
-  case interfaces, gateway interfaces, and pure infrastructure adapters (HTTP clients,
-  SOAP clients). **Zero Nuxeo dependency.** Ends up in `lib/`.
-- **Nuxeo bundle module** (e.g. `my-addon-nuxeo`): `EventListener`,
-  `AbstractComputation`, `DefaultComponent` services, OSGI-INF XML, `MANIFEST.MF`.
-  Depends on the core module. Ends up in `bundles/`.
-
-The compiler enforces that the core module cannot import a single Nuxeo class — the
-Maven dependency simply doesn't exist in that module. Tests for the core module need
-no `nuxeo-runtime-test` infrastructure: WireMock or Mockito is sufficient.
-
-The bundle module's `pom.xml` declares the core as a `compile`-scope dependency. The
-packaging module (e.g. `hydro-package`) collects both JARs into their respective
-directories.
-
-Default to this split for any Nuxeo addon whose external adapter (REST, SOAP, Kafka
-producer) has no inherent Nuxeo dependency. The overhead is one extra `pom.xml`, one
-`<modules>` entry in the parent, and one `<dependency>` in the bundle module — a
-small cost for a compiler-enforced boundary.
-
-### Nuxeo addon logging: composite log4j2, never editing the shipped config
-
-An addon needing its own appenders/categories should never edit Nuxeo's
-shipped `log4j2.xml` directly — that fix would have to be reapplied on
-every environment and every Nuxeo upgrade. The actual mechanism is
-Log4j2's own **Composite Configuration** feature (not Nuxeo-specific):
-merge multiple config sources into one `LoggerContext`, later sources
-overriding matching Appenders/Loggers by name, the original file
-untouched on disk.
-
-Two ways to trigger the merge — which one fits depends on what you
-actually control:
-
-- **You own the deployment** (build your own Docker image, control
-  `nuxeo.conf`): pass
-  `-Dlog4j2.configurationFile=<default-path>,<your-fragment-path>` via a
-  `JAVA_OPTS` line appended in `nuxeo.conf` (or a file dropped under
-  `docker-entrypoint-initnuxeo.d/` for the official image). Simple, but
-  ties the addon's logging setup to how a specific image/environment is
-  built — every deployment target has to remember to wire it.
-- **You only own the addon bundle** (the usual case): ship the fragment as
-  a plain classpath resource inside the addon jar — never named
-  `log4j2.xml`, which would collide with Nuxeo's own file — and merge it
-  programmatically when your component starts:
-
-```java
-public class MyAddonComponent extends DefaultComponent {
-
-    private static final String FRAGMENT = "/log4j2-myaddon.xml";
-
-    private static final Logger log = LogManager.getLogger(MyAddonComponent.class);
-
-    @Override
-    public void start(ComponentContext context) {
-        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
-
-        if (ctx.getConfiguration() instanceof CompositeConfiguration) {
-            log.warn("Log4j2 config is already composite; not merging {}", FRAGMENT);
-            return;
-        }
-
-        ConfigurationSource base = ctx.getConfiguration().getConfigurationSource().resetInputStream();
-        InputStream fragment = getClass().getResourceAsStream(FRAGMENT);
-        if (base == null || fragment == null) {
-            log.warn("Not merging {}: base re-readable={}, fragment present={}",
-                    FRAGMENT, base != null, fragment != null);
-            return;
-        }
-
-        ConfigurationFactory factory = ConfigurationFactory.getInstance();
-        List<AbstractConfiguration> configs = List.of(
-                (AbstractConfiguration) factory.getConfiguration(ctx, base),
-                (AbstractConfiguration) factory.getConfiguration(ctx, new ConfigurationSource(fragment)));
-
-        Configurator.reconfigure(new CompositeConfiguration(configs));
-    }
-}
-```
-
-Three details in there are load-bearing, and each one fails **silently** if
-dropped — the merge replaces Nuxeo's real configuration with an empty one,
-so CONSOLE and FILE both vanish with no error logged anywhere:
-
-- **`start`, not `applicationStarted`.** The latter no longer exists on
-  `DefaultComponent` in current LTS; only `start(ComponentContext)` remains.
-- **`resetInputStream()`, never the live `ConfigurationSource`.**
-  `XmlConfiguration`'s constructor drains the source via `toByteArray` and
-  then closes it, and never calls `setData` — so handing that same source
-  back to the factory re-reads a *closed* stream. `resetInputStream()`
-  reopens it from the underlying file or URL, and returns `null` when it can
-  do neither.
-- **The `CompositeConfiguration` guard.** If the deployment already passes a
-  *multi-path* `-Dlog4j2.configurationFile`, the live configuration is
-  itself a composite, and `getConfigurationSource()` then answers
-  `ConfigurationSource.COMPOSITE_SOURCE` — an empty byte array. The two
-  forms above are therefore mutually exclusive: adopting this one means
-  cutting that flag back to a single path.
-
-**Scale the choice to how often the fragment actually changes.** The
-self-contained form is genuinely env-independent, but what buys that is a
-merge against global mutable state carrying the three silent failure modes
-above — spent to avoid editing a deployment descriptor. It earns its keep
-when appenders or layout change often, or when the deployment is truly not
-yours. It does not earn it when the recurring need is "give me DEBUG right
-now": that is a level bump, which the Automation operation below delivers on
-its own, with no merge, no guard, and nothing to change outside the addon.
-Reach for the operation first, and add the merge only once a concrete need
-to reshape the fragment outlives it.
-
-**Tradeoff that comes with the self-contained form: the jar-embedded
-fragment is not hot-editable.** Log4j2's `monitorInterval` file-watcher
-needs a real filesystem `File` with a checkable mtime to detect changes;
-a classpath resource packed inside a jar can't provide that. Editing the
-fragment's content means rebuilding and redeploying the addon — a direct
-consequence of the choice above, not a separate limitation to work
-around.
-
-**A runtime debug bump is a different concern from the baseline config —
-don't reach for file-editing to solve it.** The baseline (what logs
-during normal operation) and a temporary incident-response bump (DEBUG
-for twenty minutes) have opposite lifetimes: the baseline should survive
-restarts unchanged, the bump specifically shouldn't. Give whoever
-operates the addon both live-change mechanisms, built once, and let them
-pick per their own environment's constraints rather than picking one for
-them:
-
-- **JMX** (Log4j2's built-in MBeans, `Configurator` underneath) — zero
-  extra code, since Log4j2 exposes this by default. Needs a JMX port
-  reachable from wherever the change is being made, which is often
-  blocked in a containerized/production Nuxeo deployment.
-- **An Automation operation wrapping `Configurator.setLevel(...)`** —
-  a small addition, but only needs network access to Nuxeo's own REST
-  API (already available to on-call), is trivially securable to
-  Administrators, and reverts with the same call. The more practical
-  default for "need DEBUG right now" in most Nuxeo production setups —
-  no exec/file access into the running container needed, and nothing
-  left behind to forget about afterward the way a hand-edited file can be.
-
-```java
-@Operation(id = SetLogLevel.ID, category = Constants.CAT_SERVICES,
-        label = "Set Logger Level", description = "Change a logger's level at runtime, no restart.")
-public class SetLogLevel {
-    public static final String ID = "MyAddon.SetLogLevel";
-
-    @Param(name = "logger") protected String loggerName;
-    @Param(name = "level") protected String level;
-
-    @OperationMethod
-    public String run() {
-        return Option.of(Level.getLevel(level))
-                     .toEither(() -> new InvalidLevel(level))
-                     .peek(parsed -> Configurator.setLevel(loggerName, parsed))
-                     .fold(invalid -> {
-                         throw new NuxeoException("Unknown log level: " + invalid.levelName());
-                     }, applied -> loggerName + " -> " + applied);
-    }
-}
-```
-
-**`Level.getLevel`, never `Level.toLevel`.** The single-argument
-`toLevel(String)` answers `DEBUG` for any name it doesn't recognise, so an
-operator's typo — `"WARNING"`, or a trailing space — silently switches
-production to DEBUG instead of being rejected. `getLevel(String)` returns
-`null` for an unknown name, which is what lets the operation fail loudly.
-Keeping the parse in a small owned class (here, whatever produces
-`InvalidLevel`) rather than inline in the operation is what makes that
-rejection unit-testable without a Nuxeo runtime — the operation stays a thin
-adapter, per "the entry point isn't always yours" above.
-
-Reach for an external override path instead only when the actual need is
-structural — a new appender or filter added live — not a level bump.
-That's the one case where `monitorInterval`'s file-watching genuinely
-earns back the env-dependency the jar-embedded form was chosen to avoid.
-
-**This route must be seeded at boot, not created on demand, if the
-environment can't tolerate a restart.** An ephemeral/immutable container
-(ops has exec access into the running instance, but restarting means the
-orchestrator destroys and recreates it from the image, wiping anything
-placed by hand) can't use "drop the file in later" — Log4j2 only watches
-a `ConfigurationSource` it already loaded into the composite at
-component `start`; a file that didn't exist at boot was never handed
-to it, so creating one afterward inside the still-running container is
-invisible, restart or not. The fix is to always include the override
-path in the composite from boot — even as an empty/minimal stub config —
-with `monitorInterval` set on that source. Then a later exec-in-and-edit
-is picked up by Log4j2's own watcher with zero restart of the app or the
-container, which is the actual requirement in that kind of environment.
-"Checked at startup, falls back to the jar-embedded default if absent" is
-the wrong shape here — it silently drops this capability exactly where
-it's needed most.
-
-### Nuxeo platform-seeded vocabularies: append at runtime, never take over the dataFile
-
-Same principle as the log4j2 case above, on a different platform-owned
-resource. Some Nuxeo vocabularies are the platform's, not yours —
-`eventTypes` and `eventCategories` are seeded from CSVs shipped inside
-`nuxeo-platform-audit-core`. An addon that contributes its own audit events
-has to get them into those vocabularies or they are invisible to anything
-reading the vocabulary, but it must not take ownership of them.
-
-The obvious declarative move is the destructive one:
-
-```xml
-<!-- WRONG: replaces the platform CSV, does not add to it -->
-<directory name="eventTypes" extends="template-vocabulary">
-  <dataFile>directories/my-event-types.csv</dataFile>
-</directory>
-```
-
-`BaseDirectoryDescriptor` holds a **single `dataFileName`** field, so a
-second contribution for the same directory overrides the platform's rather
-than merging with it. What makes this genuinely dangerous is *when* it
-fails: `createTablePolicy` is `on_missing_columns`, so on an existing
-database the table is already populated and nothing appears to happen —
-the override looks harmless. The built-in rows vanish only when the table
-is next created, i.e. on a fresh environment or a rebuilt one, long after
-the change was reviewed and merged.
-
-Append at runtime instead, from a `DefaultComponent` whose
-`getApplicationStartedOrder()` puts it after the directory service, behind
-a narrow port that cannot do anything but add (see *keep the port narrow*
-above — this is the safety argument, not the cost one):
-
-```java
-@Override
-public void start(ComponentContext context) {
-    super.start(context);
-    // doPrivileged as well as runInTransaction: component start has no principal.
-    TransactionHelper.runInTransaction(() -> Framework.doPrivileged(this::seed));
-}
-```
-
-Make the seeding **idempotent by construction** — read the entry, add only
-what is absent — because it runs on every start, and a blind
-`createEntry` throws a duplicate-key `DirectoryException` the second time.
-Verify it on a real instance rather than by reasoning: diff the full set of
-row ids before and after, not the row count, then restart once to prove
-idempotence, then delete one seeded row and restart to prove the component
-actually still runs and re-adds only that one. Unchanged counts alone
-cannot distinguish "correctly did nothing" from "never executed".
-
-One thing this does *not* buy: the vocabulary row makes the value
-selectable, not readable. Nuxeo resolves a row's `label` field as an i18n
-key, and platform rows set `label` equal to `id` — so an unseeded
-translation shows the raw id. That part is a translation contribution, not
-an architecture concern.
-
-### Testing across the seam
-
-Two tiers, not one:
-
-- **Use case tests** stay pure unit tests — no framework runtime, an
-  in-memory repository and Mockito per `igiari-tdd`'s existing
-  preferences. This is where most tests live.
-- **Adapter/listener integration tests** exist only to prove the seam's
-  translation is correct (event → `Command`, SDK type ↔ domain object, the
-  static lookup actually resolves) — not to re-test business rules already
-  covered by the use case's unit tests. Nuxeo provides this via
-  `nuxeo-runtime-test`'s `FeaturesRunner` + `@Features(CoreFeature.class)`:
-  an embedded runtime where `Framework.getService(...)` resolves for real,
-  scoped down with `@Deploy` to just the components under test.
-- **Checklist for listener changes — every new path needs a FeaturesRunner case.**
-  Any code path added to a listener's `handleEvent()` that involves a session
-  query or a decision based on Nuxeo state requires a FeaturesRunner test case
-  that exercises it. Before committing a listener change, enumerate every new
-  `if`/`switch` branch added to `handleEvent()` — if any branch reaches a
-  Nuxeo API, there must be a `@Test` method exercising it:
-  - A session call whose result drives a branch (`session.getVersions()`, an
-    NXQL query, `session.getWorkingCopy()`) → test each branch
-  - A property read from a Nuxeo document that feeds downstream output
-    (`gen:edfUuid`, `gen:indice`) → test the property-to-field translation
-    end-to-end through the listener
-  - A `Framework.getService(...)` lookup that affects behaviour → test that
-    the resolved service is called with the right arguments
-
-  What does **not** need a FeaturesRunner test:
-  - The listener registration itself (OSGi wiring — proven by the fact the
-    test fires at all)
-  - A filter already covered by an existing test case (e.g. a
-    non-HydroDocument guard already tested elsewhere)
-
-  Missing a FeaturesRunner case for a new branch is a violation of this skill,
-  even when the use case it delegates to is already unit-tested — the seam
-  translation itself (the session query, the branch, the field mapping) is
-  what the FeaturesRunner test proves.
-
-- **Documentum: unresolved, flag rather than assume.** There's no known
-  embedded-runtime equivalent for DFC. `IDfSysObject`/`IDfSession` are
-  interfaces, so they're directly Mockito-mockable, but the fidelity of
-  that mock against real Documentum behavior is an open concern, not a
-  settled pattern — the same unverified status as
-  `mujitsu-documentum`. Don't present a mocked-DFC adapter
-  test as equivalent proof to a Nuxeo `FeaturesRunner` test; treat it as a
-  weaker substitute until real usage says otherwise, and prefer validating
-  the adapter against a real docbase where practical.
 
 ## Author's preferences
 
@@ -1167,6 +558,27 @@ Two tiers, not one:
   anything that depends on it.
 
 <!-- Add further architecture preferences here as they come up. -->
+
+## Token self-audit
+
+This file loads **in full** whenever the skill triggers and stays resident
+for the rest of the session; `references/` files load only if the body
+points at one. When asked to reduce token cost — or before adding anything
+here — audit in this order and report what you would move, and why:
+
+- **Needed only sometimes?** Material for one framework, one tool's exact
+  commands, or a section about extending the skill itself → move to
+  `references/` behind a pointer that names the condition precisely.
+- **A reference opened on almost every trigger?** Then it costs *more*
+  there than inline — a tool call, an extra assistant turn, and a lost
+  prefix cache. Bring it back inline.
+- **Does a step here run a command?** Its output is tokens too, charged
+  every run and kept for the session. Suppress progress/debug noise and
+  bound what gets echoed.
+
+Never split a rule from its own statement: a reference shows how to satisfy
+a rule in one environment, it never holds the rule. **Relocate, never
+delete** — removing guidance to save tokens is a regression, not a saving.
 
 ## When this skill doesn't cover the case
 
