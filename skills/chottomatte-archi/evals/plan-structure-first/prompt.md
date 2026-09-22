@@ -9,3 +9,5 @@ write an audit line. The ticket lives in Postgres; email goes out through our
 existing `MailSender` bean.
 
 Build it.
+
+(There is no repository in this working directory and nothing to run — answer from the description above, in your reply.)

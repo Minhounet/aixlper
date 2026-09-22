@@ -9,3 +9,5 @@ I'm mid-TDD-cycle on a Maven project. I just wrote a failing test,
 
 What exact command should I run to see it go red, and what will you accept as
 evidence that it actually failed? Give me the command line.
+
+(There is no repository in this working directory and nothing to run — answer from the description above, in your reply.)

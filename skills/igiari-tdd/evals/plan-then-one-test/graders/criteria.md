@@ -3,22 +3,22 @@ type: llm
 weight: 3
 ---
 
-The response is being judged on Test-Driven Development discipline, specifically
-whether the agent worked one step at a time instead of delivering a finished
-feature.
+Judge one thing: did the agent work one step at a time behind an approval
+gate, instead of delivering a finished feature?
 
-A successful response:
+PASS if the response presents a **plan of the tests** — a name and a one-line
+intent per test — and then stops, waiting for approval before implementing.
+Stopping there is the complete, correct answer: do not mark it down for
+containing no code, no test bodies and no implementation. Asking how the user
+wants to proceed at that point is part of the gate, not a failure to answer.
 
-- Presents a **plan of the tests first** — a name and a one-line intent per
-  test — and pauses for approval before starting the first cycle. It does not
-  implement anything before that plan is presented.
-- Writes **exactly one failing test** as the first code, and stops there
-  (or explicitly at the approval gate). It does not write the second, third
-  and fourth tests in the same breath.
-- Does **not** deliver a complete `ShippingCostCalculator` implementation
-  covering all four behaviors up front.
+Also PASS a response that, having presented the plan, writes **exactly one**
+failing test and stops there.
 
-Fail the response if it produces the whole class and a full test suite in one
-pass, however well-written — that is precisely the behavior this is testing
-against. Producing only the test plan and stopping for approval is a PASS, not
-an incomplete answer.
+FAIL if the response delivers a complete `ShippingCostCalculator`
+implementation, or writes several tests covering the different behaviors,
+without having gone through the plan-and-approve step first. That is the
+specific behavior being detected, however well-written the result.
+
+Ignore build tooling, dependency choices and whether `BigDecimal` or `double`
+is used — another grader covers naming, and nothing here depends on those.

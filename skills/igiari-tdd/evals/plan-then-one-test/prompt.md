@@ -11,3 +11,5 @@ I'm adding a `ShippingCostCalculator` to our Java service. It needs to:
 - reject a negative order total
 
 Write it for me, test-driven. Show me the code.
+
+(There is no repository in this working directory and nothing to run — answer from the description above, in your reply.)

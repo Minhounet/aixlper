@@ -6,6 +6,11 @@ weight: 2
 Judge the dependency direction and framework placement in whatever plan or code
 the response contains.
 
+Judge only what the response commits to. A plan naming the types, their
+constructor dependencies and the `@Configuration`/`@Bean` wiring is enough —
+do not require implementation bodies, and do not penalise a plan for being a
+plan.
+
 PASS requires all of:
 
 - The use case is the entry point and depends only on **interfaces** the
