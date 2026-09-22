@@ -175,6 +175,29 @@ because no skill had an `evals/` directory; that stopped being true once the
 suites landed. Don't "fix" the workflow to call `make ci`. Run evals by hand,
 scoped with `--case` and `--runs`, and bound them with `--max-cost-usd`.
 
+### When to add an eval case
+
+Not every skill or rule needs one — see "Testing method" above; most skills
+in this repo have none, and that's the normal state, not a gap to fill by
+default. Add a case when one of these actually applies, not as a routine
+step after writing a rule:
+
+- A real question needs settling with evidence instead of a guess (e.g.
+  "does this rule still hold on a cheaper model").
+- Dogfooding or real use surfaced a rule that's ambiguous, got
+  mis-implemented, or regressed — pin it down so it can't regress silently
+  again.
+- An edit moves or rewords something (a token-cutting cut to `references/`,
+  a rewritten rule) and the change needs verifying, not just assuming, it
+  didn't alter behavior.
+
+A passing score only proves that case's own scenario, on the model and run
+count it was run with — see `docs/design-log.md` for the grader-defect
+history before trusting one blindly. Run the no-skill ablation before
+trusting a good score (a case any model passes without the skill proves
+nothing), and treat a suspiciously easy pass as a reason to re-read the
+grader, not as confirmation the skill is right.
+
 ## Testing
 
 - **Claude Code**: skills can be exercised live in a Claude Code session,
