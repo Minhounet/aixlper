@@ -1013,3 +1013,52 @@ came to roughly $23. `--runs 5` across six cases and two models is about $13 of
 that. An eval suite is cheap to write and not cheap to iterate on; budget it
 as a calibration exercise that takes several passes, not a check you run
 casually.
+
+### Third eval run: the sandbox fix held, and the split is real
+
+Re-ran both suites, both models, `--runs 5`, with the empty-sandbox note on
+every prompt and the three grader fixes in place. First run of the three that
+is internally consistent and interpretable.
+
+| case | Sonnet | Opus |
+|---|---|---|
+| `triangulate-before-generalizing` | **1.00** | **1.00** |
+| `scoped-build-and-evidence` | **1.00** | **1.00** |
+| `repository-returns-domain` | **1.00** | **1.00** |
+| `invert-nondeterministic-dependency` | 0.80 | **1.00** |
+| `plan-structure-first` | 0.76 | **1.00** |
+| `plan-then-one-test` | 0.25 | 0.25 | *(confounded — see below)* |
+
+Suite cost: Sonnet $4.04, Opus $8.58 — a 2.1x ratio, matching list pricing.
+
+**The sandbox diagnosis was right.** `triangulate-before-generalizing` went
+0.60 → 1.00 on Sonnet from the prompt note alone, with no grader change. What
+had looked like variance large enough to sink the suite was the agent asking
+where the project was.
+
+**The result supports the split the author proposed.** On `igiari-tdd` the two
+models are indistinguishable — both perfect on the two sound cases, including
+`triangulate-before-generalizing`, the hardest and most distinctive rule in the
+skill (no loop, no lookup table, no generalising on one test's strength). On
+`chottomatte-archi` Opus is ahead on the two judgment-shaped cases
+(`plan-structure-first` 1.00 vs 0.76, `invert-nondeterministic-dependency` 1.00
+vs 0.80) and level on the third. Rule-following survives the cheaper model;
+structural judgment does not, quite.
+
+**`plan-then-one-test` stays confounded and was excluded.** It scores 0.25 on
+both models identically — the signature of a case defect, and the third time
+that signature has appeared in this exercise. The cause is structural rather
+than a grader wording bug: the sandbox is an empty directory, so no build can
+run, and the skill's approval gate exists to stop work *before doing it*. With
+nothing to run, the honest answer is to present the plan and narrate the cycles
+in one reply, which is what both models do. The gate is not being ignored; it
+has nothing to hold back. Fixing it needs a `scaffold_script` laying down a
+minimal Maven project plus write/shell tools, noted in
+`skills/igiari-tdd/evals/README.md`.
+
+Three passes of calibration to get one usable comparison, at about $35 total.
+The generalisable lesson is that an eval's first few runs measure the eval:
+each of the three defect classes found here — a grader encoding the expected
+answer, a prompt ambiguous about its environment, a case whose premise the
+sandbox cannot support — produced scores that looked like model differences and
+would have been acted on as such.
