@@ -308,6 +308,29 @@ TDD skill's preferences possible: an in-memory repository and a Mockito
 mock are both just another implementation of the same interface the use
 case already depends on — no test-only wiring hacks needed.
 
+## Every repository port ships with an in-memory implementation
+
+A repository interface is not complete until an in-memory implementation
+(backed by a `Map`/`List`) exists alongside it — added in the same change
+that introduces the port, never invented later only because a test happened
+to need one. List it in the structural plan's composition-root wiring next
+to the real adapter.
+
+- It implements every method the interface declares, including ones the
+  first caller doesn't yet exercise — a partial stub defeats the purpose
+  the next time a different use case needs the same port.
+- It is bound at the composition root exactly like the real adapter is —
+  which one is wired is a one-line choice there (production vs. test
+  setup), never a change to the use case or its constructor, same as the
+  Logging/No-Op gateway stand-ins above.
+- This doesn't relax "Repository return types" above: the in-memory
+  implementation returns the same domain object the real adapter does.
+
+This is what makes `igiari-tdd`'s test-writing preference (in-memory over
+mocking a repository) possible from day one, rather than depending on
+someone having written the double already: the adapter exists because the
+port does, not because a test asked for it.
+
 ## Verifying a structural change: full build, not just the scoped test
 
 A structural change here — introducing an interface, changing a
