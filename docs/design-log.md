@@ -955,3 +955,61 @@ again.
 Three runs per case is too few to separate a real gap from variance. Before
 this decides anything, the graders need the "encode the rule" pass and the runs
 need raising.
+
+### Second eval run (`--runs 5`): the suite was measuring its own sandbox
+
+Fixed the graders flagged above, re-ran both suites against both models at
+`--runs 5`, and got a result that invalidates the run rather than settling
+anything. Worth recording in full, because the mistake is the useful part.
+
+| case | Sonnet | Opus |
+|---|---|---|
+| `plan-then-one-test` | 0.20 | 0.55 |
+| `scoped-build-and-evidence` | **1.00** | 0.80 |
+| `triangulate-before-generalizing` | 0.60 | 0.80 |
+| `invert-nondeterministic-dependency` | **1.00** | 0.80 |
+| `plan-structure-first` | 0.88 | *invalid* |
+| `repository-returns-domain` | **1.00** | *invalid* |
+
+Two Opus cells are rate-limit artifacts — the run hit a session limit, so one
+grader threw and one case exited 1 and scored 0.00. Not model performance.
+
+**The `real-red` fix worked** (Sonnet 0.89 → 1.00): that grader had been
+failing responses for citing a non-zero exit status *alongside* three other
+signals, because its FAIL clause said "treats a non-zero exit code alone as
+proof". Same defect class as the two before it — the judge pattern-matched on
+mention rather than on the rule.
+
+**Two of my own changes made things worse, in different ways.**
+
+`plan-then-one-test` fell 0.75 → 0.20 on Sonnet. That was a prompt edit, not a
+model result: the note I added said "no code needs to be written to disk or
+run", which undercuts the premise of a TDD case and removed the reason to pause
+at an approval gate.
+
+`triangulate-before-generalizing` fell 1.00 → 0.60 on Sonnet and 1.00 → 0.80 on
+Opus **with no change to its grader or prompt at all**. That looked like
+run-to-run variance big enough to make the whole suite useless for ranking
+models. It was not. Reading a failing run showed the agent had asked where the
+project was, because the eval sandbox is an empty directory and the prompt
+implies an existing codebase ("Continuing a TDD session on a `RomanNumeral`
+converter"). The ambiguity fires probabilistically, so it presents as noise.
+
+Settled rule, alongside "encode the rule, not the expected answer": **an eval
+prompt must not be ambiguous about its own environment.** Every prompt now
+states there is no repository and nothing to run. A case that sometimes gets a
+clarifying question instead of an answer is measuring the sandbox, not the
+skill, and it will read as variance and get blamed on the model.
+
+**Status: no model recommendation is supported by either run.** The first
+measured three grader defects; the second measured a sandbox defect and a
+prompt regression of mine. Scores either side of these fixes are not
+comparable. What has held across both runs, and looks like genuine signal, is
+`repository-returns-domain` and `invert-nondeterministic-dependency` at 1.00 on
+Sonnet — but two cases are not an answer.
+
+Cost note, recorded because it is the subject of the session: the two sweeps
+came to roughly $23. `--runs 5` across six cases and two models is about $13 of
+that. An eval suite is cheap to write and not cheap to iterate on; budget it
+as a calibration exercise that takes several passes, not a check you run
+casually.
