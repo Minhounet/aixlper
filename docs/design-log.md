@@ -1062,3 +1062,34 @@ each of the three defect classes found here — a grader encoding the expected
 answer, a prompt ambiguous about its environment, a case whose premise the
 sandbox cannot support — produced scores that looked like model differences and
 would have been acted on as such.
+
+### Effort level: a real lever, not measurable with this suite
+
+`claude --effort <low|medium|high|xhigh|max>` sets thinking depth and token
+spend within one model; Claude Code defaults to `xhigh`. It matters here for a
+reason the model-routing discussion missed: **prompt caches are model-scoped**,
+so a Sonnet/Opus split forfeits cache reuse every time work crosses models,
+while an effort change does not. The capable model at lower effort is therefore
+the cheaper thing to try *before* routing work to a smaller model — one cache
+namespace, and no capability cliff to fall off.
+
+Attempted to measure it with the eval suite and could not. `claude plugin eval`
+does not accept `--effort`, and `effort` is not a valid case frontmatter key —
+the harness lists exactly: `schema_version, name, description, tags, plugins,
+runs, expected_outcome, model, max_turns, timeout_seconds, allowed_tools,
+artifact_publish, growthbook_overrides, append_system_prompt, env`. `model` is
+per-case, effort is not. Claimed it was measurable before checking; it is not.
+
+So effort stays a judgement call for now: `high` for routine work where the
+rules are already written down, `xhigh`/`max` where the judgment is the point.
+Recorded in `global/CLAUDE.md` on that basis. The `env` key is the only
+plausible route to sweeping it, if an environment variable controlling effort
+exists — unverified, and not guessed at here.
+
+Also added to `global/CLAUDE.md`: a **response length** rule. Output tokens
+cost about five times input and are paid fresh every turn with nothing caching
+them, which makes length the one cost lever that trades nothing for
+correctness. The rule is explicit that it does not license dropping a caveat, a
+limit on what was verified, or a disagreement — brevity removes what adds
+nothing, not what matters. Written partly against the evidence of this session,
+whose own replies were considerably longer than they needed to be.
