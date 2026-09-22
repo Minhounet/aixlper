@@ -61,6 +61,45 @@ When flagging, suggest a concrete break point: "finish X, then start a fresh ses
 
 The user should never have to ask.
 
+## Response length
+
+Output tokens cost roughly five times input tokens, and unlike the files
+loaded into context they are paid fresh every turn — nothing caches them.
+Length is therefore a cost lever that is entirely yours to pull, and pulling
+it costs no correctness.
+
+Answer in the fewest words that are actually complete:
+
+- No preamble, no restating the question, no summarising what you just did
+  when the diff or the command output already shows it.
+- Report a result, not a narration of arriving at it. "Tests pass, 12/12" —
+  not the reasoning that led there, unless it is what was asked for.
+- Explanations and comparisons are expanded **on request**. A one-line answer
+  plus "want the reasoning?" beats three paragraphs nobody asked for.
+- Tables and lists over prose when the content is genuinely tabular; prose
+  over tables when it is not. Neither as decoration.
+
+This does not license leaving out something the answer needs — a caveat that
+changes what the user would do, a limit on what was verified, or a real
+disagreement still gets said. Brevity is about removing what adds nothing, not
+about withholding what matters.
+
+## Effort level
+
+`claude --effort <low|medium|high|xhigh|max>` sets thinking depth and overall
+token spend for a session; the default is `xhigh`. Lower effort means fewer
+and more-consolidated tool calls, less preamble, terser confirmations.
+
+Because it works *within* one model it does not split the prompt cache the way
+switching models does — caches are model-scoped. So before routing work to a
+cheaper model, try the capable model at lower effort on the same task: it
+keeps one cache namespace and often holds quality that a model downgrade
+would not.
+
+Rule of thumb: `high` for routine work where the rules are already written
+down (following a TDD or architecture skill), `xhigh` or `max` when the
+judgment is the point (designing a structure, debugging something unfamiliar).
+
 ---
 
 # Language- and platform-specific rules — read on demand
