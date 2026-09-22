@@ -166,7 +166,14 @@ by the client — but there is a validate/test pipeline, the equivalent of
 - `make eval` — runs `claude plugin eval` for every skill that has a
   `skills/<name>/evals/` directory (`case.yaml`/`prompt.md` + grader
   files), including a no-skill baseline comparison.
-- `make ci` — both, in order. Wired into `.github/workflows/`.
+- `make ci` — both, in order.
+
+**GitHub Actions runs `make validate` only, deliberately.** `make eval` spends
+real API money — roughly $13 for the six cases across two models at
+`--runs 5` — and needs credentials CI does not have. It used to be a no-op,
+because no skill had an `evals/` directory; that stopped being true once the
+suites landed. Don't "fix" the workflow to call `make ci`. Run evals by hand,
+scoped with `--case` and `--runs`, and bound them with `--max-cost-usd`.
 
 ## Testing
 
