@@ -1287,3 +1287,22 @@ error from production code is a valid red when it *is* the missing behavior.
   real end-of-task build.
 - Code style says no exceptions for control flow, while a planned test
   requires a throw. The skill doesn't say which wins at the API boundary.
+
+### Split mode removed; rule 5 clarified
+
+**Split mode removed at the author's request,** after the comparison above.
+The `SKILL.md` section and `references/red-green-split.md` are gone. Kept:
+rule 9 (frozen test during GREEN), the rule 4 stub fix, and `CLAUDE.md`'s
+5th subagent criterion, which is still valid in general. The proposal file
+stays as the record.
+
+**Rule 5: a hardcoded value is minimal only while one value satisfies every
+test.** The two runs read rule 5 differently at test 2: the split implementer
+wrote `isEmpty() ? 0 : 5` and the inline run wrote `parseInt`, which matches
+the skill's own Super Green example. The author chose to generalize at the
+second test: once two tests need different answers, generalize just enough
+for the tests that exist. A branch returning a different literal per test
+input is faking, not minimal. The triangulation clause is unchanged, so test
+3 (two operands) still doesn't license a loop; test 4 does. This settles the
+first of the six frictions listed above. The alternative, Beck-style fake-it
+then generalize in REFACTOR, was rejected because it contradicts Super Green.

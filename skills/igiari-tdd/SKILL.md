@@ -196,7 +196,11 @@ destination — it never moves up when you're allowed to build the road.
    that single test pass. Do not implement behavior no current test
    requires, even if you know a later step will need it. A hardcoded or
    degenerate return value is an acceptable, even expected, way to pass a
-   test — the next test is what should force generalization.
+   test — the next test is what should force generalization. That holds
+   only while **one** value satisfies every test so far: once two tests
+   need different answers, generalize just enough for the tests that
+   exist. A branch that returns a different literal per test input
+   (`isEmpty() ? 0 : 5`, `contains(",") ? 3 : 5`) is faking, not minimal.
    **Triangulate before generalizing**: never introduce a loop, recursion,
    or a general/abstracted branch on the strength of a single test, even
    one you're confident implies it. Wait until a second test exists that a
@@ -309,28 +313,6 @@ When there are no more behaviors left for the current task, run the full
 project build once as the final step, then print the "Deferred refinement
 notes" list accumulated during the task (see the Advanced refinement rule
 above) — explicitly say "none" if nothing was logged.
-
-### Split mode — opt-in, Claude Code only, experimental
-
-Off by default. Use it only when the author asks for it ("use split
-mode") or the project's own instructions turn it on, and only in a client
-that can spawn subagents; everywhere else, run the cycle above inline.
-
-Split mode hands RED and GREEN to two fresh subagents per cycle, each
-defined by what it must **not** see: the **test writer** never sees
-production method bodies (so the test specifies the requirement, not an
-implementation), and the **implementer** never sees the test plan (so it
-can't build ahead of the tests). Everything else stays with you: the plan
-and its single pause, any signature stub, REFACTOR, the final build, every
-official red/green run shown under rule 8, rule 9's frozen-test check
-after each GREEN, and reviewing each GREEN diff against rule 5 — only you
-know the plan, so only you can see an overshoot. A subagent's report is
-never the evidence. Show each new
-test's code and its red output before dispatching the implementer, without
-pausing.
-
-Read `references/red-green-split.md` when split mode is on: it holds the
-step-by-step cycle and the two dispatch prompts.
 
 ## Build commands — scoped during the cycle, full only at the end
 

@@ -1,9 +1,10 @@
 # Proposal: separate RED from GREEN in `igiari-tdd`
 
-> Status: **applied 2026-10-02.** Part A is rule 9 in
-> `skills/igiari-tdd/SKILL.md`; Part B is the "Split mode" section there plus
-> `skills/igiari-tdd/references/red-green-split.md`; history is in
-> `docs/design-log.md`. Kept as the record of the reasoning and decisions.
+> Status: **Part A kept, Part B removed (2026-10-02).** Part A is rule 9 in
+> `skills/igiari-tdd/SKILL.md`. Part B (split mode) was applied, dogfooded
+> against an inline baseline, did worse at ~9× the tokens, and was removed
+> at the author's request; see `docs/design-log.md`. Kept as the record of
+> the reasoning.
 
 ## The problem this solves
 
