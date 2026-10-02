@@ -79,6 +79,12 @@ sections without the author asking.**
 | `gyakuten-ddd` | New, not dogfooded | DDD *strategic* patterns only (Bounded Context, Context Map, ACL...). Tactical patterns stay in `chottomatte-archi`. Doubles as a learning aid — explaining a term on request is a valid trigger. |
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
 
+**Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
+by one with the author, evals checked against the no-skill baseline). The
+brief, with the method and lessons from the `igiari-tdd` study, is in
+`docs/next-session-chottomatte.md`. Read it first, and delete both it and
+this paragraph when the study is done.
+
 `igiari-tdd` and `chottomatte-archi` are deliberately **two** skills: TDD
 governs *how you write code over time*, Clean Architecture governs *how the
 code is structured* — orthogonal and composable, and you shouldn't need
