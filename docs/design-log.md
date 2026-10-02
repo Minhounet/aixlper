@@ -1340,3 +1340,12 @@ fail in CI. Changed in `SKILL.md` and `references/build-commands.md`.
 `chottomatte-archi`'s `mvn test` call-site grep stays as it is: it's a
 compile-error diagnostic, not the final build. Fifth of the six frictions
 settled.
+
+**Throw vs. `Either`: settled at plan time.** The code style (and
+`kanpeki-fp`: a known business failure returns `Either`, never throws)
+conflicted with an approved planned test that required a throw. Both runs
+had to throw, and one listed `Either` as a deferred note. Decided: the plan
+models known failures as values. A "throws" entry appears only for an
+external contract and names it. Once approved, the plan wins, and swapping
+either way mid-cycle is a plan deviation. The kata's own plan would now
+carry "— kata spec" on test 6. Last of the six frictions settled.

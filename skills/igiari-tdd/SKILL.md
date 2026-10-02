@@ -134,6 +134,15 @@ first (its classes/interfaces/signatures), write this test plan against
 that already-approved structure rather than re-deriving or re-presenting
 it — one plan per concern, not two overlapping ones.
 
+**Failures are shaped at plan time, not mid-cycle.** Write a planned
+failure case the "Code style" way below: a known business failure is
+returned as a value (`Either`/`Validation`), not thrown. Plan a "throws"
+test only when the throw is an external contract (a spec, a framework, an
+API you don't own) and say which in the entry, e.g. `add("1,-2") throws
+IllegalArgumentException — kata spec`. Once approved, the plan wins:
+swapping a planned throw for `Either` (or the reverse) during
+implementation is a plan deviation, never a silent substitution.
+
 **Example — seeing the whole plan doesn't license building ahead.** Take
 the plan above. You're implementing test 1, but you can already read
 tests 3 and 4 and know a split-and-sum loop is coming. Rule 5 (minimal
