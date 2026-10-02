@@ -1306,3 +1306,11 @@ input is faking, not minimal. The triangulation clause is unchanged, so test
 3 (two operands) still doesn't license a loop; test 4 does. This settles the
 first of the six frictions listed above. The alternative, Beck-style fake-it
 then generalize in REFACTOR, was rejected because it contradicts Super Green.
+
+**Refactor checklist: "fight the next behavior" is make-room only.** The item
+"does the current structure fight the next behavior you already know is
+coming?" invited the building ahead that rule 5 forbids: after test 3 the
+honest answer was yes, and acting on it meant a loop before test 4 existed.
+The author kept the item but scoped it to behavior-preserving moves (rename,
+extract, reorder). Added generality waits for the next test's GREEN. Second
+of the six frictions settled.

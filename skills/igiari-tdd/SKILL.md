@@ -213,7 +213,12 @@ destination — it never moves up when you're allowed to build the road.
    - Did this step leave a magic literal that should be a constant?
    - Is there now a guard clause / early return that would remove nesting?
    - Does the current structure fight the next behavior you already know
-     is coming?
+     is coming? If so, **make room, never add**: only behavior-preserving
+     moves (rename, extract method, reorder) that make the next change
+     easier. Anything that adds generality or behavior no current test
+     needs — a loop, a new branch, a new parameter — waits for that next
+     test's GREEN (rule 5). E.g. after a two-operand green, extracting
+     `parseOperand()` is room; replacing it with a loop is adding.
    - Could this test now be merged with an existing one into a
      `@ParameterizedTest`? If yes, do it — no confirmation needed — but
      **never silently**: it changes test code, not just production code,
