@@ -285,7 +285,10 @@ destination — it never moves up when you're allowed to build the road.
    `kaizen-refactor` (its "Tier 1 — IDE-verified mechanical refactorings"
    section), which owns it since the same set applies whether you're
    mid-cycle here or refactoring existing code outside a TDD cycle — load
-   that skill for the list itself rather than duplicating it here.
+   that skill for the list itself rather than duplicating it here, at the
+   first REFACTOR of the task. If it can't be loaded, skip only the
+   mechanical list and say so in every refactor summary ("mechanical list:
+   kaizen-refactor not available"), so the gap is visible, never silent.
    `kaizen-refactor`'s scan-based workflow (`qodana scan`/`idea inspect`)
    is a separate, standalone activity for triaging existing code — this
    step here never triggers it.

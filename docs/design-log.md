@@ -1323,3 +1323,11 @@ planned names was a plan deviation. Decided: merge only tests that specify
 the same behavior with different data. Distinct cases keep their own test.
 The rename is part of the traced refactor, not a deviation. Third of the six
 frictions settled.
+
+**Mechanical list: load `kaizen-refactor`, else say so.** Rule 6 made the
+Tier 1 list mandatory, but the list lives only in `kaizen-refactor`, with no
+fallback. This was partly caused by the setup, since the baseline prompt
+forbade reading other skills, but the gap is real wherever that skill
+doesn't load. Decided: load it at the first REFACTOR. If it's unavailable,
+skip only that list and state it in every refactor summary. `kaizen-refactor`
+stays the single owner, with no copy. Fourth of the six frictions settled.
