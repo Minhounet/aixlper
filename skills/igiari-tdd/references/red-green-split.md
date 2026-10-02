@@ -29,11 +29,16 @@ too. Rule 9's frozen-test check, run by you, is what enforces the boundary.
 1. **RED**
    1. Dispatch the test writer with plan entry N.
    2. If the new test doesn't compile because the API doesn't exist yet,
-      add a signature-only stub yourself (default return, or
-      `throw new UnsupportedOperationException()`) and show it. A stub is
-      not implementation.
+      add a signature-only stub yourself and show it. A stub is not
+      implementation. It must return a value the test rejects (e.g. `-1`
+      where the test expects `0`): a thrown exception fails with an error
+      rather than on the assertion (rule 4), and a "natural" default like
+      `0` can pass the test before any implementation exists.
    3. Run the scoped test yourself. Show the new test method's code and the
-      red output; confirm it fails on the assertion (rule 4). Don't pause.
+      red output; confirm it fails for the expected reason (rule 4): an
+      assertion, or a runtime error that *is* the missing behavior (e.g.
+      `NumberFormatException` on a separator not handled yet) — never a
+      compile error. Don't pause.
 2. **GREEN**
    1. Record the test files' state (rule 9).
    2. Dispatch the implementer.
@@ -41,7 +46,14 @@ too. Rule 9's frozen-test check, run by you, is what enforces the boundary.
       it as a plan deviation (the existing second pause).
    4. Otherwise run the frozen-test check, then the scoped test yourself.
       Show the production diff and the green output.
-   5. A test file changed → revert that change and re-dispatch once, naming
+   5. **Review the diff against rule 5 yourself.** You are the only one
+      who knows the plan, so you are the only one who can see an
+      overshoot: a collection-wide loop/stream/sum backed by a single
+      test, or a branch that sniffs specific test inputs to return their
+      expected literals. Either one → reject: revert the production change
+      and send it back to the same implementer (cheaper than a fresh
+      spawn), naming the rule but **not** revealing any future test.
+   6. A test file changed → revert that change and re-dispatch once, naming
       the violation. A second violation → stop and show the author.
 3. **REFACTOR**: inline, exactly as in `SKILL.md`. It needs the
    whole-task view (cross-cycle duplication, deferred refinement notes) and
@@ -52,6 +64,11 @@ too. Rule 9's frozen-test check, run by you, is what enforces the boundary.
 
 Fill the `<...>` slots. Keep the red output bounded (`tail -30`), and the
 code-style bullets verbatim from `SKILL.md`.
+
+The subagents never see `SKILL.md`: any rule the prompt paraphrases or
+drops is gone for them. Quote rules verbatim, never summarise them. (First
+dogfood run: shortening rule 5 to "a hardcoded return is acceptable" got a
+green that sniffed test inputs, `contains(",") ? 3 : 5`.)
 
 **Test writer**
 
@@ -64,22 +81,27 @@ Test class: <path>   Class under test (public API only): <path>
 - Expected values are literals written in the test; never import or reuse
   a production constant or call production code to compute an expectation.
 - Use the existing @BeforeEach wiring; do not add a field initializer.
-- Do not modify production code. Do not run the build.
+- Do not modify production code or any existing test. Do not run the build.
 Return: the test method you added, and nothing else.
 ```
 
 **Implementer**
 
 ```
-Make the failing test pass with the MINIMAL production change.
+Make the failing test pass with the MINIMAL, CLEAN production change.
 Test class: <path>   Failing test: <method>   Class under test: <path>
 Red output:
 <bounded red output>
 - Never modify any test file. If the test looks wrong, change nothing and
   return "TEST LOOKS WRONG: <reason>".
-- Implement only what the tests in the test class require. A hardcoded
-  return is acceptable; do not generalize (loop, recursion, abstraction)
-  unless an existing test forces it.
+- Minimal implementation rule, verbatim: "<SKILL.md rule 5, verbatim,
+  including the triangulation paragraph>"
+- Read that as: generalize just enough for the tests that exist. Never
+  branch on specific test inputs to return their expected literals —
+  that is faking, not minimal.
+- "Super Green": green is already the clean, minimal answer — clear
+  names, no sloppy code to clean up later, and no structure the tests
+  didn't ask for.
 - Code style: <the SKILL.md "Code style" bullets, verbatim>
 - You may run: <scoped test command>. Keep output bounded (tail -30).
 Return: a one-line summary of the change. Do not paste the build output.
@@ -87,8 +109,10 @@ Return: a one-line summary of the change. Do not paste the build output.
 
 ## Costs
 
-- Two cold subagent starts per cycle (8 for a 4-test kata), each
-  re-reading the files it needs.
+- Two cold subagent starts per cycle, each re-reading the files it needs.
+  Measured on the first run (String Calculator, 6 cycles): 14 subagent
+  runs at ~54k tokens each, ~760k total — almost all of it per-spawn fixed
+  overhead, not the work itself.
 - At least one more scoped build per cycle than inline: the implementer
   may iterate, then you re-run green as the evidence.
 - Without the plan, the implementer may pick a structure the next test

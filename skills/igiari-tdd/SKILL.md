@@ -316,8 +316,10 @@ production method bodies (so the test specifies the requirement, not an
 implementation), and the **implementer** never sees the test plan (so it
 can't build ahead of the tests). Everything else stays with you: the plan
 and its single pause, any signature stub, REFACTOR, the final build, every
-official red/green run shown under rule 8, and rule 9's frozen-test check
-after each GREEN — a subagent's report is never the evidence. Show each new
+official red/green run shown under rule 8, rule 9's frozen-test check
+after each GREEN, and reviewing each GREEN diff against rule 5 — only you
+know the plan, so only you can see an overshoot. A subagent's report is
+never the evidence. Show each new
 test's code and its red output before dispatching the implementer, without
 pausing.
 
