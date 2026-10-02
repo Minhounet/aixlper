@@ -1186,3 +1186,185 @@ subsequent turn.
 Stated with its trade rather than as a free win: you get the conclusion, not
 the evidence. Delegate the search, keep the decision, and verify the specific
 file or line yourself when a finding is surprising or load-bearing.
+
+### `igiari-tdd`: a checked frozen test, and an opt-in RED/GREEN split
+
+Prompted by the author following a craftsmanship practitioner who runs TDD
+through agents. Full reasoning and the decided open questions are in
+`docs/proposals/igiari-tdd-red-green-split.md`.
+
+**The gap.** Containment was mostly enforced by the AI agreeing to it. The
+same context wrote the test and the code that passed it, so three failures
+stayed possible: editing the test to reach green, building ahead because the
+plan is visible (the skill needed a whole worked example against it), and
+tests shaped by the implementation the writer already intended.
+
+**Rule 9, portable, always on: the test is frozen during GREEN.** Record the
+test files' state before GREEN and check it after; a change invalidates the
+step. One cheap command per cycle turns the first failure from promised into
+checked, in every client.
+
+**Split mode, Claude Code only, opt-in.** RED goes to a fresh test-writer
+subagent that never sees production method bodies; GREEN to a fresh
+implementer that never sees the plan. The orchestrator keeps the plan,
+stubs, REFACTOR, the final build and every official red/green run. Mechanics
+and dispatch prompts went to `references/red-green-split.md`; `SKILL.md`
+keeps the guarantees.
+
+**Tool allowlists turned out not to be the enforcement.** They're per-tool,
+not per-path, so an `Edit`-capable implementer can still edit tests. Rule 9
+is what enforces the boundary, which is why it's needed even inside split
+mode.
+
+**This rests on a reason `CLAUDE.md` didn't list.** None of its four
+subagent criteria really applied; the real one is that a step must *not
+know* something the caller knows, and one context can't be made to forget.
+Added as criterion #5.
+
+**Decided against, by the author:** a per-test approval pause (the single
+plan-time pause stays), a cheaper model for the implementer, a read-only
+reviewer subagent for REFACTOR, and a `PreToolUse` hook blocking test
+edits (rule 9's after-the-fact check is enough).
+
+**Opt-in on purpose.** A reference opened on almost every trigger costs more
+than inline, so the split stays opt-in until it earns default status. Not
+yet dogfooded: next step is the same kata run inline (with rule 9) and in
+split mode, comparing build-ahead violations, caught test edits,
+implementation-shaped tests, and cost. If split mode only ties, rule 9 alone
+is the win.
+
+### First dogfood of split mode, against an inline baseline
+
+String Calculator, the same 6-test plan (the skill's 4 plus newline separator
+and negatives) and the same skeleton, run twice. **Split mode** was driven by
+the main session, with 13 subagent dispatches plus one resume. **Inline
+mode** was run by one fresh subagent that read only `SKILL.md`, so that the
+orchestrator's knowledge of the split run's pitfalls couldn't bias it. Both
+ended green with a passing full build, and rule 9 was clean in every cycle of
+both runs.
+
+| | Split | Inline |
+|---|---|---|
+| GREEN rejected | 2 (both cycle 3) | 0 |
+| Faked green (input sniffing) | 1, plus a degenerate `? 0 : 5` in cycle 2 | 0 |
+| Built ahead | 1 (list-wide sum on one multi-number test) | 0 |
+| Cycle 3 green | needed two corrections | explicit two-operand code, first try |
+| Tokens | ~760k (14 × ~54k, orchestrator excluded) | ~83k |
+
+**Hiding the plan didn't prevent building ahead.** The one overshoot was
+made by an implementer that had never seen the plan. The inline agent saw
+the whole plan and didn't overshoot. In this run the pull came from "clean"
+against "minimal", not from knowing what came next, which undercuts split
+mode's main argument. **Most of split mode's trouble was the dispatch
+prompt.** It paraphrased rule 5 ("a hardcoded return is acceptable"), and
+subagents can't see `SKILL.md`, so the paraphrase was all they had. Quoting
+rule 5 verbatim, plus Super Green, fixed cycles 4–6. **The orchestrator had
+to review every green against rule 5**, since only it knows the plan. Those
+three corrections are now in `references/red-green-split.md`.
+
+**Verdict on this evidence:** the proposal's own exit condition applies.
+Split mode didn't beat inline plus rule 9: it did worse before its prompt was
+fixed, at about 9× the tokens. Rule 9 is the win. Split mode stays
+documented and opt-in, as tried and not yet justified. One kata, one model,
+and the inline agent knew it was a dogfood run, so this isn't settled.
+
+**Gap found by both runs independently, now fixed in rule 4:** what a stub
+returns (a throwing stub gives an error, and `return 0` passes test 1
+outright, so it must return a value the test rejects), and that a runtime
+error from production code is a valid red when it *is* the missing behavior.
+
+**Friction surfaced, not yet decided (author's call):**
+- The skill's own Super Green example uses `parseInt` at test 2, while rule
+  5 allows a hardcoded value. Both runs read it differently.
+- Refactor checklist item "does the structure fight the next behavior you
+  already know is coming?" invites the building ahead that rule 5 forbids.
+- The `@ParameterizedTest` merge item is too broad read literally (it would
+  merge tests 1 and 2). It also renames planned tests, and the skill doesn't
+  say whether that's a plan deviation.
+- Rule 6 points at `kaizen-refactor` for the mechanical checklist, with no
+  fallback when that skill isn't loaded.
+- The full-build command is `mvn test`, though `verify` is arguably the
+  real end-of-task build.
+- Code style says no exceptions for control flow, while a planned test
+  requires a throw. The skill doesn't say which wins at the API boundary.
+
+### Split mode removed; rule 5 clarified
+
+**Split mode removed at the author's request,** after the comparison above.
+The `SKILL.md` section and `references/red-green-split.md` are gone. Kept:
+rule 9 (frozen test during GREEN), the rule 4 stub fix, and `CLAUDE.md`'s
+5th subagent criterion, which is still valid in general. The proposal file
+stays as the record.
+
+**Rule 5: a hardcoded value is minimal only while one value satisfies every
+test.** The two runs read rule 5 differently at test 2: the split implementer
+wrote `isEmpty() ? 0 : 5` and the inline run wrote `parseInt`, which matches
+the skill's own Super Green example. The author chose to generalize at the
+second test: once two tests need different answers, generalize just enough
+for the tests that exist. A branch returning a different literal per test
+input is faking, not minimal. The triangulation clause is unchanged, so test
+3 (two operands) still doesn't license a loop; test 4 does. This settles the
+first of the six frictions listed above. The alternative, Beck-style fake-it
+then generalize in REFACTOR, was rejected because it contradicts Super Green.
+
+**Refactor checklist: "fight the next behavior" is make-room only.** The item
+"does the current structure fight the next behavior you already know is
+coming?" invited the building ahead that rule 5 forbids: after test 3 the
+honest answer was yes, and acting on it meant a loop before test 4 existed.
+The author kept the item but scoped it to behavior-preserving moves (rename,
+extract, reorder). Added generality waits for the next test's GREEN. Second
+of the six frictions settled.
+
+**`@ParameterizedTest` merge: same behavior, not same shape.** Read
+literally, the checklist item merged any same-shaped tests. The two runs drew
+the line differently (`"5"→5` merged into the sums in one run, kept separate
+in the other), and the skill didn't say whether the merged name replacing
+planned names was a plan deviation. Decided: merge only tests that specify
+the same behavior with different data. Distinct cases keep their own test.
+The rename is part of the traced refactor, not a deviation. Third of the six
+frictions settled.
+
+**Mechanical list: load `kaizen-refactor`, else say so.** Rule 6 made the
+Tier 1 list mandatory, but the list lives only in `kaizen-refactor`, with no
+fallback. This was partly caused by the setup, since the baseline prompt
+forbade reading other skills, but the gap is real wherever that skill
+doesn't load. Decided: load it at the first REFACTOR. If it's unavailable,
+skip only that list and state it in every refactor summary. `kaizen-refactor`
+stays the single owner, with no copy. Fourth of the six frictions settled.
+
+**End-of-task Maven build is `verify`, not `test`.** Rule 7's single full
+build was `mvn test` for Maven but `./gradlew build` for Gradle, and the two
+aren't equivalent. `test` stops before integration tests, coverage gates,
+verify-bound quality plugins and packaging, so "full build green" could still
+fail in CI. Changed in `SKILL.md` and `references/build-commands.md`.
+`chottomatte-archi`'s `mvn test` call-site grep stays as it is: it's a
+compile-error diagnostic, not the final build. Fifth of the six frictions
+settled.
+
+**Throw vs. `Either`: settled at plan time.** The code style (and
+`kanpeki-fp`: a known business failure returns `Either`, never throws)
+conflicted with an approved planned test that required a throw. Both runs
+had to throw, and one listed `Either` as a deferred note. Decided: the plan
+models known failures as values. A "throws" entry appears only for an
+external contract and names it. Once approved, the plan wins, and swapping
+either way mid-cycle is a plan deviation. The kata's own plan would now
+carry "— kata spec" on test 6. Last of the six frictions settled.
+
+**Eval check after the rule 5 rewording.** Ran `triangulate-before-generalizing`
+(`--runs 5`, with/without ablation, $0.53): 1.00 with the skill and 1.00
+without it, Δ 0.00. So there's no regression, but the case doesn't
+discriminate: hardcoding for a single test is what models do unprompted. It
+also doesn't exercise the part of rule 5 that changed, which is the second
+test. Noted in `evals/README.md`. A two-test case is the open gap.
+
+**New eval case `generalize-just-enough`: the first measured skill effect.**
+Covers the half of rule 5 that `triangulate-before-generalizing` can't reach.
+A Roman `I`/`II` draft was discarded (never committed) because 10/10 answers
+wrote `"I".repeat(n)` with or without the skill: models don't fake unprompted.
+The failure they do make unprompted is building ahead, so the case is now the
+kata moment where split mode overshot (`"5"→5`, new red `"1,2"→3`). After one
+grader fix (a generalization shown as an explicitly *deferred* next step had
+drawn a split vote; the same "penalised the better answer" pattern as before),
+it scored 1.00 with the skill vs 0.00 without, all votes unanimous, each
+verdict checked by hand. The baseline built ahead in 7/10 samples across both
+runs. Total cost $1.75 including the discarded draft.

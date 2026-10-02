@@ -134,6 +134,15 @@ first (its classes/interfaces/signatures), write this test plan against
 that already-approved structure rather than re-deriving or re-presenting
 it — one plan per concern, not two overlapping ones.
 
+**Failures are shaped at plan time, not mid-cycle.** Write a planned
+failure case the "Code style" way below: a known business failure is
+returned as a value (`Either`/`Validation`), not thrown. Plan a "throws"
+test only when the throw is an external contract (a spec, a framework, an
+API you don't own) and say which in the entry, e.g. `add("1,-2") throws
+IllegalArgumentException — kata spec`. Once approved, the plan wins:
+swapping a planned throw for `Either` (or the reverse) during
+implementation is a plan deviation, never a silent substitution.
+
 **Example — seeing the whole plan doesn't license building ahead.** Take
 the plan above. You're implementing test 1, but you can already read
 tests 3 and 4 and know a split-and-sum loop is coming. Rule 5 (minimal
@@ -185,12 +194,22 @@ destination — it never moves up when you're allowed to build the road.
    modified until the one test for this step exists and has been run and
    has been shown to fail — and it must fail for the expected reason (a
    compile error because the API doesn't exist yet is not a valid red; get
-   it compiling against a stub, then see it fail on the assertion).
+   it compiling against a stub, then see it fail on the assertion). The
+   stub must return a value the test rejects (e.g. `-1` where the test
+   expects `0`): a throwing stub fails with an error instead, and a
+   natural default like `0` can pass before anything is implemented. A
+   runtime error *from production code* is a valid red when the error is
+   the missing behavior itself (e.g. `NumberFormatException` on a
+   separator not handled yet).
 5. **Minimal implementation only.** Write only the code required to make
    that single test pass. Do not implement behavior no current test
    requires, even if you know a later step will need it. A hardcoded or
    degenerate return value is an acceptable, even expected, way to pass a
-   test — the next test is what should force generalization.
+   test — the next test is what should force generalization. That holds
+   only while **one** value satisfies every test so far: once two tests
+   need different answers, generalize just enough for the tests that
+   exist. A branch that returns a different literal per test input
+   (`isEmpty() ? 0 : 5`, `contains(",") ? 3 : 5`) is faking, not minimal.
    **Triangulate before generalizing**: never introduce a loop, recursion,
    or a general/abstracted branch on the strength of a single test, even
    one you're confident implies it. Wait until a second test exists that a
@@ -203,11 +222,21 @@ destination — it never moves up when you're allowed to build the road.
    - Did this step leave a magic literal that should be a constant?
    - Is there now a guard clause / early return that would remove nesting?
    - Does the current structure fight the next behavior you already know
-     is coming?
+     is coming? If so, **make room, never add**: only behavior-preserving
+     moves (rename, extract method, reorder) that make the next change
+     easier. Anything that adds generality or behavior no current test
+     needs — a loop, a new branch, a new parameter — waits for that next
+     test's GREEN (rule 5). E.g. after a two-operand green, extracting
+     `parseOperand()` is room; replacing it with a loop is adding.
    - Could this test now be merged with an existing one into a
-     `@ParameterizedTest`? If yes, do it — no confirmation needed — but
-     **never silently**: it changes test code, not just production code,
-     so it must be traced. See "Tracing test refactors" below.
+     `@ParameterizedTest`? Only when both specify the **same behavior with
+     different data** (e.g. "returns the sum" for `"1,2"` and `"1,2,3,4"`)
+     — same shape is not enough; a distinct case (empty input → 0, a
+     single number) keeps its own test. If yes, do it — no confirmation
+     needed — but **never silently**: it changes test code, not just
+     production code, so it must be traced. See "Tracing test refactors"
+     below. The merged name replacing planned names is part of that traced
+     refactor, not a plan deviation.
    If one or more apply, fix them now, then re-run the scoped test and show
    it's still green. If genuinely none apply, say so explicitly ("refactor
    checklist: nothing applies") — do not silently skip the step.
@@ -265,7 +294,10 @@ destination — it never moves up when you're allowed to build the road.
    `kaizen-refactor` (its "Tier 1 — IDE-verified mechanical refactorings"
    section), which owns it since the same set applies whether you're
    mid-cycle here or refactoring existing code outside a TDD cycle — load
-   that skill for the list itself rather than duplicating it here.
+   that skill for the list itself rather than duplicating it here, at the
+   first REFACTOR of the task. If it can't be loaded, skip only the
+   mechanical list and say so in every refactor summary ("mechanical list:
+   kaizen-refactor not available"), so the gap is visible, never silent.
    `kaizen-refactor`'s scan-based workflow (`qodana scan`/`idea inspect`)
    is a separate, standalone activity for triaging existing code — this
    step here never triggers it.
@@ -276,6 +308,14 @@ destination — it never moves up when you're allowed to build the road.
 8. **Never claim green (or red) without having actually run it.** Show the
    command and its output at every red/green checkpoint. No exceptions for
    "this is obviously going to pass."
+9. **The test is frozen during GREEN.** Before writing production code,
+   record the state of the test files (`git diff --stat -- <test paths>`,
+   or checksums outside a git repository); after GREEN, check again. Any
+   test file changed → the step is invalid: revert that change, then
+   either redo GREEN against the original test or, if the test itself is
+   wrong, raise it as a plan deviation (the existing second pause). Test
+   changes belong in RED, or in REFACTOR where they're traced — never in
+   GREEN. Rules ask; this one is checked.
 
 ## The cycle
 
@@ -284,8 +324,9 @@ at a time, straight through to the end:
 
 1. **RED** — Add the one test method for the next smallest behavior. Run it
    scoped to its class. Show the failure output.
-2. **GREEN** — Write the minimal production code to pass that one test.
-   Run the same scoped test. Show the pass.
+2. **GREEN** — Record the test files' state (rule 9). Write the minimal
+   production code to pass that one test. Confirm the test files are
+   unchanged, then run the same scoped test. Show the pass.
 3. **REFACTOR** — Run the mandatory checklist above. Apply what applies.
    Re-run the scoped test, show it's still green.
 4. Go back to step 1 for the next behavior.
@@ -358,8 +399,9 @@ anything else here. Always suppress the noise that carries no evidence:
 mvn -B --no-transfer-progress test -Dtest=ClassNameTest 2>&1 | tail -30
 mvn -B --no-transfer-progress test -Dtest=ClassNameTest#methodName 2>&1 | tail -30
 
-# full (end of task only, once)
-mvn -B --no-transfer-progress test 2>&1 | tail -40
+# full (end of task only, once) — verify, not test: also runs ITs,
+# quality gates bound to verify, and packaging, like Gradle's `build`
+mvn -B --no-transfer-progress verify 2>&1 | tail -40
 
 # multi-module: when the test's module depends on an uninstalled sibling
 mvn -o -B --no-transfer-progress test -pl <module> -am -Dtest=ClassNameTest \

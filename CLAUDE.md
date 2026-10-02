@@ -41,6 +41,10 @@ when it hits one of these, not on vibes ("this feels agentic"):
    intermediate noise polluting the caller's context.
 4. It needs to be addressable on its own — resumed later, messaged,
    named independently of whoever invoked it first.
+5. It must *not know* something the caller knows — e.g. an implementer
+   that mustn't see the test plan, so it can't build ahead of the tests.
+   A single context can't be told to forget; only a fresh one starts
+   without it.
 
 None of these apply → the step stays inline, followed by whichever Claude
 is running the skill. One or more apply → the skill's own instructions can
@@ -74,6 +78,12 @@ sections without the author asking.**
 | `mujitsu-documentum` | **Unverified** | Written from general DQL/API knowledge, never run against a real docbase. Treat every pattern as a draft; don't cite it as settled. Known-weak spot: pattern 4's `get_type_attr_count` is a named placeholder, not confirmed DQL. |
 | `gyakuten-ddd` | New, not dogfooded | DDD *strategic* patterns only (Bounded Context, Context Map, ACL...). Tactical patterns stay in `chottomatte-archi`. Doubles as a learning aid — explaining a term on request is a valid trigger. |
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
+
+**Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
+by one with the author, evals checked against the no-skill baseline). The
+brief, with the method and lessons from the `igiari-tdd` study, is in
+`docs/next-session-chottomatte.md`. Read it first, and delete both it and
+this paragraph when the study is done.
 
 `igiari-tdd` and `chottomatte-archi` are deliberately **two** skills: TDD
 governs *how you write code over time*, Clean Architecture governs *how the
@@ -169,8 +179,10 @@ by the client — but there is a validate/test pipeline, the equivalent of
 - `make ci` — both, in order.
 
 **GitHub Actions runs `make validate` only, deliberately.** `make eval` spends
-real API money — roughly $13 for the six cases across two models at
-`--runs 5` — and needs credentials CI does not have. It used to be a no-op,
+real API money — roughly $17 for the eight cases across two models at
+`--runs 5` (scaled from a measured $13 for the first six), and a single
+case on one model is about $0.50–0.60 — and needs credentials CI does not
+have. It used to be a no-op,
 because no skill had an `evals/` directory; that stopped being true once the
 suites landed. Don't "fix" the workflow to call `make ci`. Run evals by hand,
 scoped with `--case` and `--runs`, and bound them with `--max-cost-usd`.

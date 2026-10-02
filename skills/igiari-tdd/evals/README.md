@@ -6,8 +6,9 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 
 | Case | Signal |
 |---|---|
-| `triangulate-before-generalizing` | **Strong.** 1.00 on both models; clean, unambiguous rule. |
+| `triangulate-before-generalizing` | **Clean, but not discriminating.** 1.00 on both models, *and* 1.00 on the no-skill baseline (2026-10-02, Δ 0.00) — proves no regression, not that the skill changes behavior. |
 | `scoped-build-and-evidence` | **Strong.** 1.00 on both models. |
+| `generalize-just-enough` | **Strong, and the only case with a measured skill effect.** 1.00 with skill vs 0.00 without (Δ 1.00, judges unanimous, 2026-10-02, after one grader fix). |
 | `one-test-per-step` | **Weak — do not read as a model signal.** |
 | `scoped-build-and-evidence-gradle` | **Moderate, Sonnet-only so far.** 0.83 average across 6 Sonnet samples (2026-09-22); `cache-honesty` shows real judge noise — see below. Still no Opus data. |
 
@@ -87,3 +88,37 @@ signal rather than variance. No change made to `cache-honesty.md` yet — the
 existing wording doesn't look like the culprit, so rewriting it without
 knowing what would fix it risks the same "fixed a symptom, not the cause"
 mistake documented elsewhere in this file. Still no Opus data for this case.
+
+### 2026-10-02: `triangulate-before-generalizing` passes without the skill
+
+Re-run after rule 5 was clarified (a hardcoded value is minimal only while one
+value satisfies every test): `--runs 5`, default ablation, session model,
+$0.53. With skill 5/5 at 1.00, **without skill 5/5 at 1.00**, Δ 0.00, judges
+unanimous. The single-test scenario ("hardcode `"I"`") is something models do
+unprompted, so this case can only catch a regression, not show the skill's
+effect, and it doesn't touch the clarified half of rule 5 at all (the second
+test, where per-input literals like `n == 1 ? "I" : "II"` are now faking). A
+two-test case is the open gap.
+
+### 2026-10-02: `generalize-just-enough` — the first case that shows the skill working
+
+Built to cover the half of rule 5 clarified that day. First attempt was a
+Roman-numeral `I`/`II` case: 10/10 answers wrote `"I".repeat(number)`, with or
+without the skill, so it was discarded (never committed) — the faking failure
+it targeted only appears when a prompt *pushes* hardcoding, not unprompted.
+
+Rebuilt around the String Calculator moment where the split-mode dogfood
+overshot: `""→0`, `"5"→5`, new red `"1,2"→3`. The skill's answer is two-operand
+code; the unprompted answer is a loop/stream sum over all parts.
+
+- Run 1 (`--runs 5`, $0.59): with 1.00, without 0.40. Inspection found a
+  grader defect: a baseline answer that wrote two-operand code and showed a
+  stream only as an explicitly *deferred* next step got a split FAIL PASS FAIL
+  — the grader never said a deferred generalization is allowed. Fixed by
+  judging only the code proposed for *this* green.
+- Run 2 (`--runs 5`, $0.60): **with 1.00 (5/5), without 0.00 (5/5)**, all
+  votes unanimous; each answer's green code checked by hand against its
+  verdict. Across both runs the baseline built ahead 7/10 times.
+
+One model (the session's default), 10 samples per arm — enough to show the
+effect, not to measure its size precisely.
