@@ -1331,3 +1331,12 @@ forbade reading other skills, but the gap is real wherever that skill
 doesn't load. Decided: load it at the first REFACTOR. If it's unavailable,
 skip only that list and state it in every refactor summary. `kaizen-refactor`
 stays the single owner, with no copy. Fourth of the six frictions settled.
+
+**End-of-task Maven build is `verify`, not `test`.** Rule 7's single full
+build was `mvn test` for Maven but `./gradlew build` for Gradle, and the two
+aren't equivalent. `test` stops before integration tests, coverage gates,
+verify-bound quality plugins and packaging, so "full build green" could still
+fail in CI. Changed in `SKILL.md` and `references/build-commands.md`.
+`chottomatte-archi`'s `mvn test` call-site grep stays as it is: it's a
+compile-error diagnostic, not the final build. Fifth of the six frictions
+settled.

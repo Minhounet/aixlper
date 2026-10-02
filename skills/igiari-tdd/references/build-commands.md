@@ -30,8 +30,9 @@ when it is already there.
 mvn test -Dtest=ClassNameTest
 mvn test -Dtest=ClassNameTest#methodName
 
-# full (end of task only, once)
-mvn test
+# full (end of task only, once) — verify, not test: it also runs ITs,
+# quality gates bound to verify, and packaging, like Gradle's `build`
+mvn verify
 ```
 
 Surefire already fails when `-Dtest=` matches nothing: `failIfNoSpecifiedTests`

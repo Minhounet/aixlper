@@ -390,8 +390,9 @@ anything else here. Always suppress the noise that carries no evidence:
 mvn -B --no-transfer-progress test -Dtest=ClassNameTest 2>&1 | tail -30
 mvn -B --no-transfer-progress test -Dtest=ClassNameTest#methodName 2>&1 | tail -30
 
-# full (end of task only, once)
-mvn -B --no-transfer-progress test 2>&1 | tail -40
+# full (end of task only, once) — verify, not test: also runs ITs,
+# quality gates bound to verify, and packaging, like Gradle's `build`
+mvn -B --no-transfer-progress verify 2>&1 | tail -40
 
 # multi-module: when the test's module depends on an uninstalled sibling
 mvn -o -B --no-transfer-progress test -pl <module> -am -Dtest=ClassNameTest \
