@@ -1349,3 +1349,10 @@ models known failures as values. A "throws" entry appears only for an
 external contract and names it. Once approved, the plan wins, and swapping
 either way mid-cycle is a plan deviation. The kata's own plan would now
 carry "— kata spec" on test 6. Last of the six frictions settled.
+
+**Eval check after the rule 5 rewording.** Ran `triangulate-before-generalizing`
+(`--runs 5`, with/without ablation, $0.53): 1.00 with the skill and 1.00
+without it, Δ 0.00. So there's no regression, but the case doesn't
+discriminate: hardcoding for a single test is what models do unprompted. It
+also doesn't exercise the part of rule 5 that changed, which is the second
+test. Noted in `evals/README.md`. A two-test case is the open gap.
