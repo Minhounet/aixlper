@@ -276,6 +276,14 @@ destination — it never moves up when you're allowed to build the road.
 8. **Never claim green (or red) without having actually run it.** Show the
    command and its output at every red/green checkpoint. No exceptions for
    "this is obviously going to pass."
+9. **The test is frozen during GREEN.** Before writing production code,
+   record the state of the test files (`git diff --stat -- <test paths>`,
+   or checksums outside a git repository); after GREEN, check again. Any
+   test file changed → the step is invalid: revert that change, then
+   either redo GREEN against the original test or, if the test itself is
+   wrong, raise it as a plan deviation (the existing second pause). Test
+   changes belong in RED, or in REFACTOR where they're traced — never in
+   GREEN. Rules ask; this one is checked.
 
 ## The cycle
 
@@ -284,8 +292,9 @@ at a time, straight through to the end:
 
 1. **RED** — Add the one test method for the next smallest behavior. Run it
    scoped to its class. Show the failure output.
-2. **GREEN** — Write the minimal production code to pass that one test.
-   Run the same scoped test. Show the pass.
+2. **GREEN** — Record the test files' state (rule 9). Write the minimal
+   production code to pass that one test. Confirm the test files are
+   unchanged, then run the same scoped test. Show the pass.
 3. **REFACTOR** — Run the mandatory checklist above. Apply what applies.
    Re-run the scoped test, show it's still green.
 4. Go back to step 1 for the next behavior.
@@ -294,6 +303,26 @@ When there are no more behaviors left for the current task, run the full
 project build once as the final step, then print the "Deferred refinement
 notes" list accumulated during the task (see the Advanced refinement rule
 above) — explicitly say "none" if nothing was logged.
+
+### Split mode — opt-in, Claude Code only, experimental
+
+Off by default. Use it only when the author asks for it ("use split
+mode") or the project's own instructions turn it on, and only in a client
+that can spawn subagents; everywhere else, run the cycle above inline.
+
+Split mode hands RED and GREEN to two fresh subagents per cycle, each
+defined by what it must **not** see: the **test writer** never sees
+production method bodies (so the test specifies the requirement, not an
+implementation), and the **implementer** never sees the test plan (so it
+can't build ahead of the tests). Everything else stays with you: the plan
+and its single pause, any signature stub, REFACTOR, the final build, every
+official red/green run shown under rule 8, and rule 9's frozen-test check
+after each GREEN — a subagent's report is never the evidence. Show each new
+test's code and its red output before dispatching the implementer, without
+pausing.
+
+Read `references/red-green-split.md` when split mode is on: it holds the
+step-by-step cycle and the two dispatch prompts.
 
 ## Build commands — scoped during the cycle, full only at the end
 

@@ -1186,3 +1186,49 @@ subsequent turn.
 Stated with its trade rather than as a free win: you get the conclusion, not
 the evidence. Delegate the search, keep the decision, and verify the specific
 file or line yourself when a finding is surprising or load-bearing.
+
+### `igiari-tdd`: a checked frozen test, and an opt-in RED/GREEN split
+
+Prompted by the author following a craftsmanship practitioner who runs TDD
+through agents. Full reasoning and the decided open questions are in
+`docs/proposals/igiari-tdd-red-green-split.md`.
+
+**The gap.** Containment was mostly enforced by the AI agreeing to it. The
+same context wrote the test and the code that passed it, so three failures
+stayed possible: editing the test to reach green, building ahead because the
+plan is visible (the skill needed a whole worked example against it), and
+tests shaped by the implementation the writer already intended.
+
+**Rule 9, portable, always on: the test is frozen during GREEN.** Record the
+test files' state before GREEN and check it after; a change invalidates the
+step. One cheap command per cycle turns the first failure from promised into
+checked, in every client.
+
+**Split mode, Claude Code only, opt-in.** RED goes to a fresh test-writer
+subagent that never sees production method bodies; GREEN to a fresh
+implementer that never sees the plan. The orchestrator keeps the plan,
+stubs, REFACTOR, the final build and every official red/green run. Mechanics
+and dispatch prompts went to `references/red-green-split.md`; `SKILL.md`
+keeps the guarantees.
+
+**Tool allowlists turned out not to be the enforcement.** They're per-tool,
+not per-path, so an `Edit`-capable implementer can still edit tests. Rule 9
+is what enforces the boundary, which is why it's needed even inside split
+mode.
+
+**This rests on a reason `CLAUDE.md` didn't list.** None of its four
+subagent criteria really applied; the real one is that a step must *not
+know* something the caller knows, and one context can't be made to forget.
+Added as criterion #5.
+
+**Decided against, by the author:** a per-test approval pause (the single
+plan-time pause stays), a cheaper model for the implementer, a read-only
+reviewer subagent for REFACTOR, and a `PreToolUse` hook blocking test
+edits (rule 9's after-the-fact check is enough).
+
+**Opt-in on purpose.** A reference opened on almost every trigger costs more
+than inline, so the split stays opt-in until it earns default status. Not
+yet dogfooded: next step is the same kata run inline (with rule 9) and in
+split mode, comparing build-ahead violations, caught test edits,
+implementation-shaped tests, and cost. If split mode only ties, rule 9 alone
+is the win.

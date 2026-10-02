@@ -1,9 +1,9 @@
 # Proposal: separate RED from GREEN in `igiari-tdd`
 
-> Status: **draft, open questions decided, not applied.** Nothing in
-> `skills/igiari-tdd/` has changed yet.
-> On approval this becomes a `SKILL.md` edit, a new reference file and a
-> `docs/design-log.md` entry, the same discipline as every other rule change.
+> Status: **applied 2026-10-02.** Part A is rule 9 in
+> `skills/igiari-tdd/SKILL.md`; Part B is the "Split mode" section there plus
+> `skills/igiari-tdd/references/red-green-split.md`; history is in
+> `docs/design-log.md`. Kept as the record of the reasoning and decisions.
 
 ## The problem this solves
 
