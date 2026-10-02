@@ -1356,3 +1356,15 @@ without it, Δ 0.00. So there's no regression, but the case doesn't
 discriminate: hardcoding for a single test is what models do unprompted. It
 also doesn't exercise the part of rule 5 that changed, which is the second
 test. Noted in `evals/README.md`. A two-test case is the open gap.
+
+**New eval case `generalize-just-enough`: the first measured skill effect.**
+Covers the half of rule 5 that `triangulate-before-generalizing` can't reach.
+A Roman `I`/`II` draft was discarded (never committed) because 10/10 answers
+wrote `"I".repeat(n)` with or without the skill: models don't fake unprompted.
+The failure they do make unprompted is building ahead, so the case is now the
+kata moment where split mode overshot (`"5"→5`, new red `"1,2"→3`). After one
+grader fix (a generalization shown as an explicitly *deferred* next step had
+drawn a split vote; the same "penalised the better answer" pattern as before),
+it scored 1.00 with the skill vs 0.00 without, all votes unanimous, each
+verdict checked by hand. The baseline built ahead in 7/10 samples across both
+runs. Total cost $1.75 including the discarded draft.
