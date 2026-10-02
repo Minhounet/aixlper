@@ -41,6 +41,10 @@ when it hits one of these, not on vibes ("this feels agentic"):
    intermediate noise polluting the caller's context.
 4. It needs to be addressable on its own — resumed later, messaged,
    named independently of whoever invoked it first.
+5. It must *not know* something the caller knows — e.g. an implementer
+   that mustn't see the test plan, so it can't build ahead of the tests.
+   A single context can't be told to forget; only a fresh one starts
+   without it.
 
 None of these apply → the step stays inline, followed by whichever Claude
 is running the skill. One or more apply → the skill's own instructions can

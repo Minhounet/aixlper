@@ -1,6 +1,7 @@
 # Proposal: separate RED from GREEN in `igiari-tdd`
 
-> Status: **draft, not applied.** Nothing in `skills/igiari-tdd/` has changed.
+> Status: **draft, open questions decided, not applied.** Nothing in
+> `skills/igiari-tdd/` has changed yet.
 > On approval this becomes a `SKILL.md` edit, a new reference file and a
 > `docs/design-log.md` entry, the same discipline as every other rule change.
 
@@ -65,15 +66,12 @@ can't shape the test to an implementation because it was never told one.
 
 ### Why subagents, against this repo's own criteria
 
-`CLAUDE.md` lists four reasons a step needs a subagent. Only one partly
-applies here: #3 (isolated context). The real reason isn't in the list:
-
-> **The step must *not know* something the caller knows.** Here that's the
-> implementer not knowing the plan, and the test writer not knowing the
-> intended implementation. A skill can't make a single context forget.
-> Only a fresh one starts without it.
-
-Proposed as a 5th criterion for `CLAUDE.md` (see open question 5).
+This rests on criterion #5 in `CLAUDE.md`, added for this proposal:
+**the step must *not know* something the caller knows.** Here that's the
+implementer not knowing the plan, and the test writer not knowing the
+intended implementation. A skill can't make a single context forget. Only a
+fresh one starts without it. Of the original four, only #3 (isolated
+context) partly applies.
 
 Tool allowlists (#1) are deliberately **not** the enforcement mechanism. A
 subagent's tool list is per-tool, not per-path: an `Edit`-capable implementer
@@ -206,22 +204,15 @@ Following the repo's own testing method, before making anything default:
 If split mode only matches inline-plus-Part-A on violations, Part A alone
 is the win and Part B isn't worth its cost.
 
-## Open questions for the author
+## Decisions (author, 2026-10-02)
 
-1. **Per-test approval in split mode?** The default here keeps the single
-   plan-time pause and shows each test without stopping. Stopping before
-   every GREEN would contradict the existing "one pause" rule, so it would
-   need to be a deliberate change.
-2. **A cheaper model for the implementer?** Its job is narrow (minimal code
-   for one failing test). Settle it with the A/B kata, not by guessing.
-3. **A read-only reviewer for REFACTOR?** A fresh, `Edit`-less subagent
-   running the refactor checklist would give an unbiased second look. Here
-   the tool allowlist *would* be the enforcement. Deferred: it adds another
-   spawn per cycle.
-4. **Hard path enforcement?** A `PreToolUse` hook could refuse test-path
-   edits during GREEN. That's stronger than Part A's after-the-fact check,
-   but it's Claude-Code-specific settings rather than skill content, and
-   it's unverified whether a hook can tell which subagent is calling.
-5. **Amend `CLAUDE.md`'s subagent criteria** with "must not know something
-   the caller knows", since that's the criterion this proposal actually
-   rests on.
+1. **No per-test approval.** Split mode keeps the single plan-time pause.
+   Each test and its red output are shown as the run continues, without
+   stopping.
+2. **No cheaper model.** The implementer and the test writer run on the
+   same model as the main session.
+3. **No reviewer subagent.** REFACTOR stays inline in the orchestrator.
+4. **Part A only.** Test edits during GREEN are caught by the frozen-test
+   check after the fact. No `PreToolUse` hook.
+5. **Criterion added.** `CLAUDE.md` now lists "must not know something the
+   caller knows" as a 5th reason for a subagent step.
