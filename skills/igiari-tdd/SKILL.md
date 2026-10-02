@@ -185,7 +185,13 @@ destination — it never moves up when you're allowed to build the road.
    modified until the one test for this step exists and has been run and
    has been shown to fail — and it must fail for the expected reason (a
    compile error because the API doesn't exist yet is not a valid red; get
-   it compiling against a stub, then see it fail on the assertion).
+   it compiling against a stub, then see it fail on the assertion). The
+   stub must return a value the test rejects (e.g. `-1` where the test
+   expects `0`): a throwing stub fails with an error instead, and a
+   natural default like `0` can pass before anything is implemented. A
+   runtime error *from production code* is a valid red when the error is
+   the missing behavior itself (e.g. `NumberFormatException` on a
+   separator not handled yet).
 5. **Minimal implementation only.** Write only the code required to make
    that single test pass. Do not implement behavior no current test
    requires, even if you know a later step will need it. A hardcoded or

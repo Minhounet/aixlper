@@ -29,16 +29,11 @@ too. Rule 9's frozen-test check, run by you, is what enforces the boundary.
 1. **RED**
    1. Dispatch the test writer with plan entry N.
    2. If the new test doesn't compile because the API doesn't exist yet,
-      add a signature-only stub yourself and show it. A stub is not
-      implementation. It must return a value the test rejects (e.g. `-1`
-      where the test expects `0`): a thrown exception fails with an error
-      rather than on the assertion (rule 4), and a "natural" default like
-      `0` can pass the test before any implementation exists.
+      add a signature-only stub yourself (rule 4 says what it returns)
+      and show it. A stub is not implementation.
    3. Run the scoped test yourself. Show the new test method's code and the
-      red output; confirm it fails for the expected reason (rule 4): an
-      assertion, or a runtime error that *is* the missing behavior (e.g.
-      `NumberFormatException` on a separator not handled yet) — never a
-      compile error. Don't pause.
+      red output; confirm it fails for the expected reason (rule 4).
+      Don't pause.
 2. **GREEN**
    1. Record the test files' state (rule 9).
    2. Dispatch the implementer.

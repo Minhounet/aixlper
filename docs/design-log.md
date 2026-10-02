@@ -1232,3 +1232,58 @@ yet dogfooded: next step is the same kata run inline (with rule 9) and in
 split mode, comparing build-ahead violations, caught test edits,
 implementation-shaped tests, and cost. If split mode only ties, rule 9 alone
 is the win.
+
+### First dogfood of split mode, against an inline baseline
+
+String Calculator, the same 6-test plan (the skill's 4 plus newline separator
+and negatives) and the same skeleton, run twice. **Split mode** was driven by
+the main session, with 13 subagent dispatches plus one resume. **Inline
+mode** was run by one fresh subagent that read only `SKILL.md`, so that the
+orchestrator's knowledge of the split run's pitfalls couldn't bias it. Both
+ended green with a passing full build, and rule 9 was clean in every cycle of
+both runs.
+
+| | Split | Inline |
+|---|---|---|
+| GREEN rejected | 2 (both cycle 3) | 0 |
+| Faked green (input sniffing) | 1, plus a degenerate `? 0 : 5` in cycle 2 | 0 |
+| Built ahead | 1 (list-wide sum on one multi-number test) | 0 |
+| Cycle 3 green | needed two corrections | explicit two-operand code, first try |
+| Tokens | ~760k (14 × ~54k, orchestrator excluded) | ~83k |
+
+**Hiding the plan didn't prevent building ahead.** The one overshoot was
+made by an implementer that had never seen the plan. The inline agent saw
+the whole plan and didn't overshoot. In this run the pull came from "clean"
+against "minimal", not from knowing what came next, which undercuts split
+mode's main argument. **Most of split mode's trouble was the dispatch
+prompt.** It paraphrased rule 5 ("a hardcoded return is acceptable"), and
+subagents can't see `SKILL.md`, so the paraphrase was all they had. Quoting
+rule 5 verbatim, plus Super Green, fixed cycles 4–6. **The orchestrator had
+to review every green against rule 5**, since only it knows the plan. Those
+three corrections are now in `references/red-green-split.md`.
+
+**Verdict on this evidence:** the proposal's own exit condition applies.
+Split mode didn't beat inline plus rule 9: it did worse before its prompt was
+fixed, at about 9× the tokens. Rule 9 is the win. Split mode stays
+documented and opt-in, as tried and not yet justified. One kata, one model,
+and the inline agent knew it was a dogfood run, so this isn't settled.
+
+**Gap found by both runs independently, now fixed in rule 4:** what a stub
+returns (a throwing stub gives an error, and `return 0` passes test 1
+outright, so it must return a value the test rejects), and that a runtime
+error from production code is a valid red when it *is* the missing behavior.
+
+**Friction surfaced, not yet decided (author's call):**
+- The skill's own Super Green example uses `parseInt` at test 2, while rule
+  5 allows a hardcoded value. Both runs read it differently.
+- Refactor checklist item "does the structure fight the next behavior you
+  already know is coming?" invites the building ahead that rule 5 forbids.
+- The `@ParameterizedTest` merge item is too broad read literally (it would
+  merge tests 1 and 2). It also renames planned tests, and the skill doesn't
+  say whether that's a plan deviation.
+- Rule 6 points at `kaizen-refactor` for the mechanical checklist, with no
+  fallback when that skill isn't loaded.
+- The full-build command is `mvn test`, though `verify` is arguably the
+  real end-of-task build.
+- Code style says no exceptions for control flow, while a planned test
+  requires a throw. The skill doesn't say which wins at the API boundary.
