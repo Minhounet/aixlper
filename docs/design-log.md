@@ -1314,3 +1314,12 @@ honest answer was yes, and acting on it meant a loop before test 4 existed.
 The author kept the item but scoped it to behavior-preserving moves (rename,
 extract, reorder). Added generality waits for the next test's GREEN. Second
 of the six frictions settled.
+
+**`@ParameterizedTest` merge: same behavior, not same shape.** Read
+literally, the checklist item merged any same-shaped tests. The two runs drew
+the line differently (`"5"→5` merged into the sums in one run, kept separate
+in the other), and the skill didn't say whether the merged name replacing
+planned names was a plan deviation. Decided: merge only tests that specify
+the same behavior with different data. Distinct cases keep their own test.
+The rename is part of the traced refactor, not a deviation. Third of the six
+frictions settled.

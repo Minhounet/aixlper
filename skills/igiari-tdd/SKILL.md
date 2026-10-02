@@ -220,9 +220,14 @@ destination — it never moves up when you're allowed to build the road.
      test's GREEN (rule 5). E.g. after a two-operand green, extracting
      `parseOperand()` is room; replacing it with a loop is adding.
    - Could this test now be merged with an existing one into a
-     `@ParameterizedTest`? If yes, do it — no confirmation needed — but
-     **never silently**: it changes test code, not just production code,
-     so it must be traced. See "Tracing test refactors" below.
+     `@ParameterizedTest`? Only when both specify the **same behavior with
+     different data** (e.g. "returns the sum" for `"1,2"` and `"1,2,3,4"`)
+     — same shape is not enough; a distinct case (empty input → 0, a
+     single number) keeps its own test. If yes, do it — no confirmation
+     needed — but **never silently**: it changes test code, not just
+     production code, so it must be traced. See "Tracing test refactors"
+     below. The merged name replacing planned names is part of that traced
+     refactor, not a plan deviation.
    If one or more apply, fix them now, then re-run the scoped test and show
    it's still green. If genuinely none apply, say so explicitly ("refactor
    checklist: nothing applies") — do not silently skip the step.
