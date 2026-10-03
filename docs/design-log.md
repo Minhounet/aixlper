@@ -1437,3 +1437,34 @@ half the words. The two relocations stay inline for now. Honest conclusion:
 even with all three, the file would stay near 30KB. What's left is rules and
 examples needed on every trigger, so reaching 20KB would mean cutting
 guidance, which the audit section itself calls a regression.
+
+### Commit per step everywhere, and the audit shipped as a script
+
+Two follow-ups to the delegated run, both chosen by the author.
+
+**Commit per step is now the inline default too,** not just in the
+delegated run. Each red, green and (if it changed anything) refactor step is
+one commit whose subject contains `red N` / `green N` / `refactor N`, with
+whatever prefix the project's convention needs. That turns rule 9 from a
+per-cycle check into one over the whole history, and makes the same audit
+work for both modes. The author's decision on history: keep the step commits
+on the branch, never rewrite them before the audit, and squash at merge time.
+
+**The audit is `skills/igiari-tdd/scripts/audit-tdd-history.sh`,** where the
+delegated-run section used to say "audit the git history" and leave the main
+session to improvise a script each time. It's bash and git only. It works in
+a temporary worktree, so the user's checkout is never touched. It takes the
+scoped-test and full-build commands as parameters, so it isn't tied to
+Maven. It checks step order, exactly one test per red, each red failing at
+its own commit and not on a compile error (printing the failure line so
+rule 4 can be judged), no green touching a test, and the final build. It
+prints about one line per commit and exits non-zero on any violation.
+Rule 5 stays a human judgment.
+
+**Verified on three histories:** the Bowling and String Calculator runs
+(clean, exit 0, with the right failure reason printed for every red,
+including the exception reds) and a deliberately broken history. In the
+broken one it flagged two tests in one red, a green that weakened a test, a
+compile-error red, an unlabelled commit, a red that already passed, and a
+step out of order (exit 1). The first version picked Maven's `Errors: 0`
+summary as the failure line; that was fixed before commit.

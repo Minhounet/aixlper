@@ -315,8 +315,9 @@ destination — it never moves up when you're allowed to build the road.
    command and its output at every red/green checkpoint. No exceptions for
    "this is obviously going to pass."
 9. **The test is frozen during GREEN.** Before writing production code,
-   record the state of the test files (`git diff --stat -- <test paths>`,
-   or checksums outside a git repository); after GREEN, check again. Any
+   record the state of the test files (the `red N` commit records it, see
+   "The cycle"; outside a git repository, checksums); after GREEN, check
+   again (`git diff --stat -- <test paths>` must be empty). Any
    test file changed → the step is invalid: revert that change, then
    either redo GREEN against the original test or, if the test itself is
    wrong, raise it as a plan deviation (the existing second pause). Test
@@ -329,18 +330,33 @@ Once the test plan above is approved, repeat for each planned behavior, one
 at a time, straight through to the end:
 
 1. **RED** — Add the one test method for the next smallest behavior. Run it
-   scoped to its class. Show the failure output.
-2. **GREEN** — Record the test files' state (rule 9). Write the minimal
-   production code to pass that one test. Confirm the test files are
-   unchanged, then run the same scoped test. Show the pass.
+   scoped to its class. Show the failure output. Commit: `red N`.
+2. **GREEN** — Write the minimal production code to pass that one test.
+   Confirm the test files are unchanged since `red N` (rule 9), then run
+   the same scoped test. Show the pass. Commit: `green N`.
 3. **REFACTOR** — Run the mandatory checklist above. Apply what applies.
-   Re-run the scoped test, show it's still green.
+   Re-run the scoped test, show it's still green. Commit `refactor N` only
+   if something changed.
 4. Go back to step 1 for the next behavior.
+
+**One commit per step**, in a git repository. The subject must contain
+`red N`, `green N` or `refactor N`; prefix it however the project's commit
+convention needs. A red commit changes only tests (plus a rule-4 stub); a
+green commit never touches a test. Keep the step commits until the work is
+merged, and never rewrite them before the audit; squashing them at merge
+time is fine.
 
 When there are no more behaviors left for the current task, run the full
 project build once as the final step, then print the "Deferred refinement
 notes" list accumulated during the task (see the Advanced refinement rule
-above) — explicitly say "none" if nothing was logged.
+above) — explicitly say "none" if nothing was logged. Then **audit the
+task's history** with `scripts/audit-tdd-history.sh` (in this skill's
+directory), passing `--base <the commit the task started from>`, the scoped
+test command as `--test-cmd`, and the full-build command as `--full-cmd`.
+It checks step order, one test per red, every red failing at its own
+commit and not on a compile error, no green touching a test, and the final
+build. It prints about one line per commit and exits non-zero on a
+violation. Rule 5 stays your judgment: read the green diffs.
 
 ### Delegated run — opt-in
 
@@ -351,16 +367,12 @@ plan verbatim, and it runs every cycle and the final build. Run it in the
 **foreground** (the author waits, your context stays clean) or the
 **background** (the author keeps working meanwhile).
 
-- **Commit per step:** `red N`, `green N`, and `refactor N` only when the
-  refactor changed something. A red commit changes only tests (plus a rule-4
-  stub); a green commit never touches a test file.
+- **Same commits as inline:** one per step, as in "The cycle" above.
 - **A deviation stops the run:** the agent returns `DEVIATION: <cycle, what,
   proposal>`, you put it to the author, and you resume the same agent.
-- **Audit before reporting done**, because the report is never the evidence.
-  Check that each red commit adds exactly one test and, re-run at that
-  commit, fails for the expected reason. Check that no green commit touches
-  a test (rule 9). Read each green diff against rule 5. Then re-run the
-  final build yourself.
+- **You run the audit yourself before reporting done**, because the
+  report is never the evidence: `scripts/audit-tdd-history.sh` as above,
+  then read each green diff against rule 5.
 
 ## Build commands — scoped during the cycle, full only at the end
 
