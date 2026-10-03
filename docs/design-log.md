@@ -1368,3 +1368,33 @@ drawn a split vote; the same "penalised the better answer" pattern as before),
 it scored 1.00 with the skill vs 0.00 without, all votes unanimous, each
 verdict checked by hand. The baseline built ahead in 7/10 samples across both
 runs. Total cost $1.75 including the discarded draft.
+
+### Delegated run: the whole cycle in one agent, audited from git
+
+The author's follow-up to split mode: rather than several agents, hand the
+*whole* approved plan to one agent, so the plan is the only stop point. It
+differs from split mode in purpose. It hides nothing from the agent, so it
+gives no extra containment; what it buys is workflow. The main session's
+context stays free of build output, and in the background the author keeps
+working. The inline baseline of the split comparison was effectively this
+already (~83k tokens, cleanest run).
+
+**Dogfood: Bowling kata, 5 tests, delegated in the background.** About 87k
+tokens and 3 minutes, with no deviation. The main session saw only the report
+and a ~25-line audit. The audit used git alone: one commit per red, green and
+refactor step. It found that each red adds exactly one test and fails on an
+assertion when re-run at its commit, that no green touches a test, and the
+final build re-run by the main session passed. Rule 5 held under real
+temptation: the spare and strike bonuses stayed first-frame-only until a
+second strike test justified a recursion over frames.
+
+**Added to `SKILL.md` as an opt-in section,** foreground or background, with
+the commit protocol, the deviation round trip, and the audit as the rule:
+the report is never the evidence. Commit-per-step is what makes the audit
+cheap, and it turns rule 9 into a check of the whole history.
+
+**Friction the run raised, not yet decided:** a rule that becomes general
+only as a side effect (spares, carried by the strike recursion) has no test
+confirming it; rule 4 doesn't cover a stub for an immutable method that
+returns the object (`roll` returned `this`); whether a degenerate zero case
+merges into a `@ParameterizedTest` is still a judgment call.

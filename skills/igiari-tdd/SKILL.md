@@ -336,6 +336,26 @@ project build once as the final step, then print the "Deferred refinement
 notes" list accumulated during the task (see the Advanced refinement rule
 above) — explicitly say "none" if nothing was logged.
 
+### Delegated run — opt-in
+
+Off by default. Use it when the author asks for it and the client can spawn
+a subagent; otherwise run the cycle inline as above. It starts only **after**
+the plan is approved: hand one agent the path to this file and the approved
+plan verbatim, and it runs every cycle and the final build. Run it in the
+**foreground** (the author waits, your context stays clean) or the
+**background** (the author keeps working meanwhile).
+
+- **Commit per step:** `red N`, `green N`, and `refactor N` only when the
+  refactor changed something. A red commit changes only tests (plus a rule-4
+  stub); a green commit never touches a test file.
+- **A deviation stops the run:** the agent returns `DEVIATION: <cycle, what,
+  proposal>`, you put it to the author, and you resume the same agent.
+- **Audit before reporting done**, because the report is never the evidence.
+  Check that each red commit adds exactly one test and, re-run at that
+  commit, fails for the expected reason. Check that no green commit touches
+  a test (rule 9). Read each green diff against rule 5. Then re-run the
+  final build yourself.
+
 ## Build commands — scoped during the cycle, full only at the end
 
 Rule 7: scoped builds during the loop, exactly one full build at the end.
