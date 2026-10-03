@@ -613,6 +613,45 @@ all three checks — it routes through the same section's "say so explicitly"
 clause instead. Settled rule: a Tier 1 entry may carry a precondition the
 reader can check at the call site, never an unstated one.
 
+## objection-conception
+
+### Acceptance criteria: checked, traced, proven (2026-10-03)
+
+The author: validating *critères d'acceptation* comes up on many tickets.
+Asked when, they chose all three moments, so the rule covers the whole
+lifecycle, not a single closing checklist:
+
+- **Before design.** Each AC is checked for being observable, unambiguous
+  and testable. Ambiguous ones turn into a question with a named owner
+  rather than a guess. The source wording stays verbatim next to the
+  interpretation, because "what was asked" vs. "what we understood" is
+  exactly where acceptance disputes start. Gaps (error/edge cases,
+  unstated non-functional needs) are proposed, never added silently: an
+  AC nobody asked for is unagreed scope.
+- **During design.** A two-way trace between ACs and `conception.md`
+  decisions. An AC with no decision is a hole; a decision serving no AC is
+  plumbing (justify it) or scope creep (raise it).
+- **After implementation.** Evidence per AC, and it must match the
+  interpretation, not some easier nearby property. Evidence means a test
+  actually run this session; a test that merely exists doesn't count. A
+  manual check counts only once the user has performed or confirmed it.
+
+**Storage: a separate `acceptance.md`** (author's choice over a section in
+`conception.md`). Each AC carries a status through
+`unclear → ready → designed → verified`, plus `failed` / `waived`.
+
+**Hard gate on `status: done`** (author's choice over report-only):
+every AC must be `verified` or explicitly `waived` by the user, with the
+reason recorded. The point is that "good enough" or silence can't close a
+ticket.
+
+Consequence for the token section below: `objection-conception` now runs
+commands, in phase 3 (tests that prove ACs), so it owes the same output
+discipline. That's stated inline in phase 3 ("failures plus a one-line
+total"). The earlier note that it "runs no commands" was true when written.
+
+Not dogfooded yet: no real ticket has been run through the three phases.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**

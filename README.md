@@ -19,7 +19,7 @@ tool — no per-client fork.
 | [`gyakuten-ddd`](skills/gyakuten-ddd/SKILL.md) | Domain-Driven Design's strategic patterns: Bounded Context, Context Map, Ubiquitous Language, and Core Domain distillation — the boundary between models, teams, and systems. |
 | [`kurae-bash`](skills/kurae-bash/SKILL.md) | Ten hardening patterns for robust, interactive bash CLI tools: keybinding dispatch, atomic writes, strict mode, framework-free testing, and more. |
 | [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
-| [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session. |
+| [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close. |
 
 ## Installing
 
