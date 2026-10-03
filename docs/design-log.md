@@ -652,6 +652,34 @@ total"). The earlier note that it "runs no commands" was true when written.
 
 Not dogfooded yet: no real ticket has been run through the three phases.
 
+### Linking acceptance.md to `igiari-tdd` (2026-10-03)
+
+The author's question: after launching `igiari-tdd`, how do the criteria
+get updated? Before this change they didn't. `objection-conception` had a
+single line ("each AC becomes a test") and `igiari-tdd` didn't know the
+file existed.
+
+The link uses igiari's two existing checkpoints, so its rule of one plan
+approval and then running straight through stays intact:
+
+- **Plan:** each test is tagged `[ACn]` (proves it) or `(supports ACn)`
+  (helper-level). Under the plan, two gaps are flagged: a criterion with
+  no test, and a criterion with only `supports` tests. The second exists
+  because a helper test passing isn't evidence the criterion holds - the
+  "nearby, easier property" trap from phase 3. Asked whether that should
+  block approval, the author chose **flag only**: the author decides
+  during the same approval.
+- **End:** `acceptance.md` is updated once, after the full build and the
+  history audit. That full build is the only run that counts as evidence.
+  Nothing is updated per cycle: that would add a non-test file to red
+  commits and noise everywhere else.
+- **Deviation:** the existing pause also names the affected criterion and
+  moves it back to `ready` / `unclear`.
+
+The rules live in `objection-conception`, which owns the file;
+`igiari-tdd` gets only a pointer, because it's already well past the
+~20KB guideline.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**

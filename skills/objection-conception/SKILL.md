@@ -199,8 +199,34 @@ Before treating the design as complete, show the trace both ways:
 - a decision serving no AC is either necessary plumbing (say why) or
   **scope creep** - raise it, don't absorb it.
 
-If a TDD skill is also loaded, every AC becomes at least one test in its
-test plan, named so the link back to the AC is obvious.
+### With a TDD skill: tag the plan, update once at the end
+
+If a TDD skill is also loaded, `acceptance.md` feeds its test plan and gets
+its evidence back from the finished run. This adds no pause beyond the
+ones the TDD skill already has.
+
+- **At plan time**, tag each planned test with the AC it proves (`[AC2]`),
+  or with the AC it only supports (`(supports AC1)`) when the test checks
+  a helper rather than the behavior the AC describes. Below the plan, flag
+  two gaps for the author to decide on during the same approval. Neither
+  blocks it:
+  - a `designed` AC with no tagged test at all;
+  - an AC whose tests are all `supports` - none exercises it at the level
+    of its `Interpretation` (the use case or service, not a helper), so
+    passing them won't prove it. It will need a higher-level test or other
+    evidence.
+- **During the cycles**, don't touch `acceptance.md`. A per-step update
+  would add noise to every commit, and no scoped run is the evidence
+  anyway.
+- **Once at the end**, after the full build and the TDD skill's own
+  audit: for each AC whose `[ACn]` tests all passed in that full build,
+  record the test names and the build result as `Evidence` and move it to
+  `verified`. Any other AC keeps its status and still needs evidence from
+  phase 3 below.
+- **A plan deviation that touches an AC's tests** goes through the TDD
+  skill's existing deviation pause: say which AC it affects, move that AC
+  back to `ready` (or `unclear` if the AC itself is in question), and log
+  it in `retro.md`.
 
 If the ticket's ACs change mid-way, update `Source`, drop the affected AC
 back to `unclear` or `ready`, re-check what it was covered by, and log the
