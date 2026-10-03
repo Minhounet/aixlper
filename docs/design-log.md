@@ -1406,3 +1406,10 @@ generalization: ..." in the Deferred refinement notes. Don't pause, and don't
 add an unplanned test; the author decides at the end. Rejected: treating it
 as a plan deviation (an extra pause, plus a round trip in a delegated run),
 and predicting it at plan time (anticipation).
+
+**Rule 4: "a value the test rejects" is for the observed method only.**
+Second Bowling friction. The first test needed two stubs, `score()` (which
+the assertion checks) and the immutable `roll()`. Decided, in one line: only
+the method the assertion observes returns a rejected value. Any other stub
+returns the simplest thing that compiles and keeps the call chain working
+(`this` for a method returning its own type, an empty value otherwise).
