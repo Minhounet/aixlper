@@ -623,6 +623,20 @@ own statement" — a session that never opened the reference had no
 definition of the tier it was gating. Relocated back inline, nothing
 deleted; the reference's "the list above" wording now points at `SKILL.md`.
 
+Added a fresh-context step for **characterization tests** (safety net,
+after step 3), after the author asked whether the skill could be an agent.
+Checked against CLAUDE.md's five criteria: the skill as a whole is a
+recipe — triage and both tiers need the caller's context (which "unused"
+code is really pending work) — so it stays a `SKILL.md`. One step clears
+criterion 5: characterization tests must pin *today's* behavior, and a
+context that already holds the refactor plan drifts toward pinning the
+intended behavior instead; it can't be told to forget the plan. So: a
+subagent given only the code and its tests, never the findings or the
+plan, where the client supports one; on Gemini CLI, the tests are written
+from the code alone before the Tier 2 change is designed, and the summary
+says the same context planned it. Either way they're accepted only once
+green against unchanged code — a red one pins the wrong behavior.
+
 ## objection-conception
 
 ### Acceptance criteria: checked, traced, proven (2026-10-03)

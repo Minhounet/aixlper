@@ -129,6 +129,27 @@ covered:
    characterization tests first (tests that pin today's actual behavior,
    not the behavior you're about to introduce) before any Tier 2 move.
 
+**Who writes the characterization tests.** By the time you know a Tier 2
+change is needed, you already know what the code is *supposed* to become —
+and tests written with that in mind drift toward pinning the intended
+behavior instead of the actual one, quirks and bugs included. You can't
+un-know the plan, so hand the writing to a context that never saw it:
+
+- **Where the client can spawn a subagent** (e.g. Claude Code): give it
+  only the code under test and its existing tests, with the instruction
+  "pin what this code does today, including behavior that looks wrong;
+  change no production code." Give it neither the findings, the triage,
+  nor the refactor you have in mind. Prefer one without file-edit access
+  to production sources if the client allows narrowing its tools.
+- **Where it can't** (e.g. Gemini CLI): triage may tell you a Tier 2
+  change exists, but write the characterization tests from the code alone
+  *before* designing that change, and state in the summary that the same
+  context later planned the refactor.
+
+Either way, the tests are only accepted once they run green against the
+**unchanged** code. A test that fails there is pinning the wrong behavior —
+fix the test, never the production code, at this stage.
+
 Tier 2 changes go one at a time, each with its own green check — never
 batch several judgment-call refactors before running tests, even when
 each one individually looks obviously safe. That's exactly the
