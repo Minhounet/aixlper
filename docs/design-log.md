@@ -1368,3 +1368,103 @@ drawn a split vote; the same "penalised the better answer" pattern as before),
 it scored 1.00 with the skill vs 0.00 without, all votes unanimous, each
 verdict checked by hand. The baseline built ahead in 7/10 samples across both
 runs. Total cost $1.75 including the discarded draft.
+
+### Delegated run: the whole cycle in one agent, audited from git
+
+The author's follow-up to split mode: rather than several agents, hand the
+*whole* approved plan to one agent, so the plan is the only stop point. It
+differs from split mode in purpose. It hides nothing from the agent, so it
+gives no extra containment; what it buys is workflow. The main session's
+context stays free of build output, and in the background the author keeps
+working. The inline baseline of the split comparison was effectively this
+already (~83k tokens, cleanest run).
+
+**Dogfood: Bowling kata, 5 tests, delegated in the background.** About 87k
+tokens and 3 minutes, with no deviation. The main session saw only the report
+and a ~25-line audit. The audit used git alone: one commit per red, green and
+refactor step. It found that each red adds exactly one test and fails on an
+assertion when re-run at its commit, that no green touches a test, and the
+final build re-run by the main session passed. Rule 5 held under real
+temptation: the spare and strike bonuses stayed first-frame-only until a
+second strike test justified a recursion over frames.
+
+**Added to `SKILL.md` as an opt-in section,** foreground or background, with
+the commit protocol, the deviation round trip, and the audit as the rule:
+the report is never the evidence. Commit-per-step is what makes the audit
+cheap, and it turns rule 9 into a check of the whole history.
+
+**Friction the run raised, not yet decided:** a rule that becomes general
+only as a side effect (spares, carried by the strike recursion) has no test
+confirming it; rule 4 doesn't cover a stub for an immutable method that
+returns the object (`roll` returned `this`); whether a degenerate zero case
+merges into a `@ParameterizedTest` is still a judgment call.
+
+**Untested generalizations go in the deferred notes.** First of the three
+Bowling frictions. Decided: when a justified GREEN makes another rule general
+beyond any test (spares carried by the strike recursion), log "untested
+generalization: ..." in the Deferred refinement notes. Don't pause, and don't
+add an unplanned test; the author decides at the end. Rejected: treating it
+as a plan deviation (an extra pause, plus a round trip in a delegated run),
+and predicting it at plan time (anticipation).
+
+**Rule 4: "a value the test rejects" is for the observed method only.**
+Second Bowling friction. The first test needed two stubs, `score()` (which
+the assertion checks) and the immutable `roll()`. Decided, in one line: only
+the method the assertion observes returns a rejected value. Any other stub
+returns the simplest thing that compiles and keeps the call chain working
+(`this` for a method returning its own type, an empty value otherwise).
+
+**"Distinct case" means degenerate input, not a zero result.** Third Bowling
+friction. The agent kept "20 gutters → 0" apart from "20 ones → 20" because
+the result was zero, by analogy with the skill's "empty input → 0" example.
+Decided: a case is distinct when its *input* is degenerate (empty, absent, a
+single element), since that usually means its own code path. A zero result
+from ordinary input is just data and merges. All three Bowling frictions are
+now settled.
+
+### Token self-audit after the delegated-run additions
+
+`SKILL.md` had reached 33.2KB. The audit, in the skill's own order, proposed
+three changes: move the IDE test-runner subsection (~2.1KB, conditional and
+unverified) to a reference; move the delegated-run mechanics (~0.8KB net,
+opt-in) to a reference; and tighten the `kaizen-refactor` pointer in rule 6,
+which repeated itself. Kept inline on purpose: the `@InjectMocks` exception
+(moving it would split a rule from its own statement), the worked examples
+(they shape behavior on every trigger, and the `generalize-just-enough` eval
+suggests they're why the skill works), and the inline build commands (needed
+every run). **The author applied only the tightening**: same content, about
+half the words. The two relocations stay inline for now. Honest conclusion:
+even with all three, the file would stay near 30KB. What's left is rules and
+examples needed on every trigger, so reaching 20KB would mean cutting
+guidance, which the audit section itself calls a regression.
+
+### Commit per step everywhere, and the audit shipped as a script
+
+Two follow-ups to the delegated run, both chosen by the author.
+
+**Commit per step is now the inline default too,** not just in the
+delegated run. Each red, green and (if it changed anything) refactor step is
+one commit whose subject contains `red N` / `green N` / `refactor N`, with
+whatever prefix the project's convention needs. That turns rule 9 from a
+per-cycle check into one over the whole history, and makes the same audit
+work for both modes. The author's decision on history: keep the step commits
+on the branch, never rewrite them before the audit, and squash at merge time.
+
+**The audit is `skills/igiari-tdd/scripts/audit-tdd-history.sh`,** where the
+delegated-run section used to say "audit the git history" and leave the main
+session to improvise a script each time. It's bash and git only. It works in
+a temporary worktree, so the user's checkout is never touched. It takes the
+scoped-test and full-build commands as parameters, so it isn't tied to
+Maven. It checks step order, exactly one test per red, each red failing at
+its own commit and not on a compile error (printing the failure line so
+rule 4 can be judged), no green touching a test, and the final build. It
+prints about one line per commit and exits non-zero on any violation.
+Rule 5 stays a human judgment.
+
+**Verified on three histories:** the Bowling and String Calculator runs
+(clean, exit 0, with the right failure reason printed for every red,
+including the exception reds) and a deliberately broken history. In the
+broken one it flagged two tests in one red, a green that weakened a test, a
+compile-error red, an unlabelled commit, a red that already passed, and a
+step out of order (exit 1). The first version picked Maven's `Errors: 0`
+summary as the failure line; that was fixed before commit.

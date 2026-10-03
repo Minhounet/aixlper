@@ -47,14 +47,36 @@ the method and what it found.
      *unprompted* and build the case around it. `igiari-tdd`'s
      `generalize-just-enough` went from Δ 0 to Δ 1.00 that way.
 
+## Also look at (added after the delegated-run work)
+
+`igiari-tdd` gained an opt-in **delegated run**: after plan approval, one
+agent runs every cycle, foreground or background, with one commit per step,
+and the main session audits the git history. `chottomatte-archi` gets **no**
+delegated mode of its own; it shapes structure and doesn't run cycles. Two
+questions for this study, both for the author to decide:
+
+1. **Combined use.** With both skills loaded and a delegated run requested,
+   does the existing hand-off work? Both plans should be approved first,
+   then one agent follows both `SKILL.md` files. Running the kata delegated
+   tests this directly. If something is missing, the fix is one sentence in
+   `igiari-tdd`'s delegated-run section, not a new section here.
+2. **Checkable rules.** Which `chottomatte-archi` rules can the audit
+   *check* rather than trust? Candidates: a full build ran after each
+   structural change; `new ConcreteThing(...)` appears only at the
+   composition root (searchable); every repository port has an in-memory
+   implementation.
+
 ## Lessons from the `igiari-tdd` study
 
 - **Enforce rules by checking, not by asking.** Rule 9 (test files frozen
   during GREEN, checked with one command) was the lasting win. Look for a
   `chottomatte-archi` rule that could be checked the same way.
-- **Subagents don't fit these skills.** Split mode cost about 9× the tokens
-  and did worse than inline, and it was removed. Don't propose it again
-  without new evidence.
+- **Splitting a task across several agents doesn't fit; one delegated agent
+  does.** Split mode (separate agents for RED and GREEN) cost about 9× the
+  tokens, did worse than inline, and was removed; don't propose it again
+  without new evidence. One agent running the whole approved plan, audited
+  from git afterwards, matched inline and is now `igiari-tdd`'s opt-in
+  delegated run.
 - **The skill's own examples count as rules.** Several contradictions were
   an example disagreeing with a rule.
 - **Never remove or "clean up" a section without the author asking** (see

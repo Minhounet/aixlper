@@ -197,10 +197,13 @@ destination — it never moves up when you're allowed to build the road.
    it compiling against a stub, then see it fail on the assertion). The
    stub must return a value the test rejects (e.g. `-1` where the test
    expects `0`): a throwing stub fails with an error instead, and a
-   natural default like `0` can pass before anything is implemented. A
-   runtime error *from production code* is a valid red when the error is
-   the missing behavior itself (e.g. `NumberFormatException` on a
-   separator not handled yet).
+   natural default like `0` can pass before anything is implemented. That
+   applies only to the method the assertion observes: any other stub
+   returns the simplest thing that compiles and keeps the call chain
+   working (`this` for a method returning its own type, an empty value
+   otherwise). A runtime error *from production code* is a valid red when
+   the error is the missing behavior itself (e.g. `NumberFormatException`
+   on a separator not handled yet).
 5. **Minimal implementation only.** Write only the code required to make
    that single test pass. Do not implement behavior no current test
    requires, even if you know a later step will need it. A hardcoded or
@@ -232,7 +235,11 @@ destination — it never moves up when you're allowed to build the road.
      `@ParameterizedTest`? Only when both specify the **same behavior with
      different data** (e.g. "returns the sum" for `"1,2"` and `"1,2,3,4"`)
      — same shape is not enough; a distinct case (empty input → 0, a
-     single number) keeps its own test. If yes, do it — no confirmation
+     single number) keeps its own test. "Distinct" is about the **input**,
+     not the output: a degenerate input (empty, absent, a single element)
+     usually means its own code path, while a zero result from ordinary
+     input is just data (20 gutter rolls → 0 merges with 20 one-pin rolls
+     → 20). If yes, do it — no confirmation
      needed — but **never silently**: it changes test code, not just
      production code, so it must be traced. See "Tracing test refactors"
      below. The merged name replacing planned names is part of that traced
@@ -285,22 +292,21 @@ destination — it never moves up when you're allowed to build the road.
    logged, say so explicitly ("deferred refinement notes: none") rather
    than omitting the list.
 
-   Independently of that checklist, also apply the fixed set of
-   syntax-level refactorings wherever they appear in code you touch —
-   they're mechanical, not judgment calls, so no "if warranted" applies to
-   them, and applying them never requires running a scan or launching an
-   IDE — it's a fixed, read-and-apply list, not something that needs a
-   fresh inspection report to surface. That list now lives in
-   `kaizen-refactor` (its "Tier 1 — IDE-verified mechanical refactorings"
-   section), which owns it since the same set applies whether you're
-   mid-cycle here or refactoring existing code outside a TDD cycle — load
-   that skill for the list itself rather than duplicating it here, at the
-   first REFACTOR of the task. If it can't be loaded, skip only the
-   mechanical list and say so in every refactor summary ("mechanical list:
-   kaizen-refactor not available"), so the gap is visible, never silent.
-   `kaizen-refactor`'s scan-based workflow (`qodana scan`/`idea inspect`)
-   is a separate, standalone activity for triaging existing code — this
-   step here never triggers it.
+   The same list also collects **untested generalizations**. When a GREEN
+   that rule 5 justified for one behavior makes another rule general as a
+   side effect, beyond anything a test checks, don't pause and don't add
+   an unplanned test. Log it, e.g. "untested generalization: spare bonus
+   outside frame 1, carried by the strike recursion", so the author can
+   decide at the end whether to add a confirming test.
+
+   Also apply, wherever it fits code you touch, the fixed list of
+   mechanical syntax refactorings: no "if warranted", and no scan or IDE
+   needed to find them. `kaizen-refactor` owns that list (its "Tier 1"
+   section), since it applies inside and outside a TDD cycle: load it at
+   the first REFACTOR rather than duplicating it here. If it can't be
+   loaded, skip only that list and say so in every refactor summary
+   ("mechanical list: kaizen-refactor not available"). Its scan-based
+   workflow (`qodana scan`/`idea inspect`) is separate and never runs here.
 7. **Build scope is never negotiable.** During the cycle (steps 1-4), build
    and run **only the single test class** you're working on — never the
    whole project. The full project build runs **exactly once, at the very
@@ -309,8 +315,9 @@ destination — it never moves up when you're allowed to build the road.
    command and its output at every red/green checkpoint. No exceptions for
    "this is obviously going to pass."
 9. **The test is frozen during GREEN.** Before writing production code,
-   record the state of the test files (`git diff --stat -- <test paths>`,
-   or checksums outside a git repository); after GREEN, check again. Any
+   record the state of the test files (the `red N` commit records it, see
+   "The cycle"; outside a git repository, checksums); after GREEN, check
+   again (`git diff --stat -- <test paths>` must be empty). Any
    test file changed → the step is invalid: revert that change, then
    either redo GREEN against the original test or, if the test itself is
    wrong, raise it as a plan deviation (the existing second pause). Test
@@ -323,18 +330,49 @@ Once the test plan above is approved, repeat for each planned behavior, one
 at a time, straight through to the end:
 
 1. **RED** — Add the one test method for the next smallest behavior. Run it
-   scoped to its class. Show the failure output.
-2. **GREEN** — Record the test files' state (rule 9). Write the minimal
-   production code to pass that one test. Confirm the test files are
-   unchanged, then run the same scoped test. Show the pass.
+   scoped to its class. Show the failure output. Commit: `red N`.
+2. **GREEN** — Write the minimal production code to pass that one test.
+   Confirm the test files are unchanged since `red N` (rule 9), then run
+   the same scoped test. Show the pass. Commit: `green N`.
 3. **REFACTOR** — Run the mandatory checklist above. Apply what applies.
-   Re-run the scoped test, show it's still green.
+   Re-run the scoped test, show it's still green. Commit `refactor N` only
+   if something changed.
 4. Go back to step 1 for the next behavior.
+
+**One commit per step**, in a git repository. The subject must contain
+`red N`, `green N` or `refactor N`; prefix it however the project's commit
+convention needs. A red commit changes only tests (plus a rule-4 stub); a
+green commit never touches a test. Keep the step commits until the work is
+merged, and never rewrite them before the audit; squashing them at merge
+time is fine.
 
 When there are no more behaviors left for the current task, run the full
 project build once as the final step, then print the "Deferred refinement
 notes" list accumulated during the task (see the Advanced refinement rule
-above) — explicitly say "none" if nothing was logged.
+above) — explicitly say "none" if nothing was logged. Then **audit the
+task's history** with `scripts/audit-tdd-history.sh` (in this skill's
+directory), passing `--base <the commit the task started from>`, the scoped
+test command as `--test-cmd`, and the full-build command as `--full-cmd`.
+It checks step order, one test per red, every red failing at its own
+commit and not on a compile error, no green touching a test, and the final
+build. It prints about one line per commit and exits non-zero on a
+violation. Rule 5 stays your judgment: read the green diffs.
+
+### Delegated run — opt-in
+
+Off by default. Use it when the author asks for it and the client can spawn
+a subagent; otherwise run the cycle inline as above. It starts only **after**
+the plan is approved: hand one agent the path to this file and the approved
+plan verbatim, and it runs every cycle and the final build. Run it in the
+**foreground** (the author waits, your context stays clean) or the
+**background** (the author keeps working meanwhile).
+
+- **Same commits as inline:** one per step, as in "The cycle" above.
+- **A deviation stops the run:** the agent returns `DEVIATION: <cycle, what,
+  proposal>`, you put it to the author, and you resume the same agent.
+- **You run the audit yourself before reporting done**, because the
+  report is never the evidence: `scripts/audit-tdd-history.sh` as above,
+  then read each green diff against rule 5.
 
 ## Build commands — scoped during the cycle, full only at the end
 
