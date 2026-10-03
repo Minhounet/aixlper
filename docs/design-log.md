@@ -701,6 +701,16 @@ skill effect is unconfirmed until the ablation runs. Next candidates, after
 a real-ticket dogfood: "gaps proposed, not added", and the helper-only flag
 in the igiari plan.
 
+**First run (Sonnet, `--runs 5`, $0.51): 1.00 with the skill, 1.00
+without, Δ 0.00.** The baseline refused to close for the right reason in
+every run. The case was built wrong for the question it was meant to
+answer: by handing over an `acceptance.md` with `Status: designed` and an
+empty `Evidence:`, the prompt gave the baseline the skill's own bookkeeping,
+so the gap was visible to anyone reading. This is the same lesson as
+`triangulate-before-generalizing`. The case stays as a regression check.
+A discriminating version has to withhold the status table, for example ACs
+only as ticket prose. See `skills/objection-conception/evals/README.md`.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**
