@@ -1398,3 +1398,11 @@ only as a side effect (spares, carried by the strike recursion) has no test
 confirming it; rule 4 doesn't cover a stub for an immutable method that
 returns the object (`roll` returned `this`); whether a degenerate zero case
 merges into a `@ParameterizedTest` is still a judgment call.
+
+**Untested generalizations go in the deferred notes.** First of the three
+Bowling frictions. Decided: when a justified GREEN makes another rule general
+beyond any test (spares carried by the strike recursion), log "untested
+generalization: ..." in the Deferred refinement notes. Don't pause, and don't
+add an unplanned test; the author decides at the end. Rejected: treating it
+as a plan deviation (an extra pause, plus a round trip in a delegated run),
+and predicting it at plan time (anticipation).

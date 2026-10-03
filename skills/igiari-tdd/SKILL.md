@@ -285,6 +285,13 @@ destination — it never moves up when you're allowed to build the road.
    logged, say so explicitly ("deferred refinement notes: none") rather
    than omitting the list.
 
+   The same list also collects **untested generalizations**. When a GREEN
+   that rule 5 justified for one behavior makes another rule general as a
+   side effect, beyond anything a test checks, don't pause and don't add
+   an unplanned test. Log it, e.g. "untested generalization: spare bonus
+   outside frame 1, carried by the strike recursion", so the author can
+   decide at the end whether to add a confirming test.
+
    Independently of that checklist, also apply the fixed set of
    syntax-level refactorings wherever they appear in code you touch —
    they're mechanical, not judgment calls, so no "if warranted" applies to
