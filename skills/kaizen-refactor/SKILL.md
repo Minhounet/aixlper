@@ -94,6 +94,25 @@ Two sections are kept out of this skill's always-loaded body and live in
 - **"Class can be record class"** — why the accessor shape decides whether
   that specific inspection finding is Tier 1 or Tier 2.
 
+**Tier 2 — judgment-call refactors.** Anything that changes shape rather
+than syntax — replacing a conditional with polymorphism, promoting a
+primitive to a value object, extracting a Strategy, splitting a class on
+SRP, or any style-level move `kanpeki-fp` governs — is not mechanically
+guaranteed safe, so it doesn't get applied on sight. Gate it the same way
+igiari-tdd's refactor step gates its own advanced refinements: only act
+when a concrete trigger is actually met by the code in front of you (see
+igiari-tdd's "Advanced refinement — triggered, not anticipated" section
+for the current threshold list — same triggers, same discipline, not
+duplicated here). A candidate that doesn't meet a trigger gets logged, not
+applied and not asked about — same "log, don't ask" rule as igiari-tdd.
+
+One difference from igiari-tdd's version of this gate: there, the trigger
+list is checked against code just written this cycle. Here it's checked
+against a whole file or class you're reviewing, so triggers like "3rd
+same-type conditional" or "3rd reason to change" are far more likely to
+already be met — don't let the higher hit rate become a reason to loosen
+the gate itself.
+
 ## The safety net: test coverage before Tier 2
 
 Before making a Tier 2 change, confirm the code being touched is actually

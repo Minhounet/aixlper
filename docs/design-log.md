@@ -613,6 +613,16 @@ all three checks — it routes through the same section's "say so explicitly"
 clause instead. Settled rule: a Tier 1 entry may carry a precondition the
 reader can check at the call site, never an unstated one.
 
+Fixed a split that the move to `references/` (#26) introduced: the **Tier 2
+definition** (what counts as a judgment-call refactor, the trigger gate
+borrowed from igiari-tdd, "log, don't ask", and the note that a whole-class
+review hits triggers more often) had landed in `tier1-candidates.md`, under
+the record-class heading, while `SKILL.md` used "Tier 2" throughout without
+ever defining it. That breaks the skill's own "never split a rule from its
+own statement" — a session that never opened the reference had no
+definition of the tier it was gating. Relocated back inline, nothing
+deleted; the reference's "the list above" wording now points at `SKILL.md`.
+
 ## objection-conception
 
 ### Acceptance criteria: checked, traced, proven (2026-10-03)
