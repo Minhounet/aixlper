@@ -1566,3 +1566,29 @@ broken one it flagged two tests in one red, a green that weakened a test, a
 compile-error red, an unlabelled commit, a red that already passed, and a
 step out of order (exit 1). The first version picked Maven's `Errors: 0`
 summary as the failure line; that was fixed before commit.
+
+## Usefulness ablation: gyakuten-ddd, kurae-bash, kanpeki-fp
+
+The author asked which skill looked least useful. The guess was
+`gyakuten-ddd`: mostly textbook DDD that a current model already knows, with
+`kanpeki-fp` and `kurae-bash` as runners-up. The author said to test before
+deciding. The first eval cases for all three were written, each targeting a
+rule a model without the skill could plausibly miss, and run on Sonnet with
+3 runs per arm and the no-skill ablation on ($2.26 total). Per-case details
+are in each skill's `evals/README.md`.
+
+| Skill | Cases | Skill effect |
+|---|---|---|
+| `gyakuten-ddd` | 4 | **None.** 1.00 with and without on every case. |
+| `kurae-bash` | 2 | **Narrow.** Pattern 1 (`bind -x` + `read`): 1.00 vs 0.00. Patterns 6/10: no effect. |
+| `kanpeki-fp` | 1 | **Strong.** 1.00 vs 0.00. Without the skill the model doesn't choose the house Vavr style. |
+
+The guess held for `gyakuten-ddd`: on Sonnet the baseline reached every
+targeted rule without it, including the contested-term split, the explicit
+conform-or-wrap choice, and challenging the senior-staff allocation away from
+the Core Domain. The caveat is the one `objection-conception`'s `done-gate`
+taught: the prompts state the conflicting facts plainly, so they may make
+the problem too visible. Learning mode also has a non-behavioral argument
+for keeping it, since the author is learning DDD. The eval can't measure
+that. No decision taken yet; this entry records the evidence the decision
+will rest on.
