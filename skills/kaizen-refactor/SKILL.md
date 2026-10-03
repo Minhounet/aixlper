@@ -75,7 +75,20 @@ below — these are mechanical, not judgment calls:
   'final' class".
 - a line that exceeds 121 characters → break at a natural boundary: stream
   chains get one operation per line (dot leading); long method calls get
-  one argument per line. See java.md for the full convention and examples.
+  one argument per line; when the receiver itself is long, extract it into
+  a named variable first (an extract-variable, itself Tier 1):
+  ```java
+  list.stream()
+      .filter(Item::isActive)
+      .map(Item::name)
+      .toList();
+
+  var service = registry.lookup(DocumentService.class);
+  service.processLifecycle(
+          session,
+          document,
+          transitionName);
+  ```
 
 These are safe enough to apply in a batch — fix every Tier 1 finding
 across the file/class under review, run the existing test suite once at

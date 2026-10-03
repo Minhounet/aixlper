@@ -637,6 +637,13 @@ from the code alone before the Tier 2 change is designed, and the summary
 says the same context planned it. Either way they're accepted only once
 green against unchanged code — a red one pins the wrong behavior.
 
+The line-length Tier 1 entry ended with "See java.md for the full
+convention" — but `java.md` is the author's global config (`global/`), not
+shipped with the skill, so every other install and Gemini CLI got a dead
+pointer. The convention is now stated in full on the entry itself (stream
+chains, one argument per line, extract a long receiver first) with a short
+genericized example; the 121-character limit is unchanged.
+
 ## objection-conception
 
 ### Acceptance criteria: checked, traced, proven (2026-10-03)
