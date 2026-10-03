@@ -299,22 +299,14 @@ destination — it never moves up when you're allowed to build the road.
    outside frame 1, carried by the strike recursion", so the author can
    decide at the end whether to add a confirming test.
 
-   Independently of that checklist, also apply the fixed set of
-   syntax-level refactorings wherever they appear in code you touch —
-   they're mechanical, not judgment calls, so no "if warranted" applies to
-   them, and applying them never requires running a scan or launching an
-   IDE — it's a fixed, read-and-apply list, not something that needs a
-   fresh inspection report to surface. That list now lives in
-   `kaizen-refactor` (its "Tier 1 — IDE-verified mechanical refactorings"
-   section), which owns it since the same set applies whether you're
-   mid-cycle here or refactoring existing code outside a TDD cycle — load
-   that skill for the list itself rather than duplicating it here, at the
-   first REFACTOR of the task. If it can't be loaded, skip only the
-   mechanical list and say so in every refactor summary ("mechanical list:
-   kaizen-refactor not available"), so the gap is visible, never silent.
-   `kaizen-refactor`'s scan-based workflow (`qodana scan`/`idea inspect`)
-   is a separate, standalone activity for triaging existing code — this
-   step here never triggers it.
+   Also apply, wherever it fits code you touch, the fixed list of
+   mechanical syntax refactorings: no "if warranted", and no scan or IDE
+   needed to find them. `kaizen-refactor` owns that list (its "Tier 1"
+   section), since it applies inside and outside a TDD cycle: load it at
+   the first REFACTOR rather than duplicating it here. If it can't be
+   loaded, skip only that list and say so in every refactor summary
+   ("mechanical list: kaizen-refactor not available"). Its scan-based
+   workflow (`qodana scan`/`idea inspect`) is separate and never runs here.
 7. **Build scope is never negotiable.** During the cycle (steps 1-4), build
    and run **only the single test class** you're working on — never the
    whole project. The full project build runs **exactly once, at the very

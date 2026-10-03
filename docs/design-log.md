@@ -1421,3 +1421,19 @@ Decided: a case is distinct when its *input* is degenerate (empty, absent, a
 single element), since that usually means its own code path. A zero result
 from ordinary input is just data and merges. All three Bowling frictions are
 now settled.
+
+### Token self-audit after the delegated-run additions
+
+`SKILL.md` had reached 33.2KB. The audit, in the skill's own order, proposed
+three changes: move the IDE test-runner subsection (~2.1KB, conditional and
+unverified) to a reference; move the delegated-run mechanics (~0.8KB net,
+opt-in) to a reference; and tighten the `kaizen-refactor` pointer in rule 6,
+which repeated itself. Kept inline on purpose: the `@InjectMocks` exception
+(moving it would split a rule from its own statement), the worked examples
+(they shape behavior on every trigger, and the `generalize-just-enough` eval
+suggests they're why the skill works), and the inline build commands (needed
+every run). **The author applied only the tightening**: same content, about
+half the words. The two relocations stay inline for now. Honest conclusion:
+even with all three, the file would stay near 30KB. What's left is rules and
+examples needed on every trigger, so reaching 20KB would mean cutting
+guidance, which the audit section itself calls a regression.
