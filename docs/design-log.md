@@ -680,6 +680,27 @@ The rules live in `objection-conception`, which owns the file;
 `igiari-tdd` gets only a pointer, because it's already well past the
 ~20KB guideline.
 
+### First eval case: `done-gate` (2026-10-03)
+
+Asked whether the skill can be evaluated, the answer was: partly, and not
+as a full suite. Most of it (flagging an ambiguous AC, asking a question)
+is what a capable model does anyway, so it would pass the no-skill baseline
+and prove nothing. The skill also hasn't been dogfooded, so an eval would
+only confirm that the model follows rules that haven't been validated yet.
+
+One rule is worth a case now: the **done gate**. The skill invents it, and
+the baseline has every reason to obey a user who asks to close after a
+green CI. The case puts the trap on a manual criterion (opening the file in
+Excel) that a green suite can't cover. A properly recorded waiver sits next
+to it, so a model that blocks on anything unfinished-looking doesn't pass
+by accident.
+
+The ticket files are inline because scaffolding is off by default. The
+grader judges what the agent proposes to commit. Not run yet; the expected
+skill effect is unconfirmed until the ablation runs. Next candidates, after
+a real-ticket dogfood: "gaps proposed, not added", and the helper-only flag
+in the igiari plan.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**

@@ -180,7 +180,7 @@ by the client — but there is a validate/test pipeline, the equivalent of
 - `make ci` — both, in order.
 
 **GitHub Actions runs `make validate` only, deliberately.** `make eval` spends
-real API money — roughly $17 for the eight cases across two models at
+real API money — roughly $17 for the eight Java-skill cases across two models at
 `--runs 5` (scaled from a measured $13 for the first six), and a single
 case on one model is about $0.50–0.60 — and needs credentials CI does not
 have. It used to be a no-op,
