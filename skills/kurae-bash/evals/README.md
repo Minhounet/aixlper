@@ -18,3 +18,8 @@ baseline was not clueless.
 **`bookmark-remove` does not discriminate.** Sonnet finds the substring
 match and the non-atomic rewrite without the skill. Patterns 6 and 10 are
 common shell knowledge. Run cost: $0.68.
+
+**2026-10-03 follow-up:** patterns 6, 9 and 10 moved out of `SKILL.md` into
+`references/everyday-hygiene.md`. `bookmark-remove` stays as a regression
+check that moving them cost nothing: the baseline already passes it, so the
+skill passing it too is the expected result.

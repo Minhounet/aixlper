@@ -1592,3 +1592,24 @@ the problem too visible. Learning mode also has a non-behavioral argument
 for keeping it, since the author is learning DDD. The eval can't measure
 that. No decision taken yet; this entry records the evidence the decision
 will rest on.
+
+### Decision: fold gyakuten-ddd into chottomatte-archi, trim kurae-bash
+
+The author chose the recommended option for each skill.
+
+- **`gyakuten-ddd` is now `chottomatte-archi/references/ddd-strategic.md`,**
+  and the skill is retired. The content was moved word for word apart from
+  "this skill" wording, following "relocate, never delete". It loads only
+  when `chottomatte-archi`'s pointer table sends a reader there: a second
+  model, team or external system, or a request to explain a strategic term.
+  **Accepted loss:** `chottomatte-archi`'s description is Java-specific, so a
+  plain "what's a bounded context" question in a non-Java session no longer
+  triggers anything. The ablation showed the model answers that well without
+  help.
+- **`kurae-bash` keeps seven patterns.** Atomic writes, strict mode and
+  `grep -vxF` (old patterns 6, 9, 10) moved to
+  `references/everyday-hygiene.md`, because the baseline applied them
+  unprompted. Pattern 1 (`bind -x` + `read`), the only one with a measured
+  effect, stays first. The remaining patterns were renumbered: the old 7 and 8
+  are now 6 and 7. `SKILL.md` went from 13.5KB to 11.4KB.
+- **`kanpeki-fp` is unchanged:** it has a strong measured effect.
