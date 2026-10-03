@@ -71,9 +71,12 @@ questions for this study, both for the author to decide:
 - **Enforce rules by checking, not by asking.** Rule 9 (test files frozen
   during GREEN, checked with one command) was the lasting win. Look for a
   `chottomatte-archi` rule that could be checked the same way.
-- **Subagents don't fit these skills.** Split mode cost about 9× the tokens
-  and did worse than inline, and it was removed. Don't propose it again
-  without new evidence.
+- **Splitting a task across several agents doesn't fit; one delegated agent
+  does.** Split mode (separate agents for RED and GREEN) cost about 9× the
+  tokens, did worse than inline, and was removed; don't propose it again
+  without new evidence. One agent running the whole approved plan, audited
+  from git afterwards, matched inline and is now `igiari-tdd`'s opt-in
+  delegated run.
 - **The skill's own examples count as rules.** Several contradictions were
   an example disagreeing with a rule.
 - **Never remove or "clean up" a section without the author asking** (see
