@@ -47,6 +47,25 @@ the method and what it found.
      *unprompted* and build the case around it. `igiari-tdd`'s
      `generalize-just-enough` went from Δ 0 to Δ 1.00 that way.
 
+## Also look at (added after the delegated-run work)
+
+`igiari-tdd` gained an opt-in **delegated run**: after plan approval, one
+agent runs every cycle, foreground or background, with one commit per step,
+and the main session audits the git history. `chottomatte-archi` gets **no**
+delegated mode of its own; it shapes structure and doesn't run cycles. Two
+questions for this study, both for the author to decide:
+
+1. **Combined use.** With both skills loaded and a delegated run requested,
+   does the existing hand-off work? Both plans should be approved first,
+   then one agent follows both `SKILL.md` files. Running the kata delegated
+   tests this directly. If something is missing, the fix is one sentence in
+   `igiari-tdd`'s delegated-run section, not a new section here.
+2. **Checkable rules.** Which `chottomatte-archi` rules can the audit
+   *check* rather than trust? Candidates: a full build ran after each
+   structural change; `new ConcreteThing(...)` appears only at the
+   composition root (searchable); every repository port has an in-memory
+   implementation.
+
 ## Lessons from the `igiari-tdd` study
 
 - **Enforce rules by checking, not by asking.** Rule 9 (test files frozen
