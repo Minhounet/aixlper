@@ -134,6 +134,12 @@ first (its classes/interfaces/signatures), write this test plan against
 that already-approved structure rather than re-deriving or re-presenting
 it — one plan per concern, not two overlapping ones.
 
+If the task is a ticket whose folder has an `acceptance.md`
+(`objection-conception`), tag each planned test with the acceptance
+criterion it serves, flag criteria with no test or only helper-level tests,
+and update that file once after the end-of-task audit — the exact rules
+live in `objection-conception`, not here.
+
 **Failures are shaped at plan time, not mid-cycle.** Write a planned
 failure case the "Code style" way below: a known business failure is
 returned as a value (`Either`/`Validation`), not thrown. Plan a "throws"

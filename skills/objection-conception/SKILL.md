@@ -1,6 +1,6 @@
 ---
 name: objection-conception
-description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under .claude/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
+description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under .claude/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session, and when the user wants to check, clarify, trace or verify a ticket's acceptance criteria ("critères d'acceptation", "AC", "definition of done") at any point - before design, during it, or after implementation. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
 ---
 
 # Objection Conception
@@ -12,6 +12,10 @@ moment the session ends or gets compacted. This skill exists to make that
 thinking durable: everything decided, and everything that went wrong along
 the way, gets written to disk inside the ticket's own folder, incrementally,
 as it happens - not reconstructed from memory at the end.
+
+It also keeps the ticket honest against its acceptance criteria: they're
+checked before anything is designed, traced through the design, and proven
+against the built code before the ticket can be closed.
 
 ## Get the ticket ID
 
@@ -35,9 +39,12 @@ Look in `.claude/ticket/<ticketId>/` before starting any design discussion:
   discard or silently overwrite.
 - **`retro.md`** - if it exists, read it too; a difficulty logged earlier
   may already be relevant to what you're about to discuss.
+- **`acceptance.md`** - if it exists, it's the current state of every
+  acceptance criterion (see below). Read it in full; a criterion still
+  `unclear` there blocks design work that depends on it.
 
-Neither file existing yet just means this is a fresh start for the ticket -
-you'll create both as the conversation produces something worth recording.
+None of these files existing yet just means this is a fresh start for the ticket -
+you'll create them as the conversation produces something worth recording.
 
 ## Check whether the ticket is already closed
 
@@ -85,7 +92,8 @@ your next edit rather than trusting your last in-memory version of it.
 
 Keep `status: in-progress` while work continues; set it to `status: done`
 only once the user confirms the ticket's design (and, typically, its
-implementation) is actually finished.
+implementation) is actually finished **and** the acceptance gate below
+passes.
 
 **Shape to follow:**
 
@@ -131,6 +139,125 @@ have helped next time.
 
 - <what happened>: <why it was a problem, and how it got resolved (or didn't)>
 ```
+
+## Acceptance criteria: acceptance.md
+
+`acceptance.md` lives alongside `conception.md` and tracks every acceptance
+criterion (AC) through three checks: is it clear, is it designed for, is
+it proven. Create it on the first trigger for a ticket that has ACs - or
+that should have them - and update it as each AC's state changes, like
+the other two files.
+
+**Shape to follow:**
+
+```markdown
+# TICKET-123: acceptance criteria
+
+## AC1: <short name>
+- Source: "<the ticket's own wording, verbatim>"
+- Interpretation: <the observable outcome that means it's met>
+- Questions: <ambiguity, who must answer it, the answer once given>
+- Covered by: <decision(s) in conception.md>
+- Evidence: <test name and result / command and result / manual check, by whom>
+- Status: unclear | ready | designed | verified | failed | waived (<reason, decided by>)
+```
+
+### 1. Before design: check the criteria themselves
+
+Extract every AC from the ticket material, numbered, with its **source
+wording kept verbatim** - your reformulation goes in `Interpretation`,
+never in place of the original, so a later reader can tell what was asked
+from what was understood. Then check each one:
+
+- **Observable** - can you state what would show it passing or failing?
+  "The page is fast" isn't; "the search returns in under 2s for 10k
+  documents" is.
+- **Unambiguous** - does it have exactly one reasonable reading? If two
+  readings would lead to different code, it's ambiguous.
+- **Testable** - can it be checked by a test, a command, or a concrete
+  manual step someone can actually perform?
+
+An AC failing any check is `unclear`: write the question down, say who has
+to answer it (the user, the PO, another team), and don't design against it
+yet. The user may choose to proceed on an explicit assumption - record it
+in `Interpretation` marked as an assumption, and keep the question open.
+
+Then check the set as a whole for **gaps**: error cases, edge cases,
+permissions, existing behavior that must not change, non-functional needs
+the ticket implies but doesn't state. Propose those as candidate ACs and
+let the user decide - never add one silently, since an AC nobody asked for
+is scope the ticket never agreed to. A ticket with no ACs at all is itself
+the first gap: say so, propose a set, and get it confirmed before design.
+
+### 2. During design: trace every AC to the design
+
+Each `ready` AC must end up covered by at least one decision in
+`conception.md`; record which in `Covered by` and move it to `designed`.
+Before treating the design as complete, show the trace both ways:
+
+- an AC with no covering decision is a **hole** in the design;
+- a decision serving no AC is either necessary plumbing (say why) or
+  **scope creep** - raise it, don't absorb it.
+
+### With a TDD skill: tag the plan, update once at the end
+
+If a TDD skill is also loaded, `acceptance.md` feeds its test plan and gets
+its evidence back from the finished run. This adds no pause beyond the
+ones the TDD skill already has.
+
+- **At plan time**, tag each planned test with the AC it proves (`[AC2]`),
+  or with the AC it only supports (`(supports AC1)`) when the test checks
+  a helper rather than the behavior the AC describes. Below the plan, flag
+  two gaps for the author to decide on during the same approval. Neither
+  blocks it:
+  - a `designed` AC with no tagged test at all;
+  - an AC whose tests are all `supports` - none exercises it at the level
+    of its `Interpretation` (the use case or service, not a helper), so
+    passing them won't prove it. It will need a higher-level test or other
+    evidence.
+- **During the cycles**, don't touch `acceptance.md`. A per-step update
+  would add noise to every commit, and no scoped run is the evidence
+  anyway.
+- **Once at the end**, after the full build and the TDD skill's own
+  audit: for each AC whose `[ACn]` tests all passed in that full build,
+  record the test names and the build result as `Evidence` and move it to
+  `verified`. Any other AC keeps its status and still needs evidence from
+  phase 3 below.
+- **A plan deviation that touches an AC's tests** goes through the TDD
+  skill's existing deviation pause: say which AC it affects, move that AC
+  back to `ready` (or `unclear` if the AC itself is in question), and log
+  it in `retro.md`.
+
+If the ticket's ACs change mid-way, update `Source`, drop the affected AC
+back to `unclear` or `ready`, re-check what it was covered by, and log the
+change in `retro.md`.
+
+### 3. After implementation: prove each AC
+
+For each AC, produce evidence that matches its `Interpretation` - not a
+nearby, easier property:
+
+- **Automated** (preferred): a test or command that exercises the AC.
+  Actually run it now and record its name and result; a test that exists
+  but wasn't run this time isn't evidence. Run only what the ACs need, and
+  report failures plus a one-line total rather than the full log.
+- **Manual**, when automation isn't reasonable: state the exact steps, and
+  have the user perform or confirm them - record who checked and what was
+  observed. Don't mark a manual check verified on your own say-so.
+
+Passing evidence → `verified`. Failing → `failed`, with what was observed;
+fix it or take it back to the design. A criterion that turned out wrong or
+impossible is a conversation with the user, not a quiet reinterpretation -
+log it in `retro.md`.
+
+### The done gate
+
+`conception.md` may move to `status: done` only when **every** AC is
+`verified` or `waived`. Waiving is the user's decision alone, with the
+reason and who decided recorded on the AC - never inferred from silence or
+from "good enough". If the user asks to close with anything still
+`unclear`, `ready`, `designed` or `failed`, list those ACs and their state
+and ask for each to be verified or explicitly waived first.
 
 ## Token self-audit
 

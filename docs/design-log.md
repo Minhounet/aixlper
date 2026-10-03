@@ -613,6 +613,104 @@ all three checks — it routes through the same section's "say so explicitly"
 clause instead. Settled rule: a Tier 1 entry may carry a precondition the
 reader can check at the call site, never an unstated one.
 
+## objection-conception
+
+### Acceptance criteria: checked, traced, proven (2026-10-03)
+
+The author: validating *critères d'acceptation* comes up on many tickets.
+Asked when, they chose all three moments, so the rule covers the whole
+lifecycle, not a single closing checklist:
+
+- **Before design.** Each AC is checked for being observable, unambiguous
+  and testable. Ambiguous ones turn into a question with a named owner
+  rather than a guess. The source wording stays verbatim next to the
+  interpretation, because "what was asked" vs. "what we understood" is
+  exactly where acceptance disputes start. Gaps (error/edge cases,
+  unstated non-functional needs) are proposed, never added silently: an
+  AC nobody asked for is unagreed scope.
+- **During design.** A two-way trace between ACs and `conception.md`
+  decisions. An AC with no decision is a hole; a decision serving no AC is
+  plumbing (justify it) or scope creep (raise it).
+- **After implementation.** Evidence per AC, and it must match the
+  interpretation, not some easier nearby property. Evidence means a test
+  actually run this session; a test that merely exists doesn't count. A
+  manual check counts only once the user has performed or confirmed it.
+
+**Storage: a separate `acceptance.md`** (author's choice over a section in
+`conception.md`). Each AC carries a status through
+`unclear → ready → designed → verified`, plus `failed` / `waived`.
+
+**Hard gate on `status: done`** (author's choice over report-only):
+every AC must be `verified` or explicitly `waived` by the user, with the
+reason recorded. The point is that "good enough" or silence can't close a
+ticket.
+
+Consequence for the token section below: `objection-conception` now runs
+commands, in phase 3 (tests that prove ACs), so it owes the same output
+discipline. That's stated inline in phase 3 ("failures plus a one-line
+total"). The earlier note that it "runs no commands" was true when written.
+
+Not dogfooded yet: no real ticket has been run through the three phases.
+
+### Linking acceptance.md to `igiari-tdd` (2026-10-03)
+
+The author's question: after launching `igiari-tdd`, how do the criteria
+get updated? Before this change they didn't. `objection-conception` had a
+single line ("each AC becomes a test") and `igiari-tdd` didn't know the
+file existed.
+
+The link uses igiari's two existing checkpoints, so its rule of one plan
+approval and then running straight through stays intact:
+
+- **Plan:** each test is tagged `[ACn]` (proves it) or `(supports ACn)`
+  (helper-level). Under the plan, two gaps are flagged: a criterion with
+  no test, and a criterion with only `supports` tests. The second exists
+  because a helper test passing isn't evidence the criterion holds - the
+  "nearby, easier property" trap from phase 3. Asked whether that should
+  block approval, the author chose **flag only**: the author decides
+  during the same approval.
+- **End:** `acceptance.md` is updated once, after the full build and the
+  history audit. That full build is the only run that counts as evidence.
+  Nothing is updated per cycle: that would add a non-test file to red
+  commits and noise everywhere else.
+- **Deviation:** the existing pause also names the affected criterion and
+  moves it back to `ready` / `unclear`.
+
+The rules live in `objection-conception`, which owns the file;
+`igiari-tdd` gets only a pointer, because it's already well past the
+~20KB guideline.
+
+### First eval case: `done-gate` (2026-10-03)
+
+Asked whether the skill can be evaluated, the answer was: partly, and not
+as a full suite. Most of it (flagging an ambiguous AC, asking a question)
+is what a capable model does anyway, so it would pass the no-skill baseline
+and prove nothing. The skill also hasn't been dogfooded, so an eval would
+only confirm that the model follows rules that haven't been validated yet.
+
+One rule is worth a case now: the **done gate**. The skill invents it, and
+the baseline has every reason to obey a user who asks to close after a
+green CI. The case puts the trap on a manual criterion (opening the file in
+Excel) that a green suite can't cover. A properly recorded waiver sits next
+to it, so a model that blocks on anything unfinished-looking doesn't pass
+by accident.
+
+The ticket files are inline because scaffolding is off by default. The
+grader judges what the agent proposes to commit. Not run yet; the expected
+skill effect is unconfirmed until the ablation runs. Next candidates, after
+a real-ticket dogfood: "gaps proposed, not added", and the helper-only flag
+in the igiari plan.
+
+**First run (Sonnet, `--runs 5`, $0.51): 1.00 with the skill, 1.00
+without, Δ 0.00.** The baseline refused to close for the right reason in
+every run. The case was built wrong for the question it was meant to
+answer: by handing over an `acceptance.md` with `Status: designed` and an
+empty `Evidence:`, the prompt gave the baseline the skill's own bookkeeping,
+so the gap was visible to anyone reading. This is the same lesson as
+`triangulate-before-generalizing`. The case stays as a regression check.
+A discriminating version has to withhold the status table, for example ACs
+only as ticket prose. See `skills/objection-conception/evals/README.md`.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**
