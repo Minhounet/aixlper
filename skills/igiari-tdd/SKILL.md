@@ -235,7 +235,11 @@ destination — it never moves up when you're allowed to build the road.
      `@ParameterizedTest`? Only when both specify the **same behavior with
      different data** (e.g. "returns the sum" for `"1,2"` and `"1,2,3,4"`)
      — same shape is not enough; a distinct case (empty input → 0, a
-     single number) keeps its own test. If yes, do it — no confirmation
+     single number) keeps its own test. "Distinct" is about the **input**,
+     not the output: a degenerate input (empty, absent, a single element)
+     usually means its own code path, while a zero result from ordinary
+     input is just data (20 gutter rolls → 0 merges with 20 one-pin rolls
+     → 20). If yes, do it — no confirmation
      needed — but **never silently**: it changes test code, not just
      production code, so it must be traced. See "Tracing test refactors"
      below. The merged name replacing planned names is part of that traced

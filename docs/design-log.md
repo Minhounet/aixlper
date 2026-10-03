@@ -1413,3 +1413,11 @@ the assertion checks) and the immutable `roll()`. Decided, in one line: only
 the method the assertion observes returns a rejected value. Any other stub
 returns the simplest thing that compiles and keeps the call chain working
 (`this` for a method returning its own type, an empty value otherwise).
+
+**"Distinct case" means degenerate input, not a zero result.** Third Bowling
+friction. The agent kept "20 gutters → 0" apart from "20 ones → 20" because
+the result was zero, by analogy with the skill's "empty input → 0" example.
+Decided: a case is distinct when its *input* is degenerate (empty, absent, a
+single element), since that usually means its own code path. A zero result
+from ordinary input is just data and merges. All three Bowling frictions are
+now settled.
