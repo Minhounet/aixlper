@@ -1693,3 +1693,31 @@ then whether anything covers `Future` and how to tell something is costly.
   in `concurrency.md` as the safe default until confirmed. It went there and
   not into `mujitsu-documentum`, because that skill covers bash
   `iapi`/`idql` scripts, not DFC Java code.
+
+### Eval: clarity-refactor, and the cost checklist moved out
+
+`SKILL.md` had reached 20.1KB, so the "Is it costly?" checklist moved to
+`references/cost.md`. The rule stays inline, with the one always-true case
+(anything that leaves the process is costly). `SKILL.md` is now 19.9KB.
+
+The author asked for an eval and an example, to see whether the refactor
+style suits them. The new case `clarity-refactor` gives the model a
+60-line `summarize` method that does everything in one place: a loop with
+mutable accumulators, an `instanceof` chain over a sealed type, a label
+reassigned in branches, a log built by string concatenation, a nullable
+private helper and a remote fallback. Its public signature is pinned by a
+test.
+
+Result (Sonnet, 3+3 runs, $0.98 for two runs): **with 0.92, without 0.67**.
+The clarity patterns themselves don't discriminate, because Sonnet applies
+them unprompted. Nor do the lazy fallback or the signature rule. What does
+is the original principle: without the skill the log stays inside the
+mapping step (3/3) and the `switch` uses type patterns with accessors
+(3/3). With the skill, both are fixed 3/3. The first grader set missed this.
+The answers showed it, which is the CLAUDE.md lesson again: read the
+outputs, not only the score. Details are in `evals/README.md`.
+
+Implication, not yet acted on: the clarity patterns add tokens without a
+measured behavior change on Sonnet. They may still matter on a cheaper
+model or as the author's own reference. Measuring that is a `--model haiku`
+run, not a reason to cut them now.

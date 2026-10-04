@@ -387,24 +387,14 @@ it runs **once** and caches. So it holds pure computations only: a side
 effect inside `Lazy` runs once, at whatever moment the first `get()`
 happens, and never again.
 
-### Is it costly? Classify before you defer
+### Defer only what is costly
 
 Don't make something lazy because it *might* be slow — the extra lambda or
-`Lazy` costs clarity and saves nothing on a cheap value. It's costly when
-any of these holds:
-
-- **It leaves the process:** a query (docbase, database), a remote call, a
-  file read, a Nuxeo `getDocument`/`query`. Always treat as costly.
-- **It builds something heavy:** an `ObjectMapper`, a JAXB context, a
-  compiled `Pattern`, a big lookup map — usually better as a field built
-  once than as a lazy local.
-- **It scales with the data:** a loop or stream over a collection of
-  unknown size, especially inside another loop.
-- **It was measured:** a profiler (IntelliJ's, async-profiler) or a timed
-  log line on real data shows it. For anything that is only pure in-memory
-  work on small inputs, measure before deferring — don't guess.
-
-Otherwise it's cheap: compute it eagerly, the straightforward way.
+`Lazy` costs clarity and saves nothing on a cheap value. Anything that
+leaves the process (a query, a remote call, a file read, a Nuxeo fetch) is
+always costly. For anything else, classify it with the checklist in
+`references/cost.md` before deferring; if it doesn't qualify, compute it
+eagerly, the straightforward way.
 
 ## When FP hurts clarity
 
@@ -455,6 +445,7 @@ When in doubt, write both versions and keep the one that reads more easily.
 | Read | When |
 |---|---|
 | `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), wraps a throwing library call with `Try`, updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
+| `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field. |
 | `references/concurrency.md` | You're about to use `Future`/`CompletableFuture`, run calls in parallel, or touch a Nuxeo or Documentum session from another thread. |
 
 ## Token self-audit
