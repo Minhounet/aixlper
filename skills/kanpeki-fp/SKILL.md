@@ -443,10 +443,13 @@ When in doubt, write both versions and keep the one that reads more easily.
 
 ## What NOT to use Vavr for
 
-- **`Try` for control flow** — `Try` wraps exceptions; use it only at the
-  boundary of code that genuinely throws (third-party libraries, I/O). Never
-  use `Try` as a substitute for `Either` when the failure is a known business
-  outcome, not an unexpected exception.
+- **`Try` for a business outcome** — **do** use `Try` instead of a
+  `try/catch` around a call that genuinely throws (a library, I/O,
+  parsing), keeping the lambda to that one call and turning it into `Either`
+  right after. Never throw your own exception to model a known business
+  outcome and catch it with `Try`: that outcome is an `Either` from the
+  start. Equivalents of `catch`/`finally`/try-with-resources and the traps:
+  `references/composition.md`.
 - **Nuxeo API calls** — Nuxeo's `CoreSession`, `DocumentModel`, etc. are
   inherently imperative and stateful. Wrap them at the seam (per
   `chottomatte-archi`); don't try to make them functional inside the listener.
@@ -456,7 +459,7 @@ When in doubt, write both versions and keep the one that reads more easily.
 
 | Read | When |
 |---|---|
-| `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), wraps a throwing library call with `Try`, updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
+| `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), replaces a `try/catch` with `Try` (or wraps a throwing library call), updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
 | `references/option-reader.md` | You're refactoring a nullable reader of external data and its mop-up helper, and want the worked before/after. |
 | `references/haskell-mapping.md` | You're reasoning in Haskell/FP terms (Reader, Writer, IO, `Debug.Trace`) and need the Java equivalent used in this codebase. |
 | `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field — or you're about to memoize a function or cache results. |

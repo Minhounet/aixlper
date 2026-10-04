@@ -1798,3 +1798,17 @@ with 1.00 / without 0.75. No regression from the additions or the moves to
 `references/`. The new sections (laziness, logging, function builders,
 memoization) have no case of their own, so this proves they didn't break
 the measured rules. It doesn't prove they work.
+
+### Try instead of try/catch, stated positively
+
+The author said they like using `Try` instead of `try/catch`. The skill
+already allowed that, but it only said so in the negative, as a "What NOT to
+use Vavr for" bullet. That bullet is now a positive rule: use `Try` instead
+of `try/catch` around a call that genuinely throws, with the lambda limited
+to that one call, then convert to `Either`. Throwing your own exception for
+a business outcome and catching it with `Try` stays forbidden.
+`references/composition.md` gained a `try/catch` → `Try` equivalents table
+(`recover`, `recoverWith`, `andFinally`, `withResources`, `run`,
+`onFailure`, `getOrElseThrow`) and the traps: it catches bugs too, it runs
+immediately, fatal errors pass through, no `Try` in an interface signature,
+and catching undoes nothing.

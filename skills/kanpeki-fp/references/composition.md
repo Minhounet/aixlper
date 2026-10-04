@@ -69,6 +69,32 @@ Either<ImportFailure, Payload> parse(String raw) {
 Keep the `Try` lambda to the single throwing call; any logic before or after
 it goes in the `Either` pipeline.
 
+### Every `try/catch` part has a `Try` equivalent
+
+| `try/catch` | `Try` |
+|---|---|
+| `catch (SpecificException e) { return fallback; }` | `.recover(SpecificException.class, e -> fallback)` |
+| `catch` that tries another call | `.recoverWith(SpecificException.class, e -> Try.of(...))` |
+| `finally` | `.andFinally(() -> ...)` |
+| try-with-resources | `Try.withResources(() -> openStream()).of(in -> read(in))` |
+| a `void` call that throws | `Try.run(() -> ...)` |
+| logging in the `catch` | `.onFailure(e -> log.warn(...))` — in the shell, like `peekLeft` |
+| rethrowing for a framework that expects an exception | `.getOrElseThrow(e -> new IllegalStateException(e))` |
+
+### Traps
+
+- **`Try` catches everything, bugs included.** An NPE becomes an ordinary
+  "failure". Keep the lambda to the single throwing call, and recover only
+  **specific** exception types — a blanket `.getOrElse(default)` hides bugs.
+- **It runs immediately.** `Try.of` executes on the spot; it is not `Lazy`.
+- **Fatal errors pass through.** Vavr rethrows fatal ones (e.g.
+  `VirtualMachineError`, `InterruptedException`) instead of wrapping them.
+- **No `Try` in an interface signature.** `Try<T>` says only "something can
+  fail", with no reason. In a private helper it's fine; at a port or public
+  method, convert to `Either<DomainError, T>`.
+- **Catching undoes nothing.** Work already done (a write, a transaction
+  marked for rollback) stays done, exactly as with `catch`.
+
 ## Immutable update: record withers  **[keeps signature]**
 
 "Never mutate, return a new value" for a record means a `withX` method that
