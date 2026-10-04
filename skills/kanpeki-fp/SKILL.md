@@ -124,15 +124,7 @@ types inside the parentheses and bind them to local names.
 **[changes signature]** — internal readers: just do it; a reader behind an
 interface: see the signature rule above.
 
-Never return null to signal absence. Return `Option<T>`:
-
-```java
-private Option<DocumentEventContext> toDocumentContext(Event event) {
-    return event.getContext() instanceof DocumentEventContext ctx
-        ? Option.some(ctx)
-        : Option.none();
-}
-```
+Never return null to signal absence. Return `Option<T>`.
 
 Chain with `flatMap`/`map`; call `.peek()`/`.onEmpty()` for side effects.
 `Option` composes with `Either` — `option.toEither(leftValue)` converts when
@@ -184,25 +176,7 @@ depends on who calls the method:
 | Other modules or teams (a public API) | **A sealed result of your own** — named outcomes, no Vavr in the caller's dependencies |
 | A framework (REST, Nuxeo operation, listener) | The framework's language — a status, the exception it expects, a log — converted in the shell |
 
-```java
-// inside the module: Either
-Either<SyncFailure, SyncResult> execute(CreerDocumentCommand cmd) {
-    return gateway.creerDocument(cmd)
-        .filterOrElse(SyncResult::isSuccess, r -> new SyncFailure.Rejected(r.errorMessage()));
-}
-
-// public API: a sealed result, built from the internal Either with one fold
-sealed interface PublishResult {
-    record Published(String docId)              implements PublishResult {}
-    record Rejected(String docId, String cause) implements PublishResult {}
-}
-
-PublishResult publish(String docId) {
-    return publishPipeline(docId)
-        .fold(failure -> new PublishResult.Rejected(docId, failure.cause()),
-              PublishResult.Published::new);
-}
-```
+The public result is built from the internal `Either` with one `fold`.
 
 `Left`/`Right` say nothing to a reader outside the code that built them; a
 sealed result names each outcome and the caller still gets an exhaustive
@@ -213,24 +187,7 @@ sealed result names each outcome and the caller still gets an exhaustive
 ### 1. Loop → pipeline  **[keeps signature]**
 
 A `for` loop that fills a mutable list, map or counter becomes a pipeline.
-The accumulator and its mutation disappear:
-
-```java
-// before
-List<String> ids = new ArrayList<>();
-for (Document d : docs) {
-    if (d.isPublished()) {
-        ids.add(d.getId());
-    }
-}
-return ids;
-
-// after
-return docs.stream()
-    .filter(Document::isPublished)
-    .map(Document::getId)
-    .toList();
-```
+The accumulator and its mutation disappear.
 
 Use `foldLeft` (Vavr) or `reduce` for a sum or a single combined value,
 `groupBy` for a map of lists, `partition` for "two lists split by a
@@ -259,14 +216,8 @@ caller) on its own.
 **Which form a function takes.** Default: a plain method, passed as a
 method reference (`this::isEligible`). When the function needs a parameter,
 write a method that **builds** it, and end its name with the functional
-type it returns, so it's never mistaken for the operation itself:
-
-```java
-private Predicate<Invoice> olderThanPredicate(Duration age) {
-    return invoice -> invoice.age().compareTo(age) > 0;
-}
-// .filter(olderThanPredicate(Duration.ofDays(30)))
-```
+type it returns, so it's never mistaken for the operation itself —
+`olderThanPredicate(age)`, `expressFeeFunction(rate)`.
 
 A `static final` field only for a constant built by composition with no
 logic of its own (`Comparator.comparing(...).thenComparing(...)`). Never a
@@ -275,26 +226,7 @@ static field holding a lambda that needs instance state.
 ### 3. Expressions, not reassigned locals  **[keeps signature]**
 
 A local declared first and assigned in branches becomes a single expression
-— a ternary for two cases, a `switch` expression for more:
-
-```java
-// before
-String label;
-if (status == Status.DRAFT) {
-    label = "draft";
-} else if (status == Status.PUBLISHED) {
-    label = "live";
-} else {
-    label = "archived";
-}
-
-// after
-String label = switch (status) {
-    case DRAFT -> "draft";
-    case PUBLISHED -> "live";
-    case ARCHIVED -> "archived";
-};
-```
+— a ternary for two cases, a `switch` expression for more.
 
 Every local is assigned once. Nested ternaries are not an expression win —
 use a `switch` or a named method instead.
@@ -305,16 +237,7 @@ The exhaustive `switch` shown above for logging also replaces
 `if (x instanceof A) ... else if (x instanceof B) ...` chains that compute a
 value. Use record pattern destructuring, and no `default` branch, so adding
 a variant breaks compilation at every site that must handle it:
-
-```java
-BigDecimal fee(Shipment s) {
-    return switch (s) {
-        case Shipment.Standard(BigDecimal weight) -> weight.multiply(RATE);
-        case Shipment.Express(BigDecimal weight, int hours) -> expressFee(weight, hours);
-        case Shipment.Pickup() -> BigDecimal.ZERO;
-    };
-}
-```
+`case Shipment.Express(BigDecimal weight, int hours) -> expressFee(weight, hours);`
 
 ### 5. Functional core, imperative shell  **[keeps signature]** of the outer method
 
@@ -322,15 +245,7 @@ This is "the one principle" applied to a whole method. Split a method that
 mixes reading, deciding and writing into three parts: the shell reads
 (I/O, Nuxeo, gateway), passes plain values to a pure core that decides, then
 acts on the decision. The core takes values and returns a value — no
-session, no logger, no mocks needed to unit-test it:
-
-```java
-void onEvent(Event event) {                              // shell
-    Option<Document> doc = loadDocument(event);
-    doc.map(publicationPolicy::decide)                   // pure core
-       .forEach(this::apply);                            // shell
-}
-```
+session, no logger, no mocks needed to unit-test it.
 
 The outer method keeps its signature. The extracted core is new, so its
 signature is free to choose (usually `Either`/`Option`/a sealed result).
@@ -340,25 +255,7 @@ signature is free to choose (usually `Either`/`Option`/a sealed result).
 Java has no `IO` type to mark a function as effectful, and none is needed:
 the core never performs an effect, it returns a value that **describes** it.
 Model the possible effects as a sealed type; the shell runs them with one
-exhaustive `switch`, and is the only place they happen:
-
-```java
-sealed interface Action {
-    record Publish(String docId, String target) implements Action {}
-    record Notify(String userId, String message) implements Action {}
-    record Skip(SkipReason reason)              implements Action {}
-}
-
-Action decide(Document doc) { ... }                      // pure
-
-void apply(Action action) {                              // shell
-    switch (action) {
-        case Action.Publish(String id, String target) -> publisher.publish(id, target);
-        case Action.Notify(String user, String msg)   -> mailer.send(user, msg);
-        case Action.Skip(SkipReason r)                -> logSkipReason(r);
-    }
-}
-```
+exhaustive `switch`, and is the only place they happen.
 
 A unit test asserts on what *would* happen —
 `assertEquals(new Action.Publish("42", "web"), decide(doc))` — with no mock
@@ -480,6 +377,7 @@ When in doubt, write both versions and keep the one that reads more easily.
 
 | Read | When |
 |---|---|
+| `references/examples.md` | You want the worked code for a pattern above — one section per pattern, same names. |
 | `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), replaces a `try/catch` with `Try` (or wraps a throwing library call), updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
 | `references/option-reader.md` | You're refactoring a nullable reader of external data and its mop-up helper, and want the worked before/after. |
 | `references/haskell-mapping.md` | You're reasoning in Haskell/FP terms (Reader, Writer, IO, `Debug.Trace`) and need the Java equivalent used in this codebase. |

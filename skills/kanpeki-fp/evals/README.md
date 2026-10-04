@@ -50,3 +50,11 @@ but Vavr in a public signature. With the skill, all 3 runs return a sealed
 `ImportResult` of their own built with one `fold`, and use `Try` for the
 parse. One run still wrapped `ledger.post` in a `try/catch`. That's the only
 with-skill failure, and it's a real one, not grader noise.
+
+**After the examples moved to `references/examples.md`, 2026-10-04 ($1.53,
+Sonnet, 3+3 runs).** `guard-pipeline` scored with 1.00 / without 0.22,
+`clarity-refactor` with 1.00 / without 0.83, and `failing-import` with 0.89
+/ without 0.33 (the same single `try-boundary` miss as before). These match
+the scores from before the move, so there's no regression. The guard,
+`SkipReason` and logging-switch examples stayed inline on purpose: they are
+what `guard-pipeline` measures.

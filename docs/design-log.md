@@ -1855,3 +1855,30 @@ posts to a ledger (which throws when down). Sonnet, 3+3 runs, $0.54:
 
 The two rules added today (`Try` as the `try/catch` replacement, and a
 sealed result for a public API) are the ones that make the difference.
+
+### Examples pass: long code blocks to references/examples.md
+
+At the author's request, `SKILL.md` was brought back to the ~20KB guideline
+(22.6KB → 20.0KB) by moving the long code blocks into a new
+`references/examples.md`, with one section per pattern under the same name.
+Moved: `toDocumentContext`, the `Either`-inside / sealed-result-outside pair,
+loop → pipeline, the function builder, expressions versus reassigned
+locals, the value-producing sealed `switch`, the shell/core split, and the
+`Action` type. Every rule's prose stayed inline, along with a one-line
+example where it carries the rule (the record-deconstruction `case`, the
+builder names, the eager-fallback pair).
+
+**Kept inline deliberately:** the guard, `flatMap`/`peekLeft` pipeline,
+`SkipReason` and logging-switch examples. They are the house style that
+`guard-pipeline` measures (1.00 vs 0.22), so they weren't risked. The short
+pattern-2 pipeline and the `getOrNull` seam line also stayed: they're cheap
+and they're the rule itself.
+
+**Regression check** (Sonnet, 3+3 runs, $1.53): all three cases scored the
+same as before the move. `guard-pipeline` 1.00 / 0.22, `clarity-refactor`
+1.00 / 0.83, `failing-import` 0.89 / 0.33.
+
+**Open question for the token audit:** if `examples.md` turns out to be
+opened on most triggers, it costs more than it saves (a tool call plus a
+lost prefix cache). The eval traces don't show whether it was read. Check it
+in real use before moving anything else out.
