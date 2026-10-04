@@ -450,11 +450,6 @@ When in doubt, write both versions and keep the one that reads more easily.
   inherently imperative and stateful. Wrap them at the seam (per
   `chottomatte-archi`); don't try to make them functional inside the listener.
   The functional pipeline starts *after* the Nuxeo call returns a value.
-- **`Future` in the core** — `Future` starts running on another thread the
-  moment it's created, so it is an effect, not a value. It belongs in the
-  shell, for independent slow I/O calls run in parallel, and only when the
-  gain is real. Never hand a session (Nuxeo `CoreSession`, Documentum
-  `IDfSession`) to another thread. Details: `references/concurrency.md`.
 
 ## Where to look for more
 
@@ -464,7 +459,7 @@ When in doubt, write both versions and keep the one that reads more easily.
 | `references/option-reader.md` | You're refactoring a nullable reader of external data and its mop-up helper, and want the worked before/after. |
 | `references/haskell-mapping.md` | You're reasoning in Haskell/FP terms (Reader, Writer, IO, `Debug.Trace`) and need the Java equivalent used in this codebase. |
 | `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field. |
-| `references/concurrency.md` | You're about to use `Future`/`CompletableFuture`, run calls in parallel, or touch a Nuxeo or Documentum session from another thread. |
+| `references/concurrency.md` | **Before** using `Future`/`CompletableFuture`, running calls in parallel, or touching a Nuxeo or Documentum session from another thread — it holds the rule for all three. |
 
 ## Token self-audit
 

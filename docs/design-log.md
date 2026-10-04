@@ -1765,3 +1765,11 @@ be obvious from its name. Added to clarity pattern 2:
   reads worse, stack traces show `lambda$static$0`, forward references hit
   initialization-order traps, and the generic types get verbose. There's no
   performance difference.
+
+**Concurrency bullet moved out, at the author's request.** The `Future`
+rule (an effect, so shell only; no session handed to another thread) now
+opens `references/concurrency.md`. This is a knowing exception to "never
+split a rule from its own statement": the rule now lives only in the
+reference. That's accepted because the reference is exactly what a reader
+opens at the moment the rule applies, and the pointer row says so ("read
+**before** using `Future`… it holds the rule"). `SKILL.md` is at 20.9KB.

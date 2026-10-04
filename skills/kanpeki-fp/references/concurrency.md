@@ -1,9 +1,13 @@
 # Concurrency — Future, parallel calls, thread-bound sessions
 
-Read this when you're about to use `Future` / `CompletableFuture`, run calls
-in parallel, or touch a Nuxeo or Documentum session from another thread. The
-rule itself is in `SKILL.md` ("What NOT to use Vavr for"): a `Future` is an
-effect, it lives in the shell, and a session never crosses threads.
+Read this **before** using `Future` / `CompletableFuture`, running calls in
+parallel, or touching a Nuxeo or Documentum session from another thread.
+
+**The rule:** a `Future` starts running on another thread the moment it's
+created, so it is an effect, not a value. It belongs in the shell, for
+independent slow I/O calls run in parallel, and only when the gain is real
+— never in the core. Never hand a session (Nuxeo `CoreSession`, Documentum
+`IDfSession`) to another thread.
 
 ## What a Vavr `Future` is
 
