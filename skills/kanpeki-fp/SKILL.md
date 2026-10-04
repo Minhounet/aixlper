@@ -235,6 +235,22 @@ This is the main tool against long methods: each step gets a name that says
 what it means, and each named step can be read (and tested through its
 caller) on its own.
 
+**Which form a function takes.** Default: a plain method, passed as a
+method reference (`this::isEligible`). When the function needs a parameter,
+write a method that **builds** it, and end its name with the functional
+type it returns, so it's never mistaken for the operation itself:
+
+```java
+private Predicate<Invoice> olderThanPredicate(Duration age) {
+    return invoice -> invoice.age().compareTo(age) > 0;
+}
+// .filter(olderThanPredicate(Duration.ofDays(30)))
+```
+
+A `static final` field only for a constant built by composition with no
+logic of its own (`Comparator.comparing(...).thenComparing(...)`). Never a
+static field holding a lambda that needs instance state.
+
 ### 3. Expressions, not reassigned locals  **[keeps signature]**
 
 A local declared first and assigned in branches becomes a single expression

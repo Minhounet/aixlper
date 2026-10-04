@@ -1746,3 +1746,22 @@ inline in a short paragraph that keeps the tell (a mop-up helper) and the
 per-caller defaults. `SKILL.md` went from 21.2KB to 20.5KB, still slightly
 over the ~20KB guideline. The remaining sections either apply on most
 triggers or are rules, not lookups.
+
+### Function-valued members: method reference, builder, static constant
+
+The author asked whether a function is better held in a static field or
+returned by a method, and then asked that a method which builds a function
+be obvious from its name. Added to clarity pattern 2:
+
+- **The default** is a plain method passed as a method reference.
+- **A builder method** returns a function only when the function needs a
+  parameter. Chosen by the author from three options: its name **ends with
+  the functional type it returns** (`olderThanPredicate(age)`,
+  `expressFeeFunction(rate)`). It works for private helpers too. Rejected: a
+  holder class like `InvoicePredicates.olderThan`, which doesn't fit private
+  one-off builders, and mixing the two by scope, which adds one more rule.
+- **A `static final` field** holds only a composed constant, such as a
+  `Comparator` chain. Reasons against static lambdas in general: `F.apply(x)`
+  reads worse, stack traces show `lambda$static$0`, forward references hit
+  initialization-order traps, and the generic types get verbose. There's no
+  performance difference.
