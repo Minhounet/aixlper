@@ -168,24 +168,45 @@ where your model meets a contract you don't control, and spelling it out makes
 the seam visible. What matters is that the null is confined to that line rather
 than travelling inward.
 
-## Either for error paths in use cases
+## Known failures: in the signature, as Either or a sealed result
 
 **[changes signature]** — a use case is usually behind a port, so this is
 normally decided when the use case is designed, not in a refactor step.
 
-When a use case can fail for a known business reason (not an exception),
-return `Either<Failure, Success>` rather than throwing or returning a
-nullable result:
+A known business failure (not an exception) is **always** visible in the
+return type — never a throw, a `null` or a silent default. Which type
+depends on who calls the method:
+
+| Caller | Return type |
+|---|---|
+| The same class (private helpers, pipelines) | `Either` freely — `flatMap`, `traverse`, `peekLeft` |
+| Your own module (a use case or port only it uses) | `Either<Failure, Success>` |
+| Other modules or teams (a public API) | **A sealed result of your own** — named outcomes, no Vavr in the caller's dependencies |
+| A framework (REST, Nuxeo operation, listener) | The framework's language — a status, the exception it expects, a log — converted in the shell |
 
 ```java
+// inside the module: Either
 Either<SyncFailure, SyncResult> execute(CreerDocumentCommand cmd) {
     return gateway.creerDocument(cmd)
         .filterOrElse(SyncResult::isSuccess, r -> new SyncFailure.Rejected(r.errorMessage()));
 }
+
+// public API: a sealed result, built from the internal Either with one fold
+sealed interface PublishResult {
+    record Published(String docId)              implements PublishResult {}
+    record Rejected(String docId, String cause) implements PublishResult {}
+}
+
+PublishResult publish(String docId) {
+    return publishPipeline(docId)
+        .fold(failure -> new PublishResult.Rejected(docId, failure.cause()),
+              PublishResult.Published::new);
+}
 ```
 
-Left = known failure (retryable or not), Right = success. The caller decides
-what to do with each — no exception-based flow control.
+`Left`/`Right` say nothing to a reader outside the code that built them; a
+sealed result names each outcome and the caller still gets an exhaustive
+`switch`. Inside the module, `Either` keeps its value: chaining.
 
 ## Clarity patterns: shortening long methods
 

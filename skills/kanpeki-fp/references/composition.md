@@ -90,8 +90,9 @@ it goes in the `Either` pipeline.
 - **Fatal errors pass through.** Vavr rethrows fatal ones (e.g.
   `VirtualMachineError`, `InterruptedException`) instead of wrapping them.
 - **No `Try` in an interface signature.** `Try<T>` says only "something can
-  fail", with no reason. In a private helper it's fine; at a port or public
-  method, convert to `Either<DomainError, T>`.
+  fail", with no reason. In a private helper it's fine; at a port convert
+  to `Either<DomainError, T>`, and in a public API to a sealed result (see
+  "Known failures" in `SKILL.md`).
 - **Catching undoes nothing.** Work already done (a write, a transaction
   marked for rollback) stays done, exactly as with `catch`.
 

@@ -1812,3 +1812,24 @@ a business outcome and catching it with `Try` stays forbidden.
 `onFailure`, `getOrElseThrow`) and the traps: it catches bugs too, it runs
 immediately, fatal errors pass through, no `Try` in an interface signature,
 and catching undoes nothing.
+
+### Either rule rewritten: the failure is in the signature, the type depends on the caller
+
+The author asked whether exposing `Either` as a return type is right, or
+whether it should stay an internal mechanism. Answer agreed with the
+author: the *failure* must stay visible in the signature (otherwise it
+comes back as a throw, `null` or a silent default), but the *Vavr type*
+needn't. "Either for error paths in use cases" is replaced by "Known
+failures: in the signature, as Either or a sealed result", which decides
+by caller:
+- the same class → `Either` freely;
+- your own module → `Either`;
+- other modules or teams → a sealed result of your own, built from the
+  internal `Either` with one `fold`;
+- a framework → its own language, converted in the shell.
+
+Reasons recorded inline: `Left`/`Right` mean nothing outside the code that
+built them, Vavr would leak into callers' dependencies, and frameworks
+don't understand it. A sealed result keeps exhaustive handling and names
+each outcome. `composition.md`'s "no `Try` in an interface signature" trap
+now points to the same split.
