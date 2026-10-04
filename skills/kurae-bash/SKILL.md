@@ -1,11 +1,11 @@
 ---
 name: kurae-bash
-description: Ten hardening patterns for building a robust, interactive bash CLI tool or shell helper — readline/bind -x dispatch, annotation-driven command registries, build-time comment stripping, layered config precedence, avoiding eval on dynamic commands, atomic file writes, double-load guards, framework-free unit testing, strict mode, and exact-match list filtering. Use whenever writing or reviewing bash that defines interactive keybindings, ships as a sourced shell helper (.bashrc/profile.d), parses its own source for a command palette/help system, reads layered config files, or needs unit tests without a test framework.
+description: Seven hardening patterns for building a robust, interactive bash CLI tool or shell helper — readline/bind -x dispatch, annotation-driven command registries, build-time comment stripping, layered config precedence, avoiding eval on dynamic commands, double-load guards, and framework-free unit testing (plus a reference for atomic writes, strict mode and exact-match filtering). Use whenever writing or reviewing bash that defines interactive keybindings, ships as a sourced shell helper (.bashrc/profile.d), parses its own source for a command palette/help system, reads layered config files, or needs unit tests without a test framework.
 ---
 
 # Bash CLI Patterns
 
-Ten patterns for bash tools that go beyond a one-off script — things that get
+Seven patterns for bash tools that go beyond a one-off script — things that get
 sourced into a live shell, bind keys, hold config, or need tests. Each one
 exists because the naive version has a specific, real failure mode. Skip a
 pattern where its problem genuinely can't occur (a script with no `bind -x`
@@ -137,30 +137,7 @@ quoting hazard.
 source "$binding_file"
 ```
 
-## 6. Atomic writes: write to a temp file, then `mv` over the target
-
-**Failure mode:** a script rewrites a state file in place (truncate and
-write). If it's interrupted mid-write — crash, killed process, a concurrent
-reader — the file is left half-written or empty, and whatever reads it next
-gets corrupted or truncated data.
-
-**Mechanism:** write the new content to a fresh file created with `mktemp`
-(same filesystem as the target, so the following `mv` is a rename, not a
-copy), then `mv` it over the real path. A rename within one filesystem is
-atomic — readers see either the old file or the fully-written new one, never
-a partial state.
-
-```bash
-local -r tmp=$(mktemp)
-generate_new_content > "$tmp"
-mv "$tmp" "$target_file"
-```
-
-Also apply this to any accumulating list write that isn't a simple append —
-e.g. rewriting a "most-recent-N" file with the current entry moved to the
-top and duplicates removed.
-
-## 7. Guard idempotent initialization against being sourced twice
+## 6. Guard idempotent initialization against being sourced twice
 
 **Failure mode:** a shell helper meant to be sourced once (from `.bashrc`,
 `profile.d`, or both during a migration window) gets sourced twice in the
@@ -185,7 +162,7 @@ file as a script (e.g. `./mytool.sh install` from a build step) also trips
 the guard and `return`s at top level, which errors outside a function/sourced
 context and skips whatever `main` logic was supposed to run.
 
-## 8. Framework-free bash unit testing
+## 7. Framework-free bash unit testing
 
 **Failure mode:** bash modules go untested because pulling in a test
 framework feels heavyweight for shell code, so bugs in string handling,
@@ -238,38 +215,13 @@ echo "${PASS} passed, ${FAIL} failed"
   verdict. Add a `VERBOSE=1` opt-in if you want the per-case ✅ back while
   debugging a single file.
 
-## 9. Strict mode as the default posture
+## Everyday shell hygiene: `references/everyday-hygiene.md`
 
-**Failure mode:** an unset variable silently expands to empty string, a
-failed command in the middle of a pipeline or `&&`-chain is ignored, and the
-script keeps running on bad state instead of stopping where the problem
-actually occurred — surfacing as a confusing failure several lines later, or
-not at all.
-
-**Mechanism:** start scripts with `set -o nounset -o errexit -o pipefail`
-(or the shorthand `set -euo pipefail`; `set -u` alone is enough for a test
-file that intentionally doesn't need `errexit`). Then make deviations
-explicit and local rather than disabling strict mode globally — e.g. a
-command whose non-zero exit is expected gets `|| true` or is placed in an
-`if` condition, not run under a relaxed global mode.
-
-## 10. Exact-match list filtering: `grep -vxF`, not bare `grep -v`
-
-**Failure mode:** removing or matching one literal value from a list with
-plain `grep -v "$value"` is a regex substring match, not an exact-line
-match. Two ways this goes wrong: a value containing regex metacharacters
-(`.` in a path matches *any* character) can match lines it shouldn't, and an
-unanchored match can remove `/home/user/projects` when you only meant to
-remove `/home/user` — because it's a substring, not the whole line.
-
-**Mechanism:** `-x` anchors the match to the *entire* line (no partial/
-substring matches), `-F` treats the pattern as a literal fixed string (no
-regex interpretation of `.`, `*`, etc.). Together they give "remove exactly
-this value, nothing that merely resembles it."
-
-```bash
-grep -vxF "$value" "$list_file" > "$tmp" && mv "$tmp" "$list_file"   # combine with pattern 6
-```
+Atomic `mktemp` + `mv` writes, strict mode, and exact-match `grep -vxF`
+filtering live there. They're real rules, but a model already applies them
+unprompted (measured, see `docs/design-log.md`), so they don't need to load on
+every trigger. Read it when reviewing a script that rewrites a state file in
+place, removes a value from a list file, or runs without `set -euo pipefail`.
 
 ## Token self-audit
 

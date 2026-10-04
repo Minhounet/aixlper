@@ -59,7 +59,7 @@ starting, rather than force-fitting it into a `SKILL.md`.
 
 ## Active work: skills still being designed
 
-Six skills are in active design and are **not** stable. For each, the
+Five skills are in active design and are **not** stable. For each, the
 `SKILL.md` is the source of truth for its current rules, and
 `docs/design-log.md` holds the session-by-session history — every rule
 addition, correction and worked example, with the reasoning behind it.
@@ -67,7 +67,7 @@ Read the `SKILL.md` when you need the rule; read the log when you need the
 *why*. Don't restate either here: this section is a map, not a summary.
 Keep the log updated whenever a skill changes.
 
-For all six: expect them to keep growing from ongoing conversation with
+For all five: expect them to keep growing from ongoing conversation with
 the author. Don't treat any as complete, and **don't remove or "clean up"
 sections without the author asking.**
 
@@ -76,7 +76,6 @@ sections without the author asking.**
 | `igiari-tdd` | Co-designed across many sessions | One-test-per-step TDD framed for an AI: baby steps for *containment*, not design-discovery. Red / Super Green / Refining Refactor. |
 | `chottomatte-archi` | Co-designed across many sessions | Dependency inversion via interfaces; everything else follows from it. |
 | `mujitsu-documentum` | **Unverified** | Written from general DQL/API knowledge, never run against a real docbase. Treat every pattern as a draft; don't cite it as settled. Known-weak spot: pattern 4's `get_type_attr_count` is a named placeholder, not confirmed DQL. |
-| `gyakuten-ddd` | New, not dogfooded | DDD *strategic* patterns only (Bounded Context, Context Map, ACL...). Tactical patterns stay in `chottomatte-archi`. Doubles as a learning aid — explaining a term on request is a valid trigger. |
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
 | `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`.claude/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design, traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived. |
 
@@ -90,9 +89,10 @@ this paragraph when the study is done.
 governs *how you write code over time*, Clean Architecture governs *how the
 code is structured* — orthogonal and composable, and you shouldn't need
 architecture rules to fix a bug in an unstructured script. Both
-cross-reference each other and `gyakuten-ddd`. When both are loaded, the
-clean-architecture structural plan comes first and the TDD test plan is
-written against it rather than re-derived. Each allows exactly one further
+cross-reference each other. DDD's strategic patterns (formerly the
+`gyakuten-ddd` skill) live in `chottomatte-archi/references/ddd-strategic.md`.
+When both are loaded, the clean-architecture structural plan comes first
+and the TDD test plan is written against it rather than re-derived. Each allows exactly one further
 pause after its plan is approved: a genuine deviation discovered during
 implementation, shown and re-approved — never silent substitution.
 
@@ -111,7 +111,7 @@ implementation, shown and re-approved — never silent substitution.
   throwaway-project equivalent; the author validates it against a real
   Documentum environment and reports friction back. Corrections land as an
   edit to the `SKILL.md` plus a log entry, same discipline as above.
-- **`gyakuten-ddd` / `kaizen-refactor`:** nothing decided yet beyond
+- **`kaizen-refactor`:** nothing decided yet beyond
   `make validate`.
 
 ## Repository layout

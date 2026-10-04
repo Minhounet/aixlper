@@ -1,33 +1,27 @@
----
-name: gyakuten-ddd
-description: Guidance and reference for Domain-Driven Design's strategic patterns — Ubiquitous Language, Bounded Context, Context Map, and the model/team relationship patterns (Shared Kernel, Customer-Supplier, Conformist, Anticorruption Layer, Open Host Service, Separate Ways), plus Core Domain / Generic Subdomain distillation. Language-agnostic. Use when defining or reasoning about the boundary between two or more models, teams, services, or systems — including integrating with a legacy or third-party system — not for structuring dependencies inside a single model (see chottomatte-archi, Java-specific) or for the test-writing workflow (see igiari-tdd). Also use to explain any of these DDD terms on request, e.g. "what's a bounded context", "explain the anticorruption layer".
----
+# DDD strategic design: boundaries between models
 
-# DDD Strategic Design
+Read this when a second model, team, service or external system enters the
+picture: deciding where one model ends and another begins, integrating a
+legacy or third-party system, or when asked to explain a DDD strategic term
+(Bounded Context, Context Map, Anticorruption Layer...). Language-agnostic,
+unlike the rest of this skill.
 
-**Related skills:** `chottomatte-archi` governs dependency direction
-*inside* one model/codebase, and already covers DDD's tactical patterns
-(Entity, Value Object, Aggregate) as what lives inside the domain layer that
-direction protects — Java-specific. This skill is one level up and
-language-agnostic: it's about the boundary *between* models — where one
-model ends and another begins, and how two models talk to each other.
-Orthogonal, not a dependency: a single-model Java feature only needs
-`chottomatte-archi`; load this skill too once a second model, team,
-service, or external system enters the picture.
-
+This was the `gyakuten-ddd` skill until 2026-10-03. An ablation showed Sonnet
+applies these rules unprompted, so it moved here as reference material
+instead of loading on every trigger (see `docs/design-log.md`).
 ## Scope: strategic vs. tactical
 
-DDD has two halves. This skill is the strategic half only:
+DDD has two halves. This file is the strategic half only:
 
 - **Tactical** (Entity, Value Object, Aggregate, Repository, Factory,
-  Service, Module) — patterns for structuring *one* model. Already covered,
-  for Java, in `chottomatte-archi`.
-- **Strategic** (this skill) — patterns for structuring a *system of
+  Service, Module) — patterns for structuring *one* model. Covered,
+  for Java, in the main `chottomatte-archi` skill.
+- **Strategic** (this file) — patterns for structuring a *system of
   models*: where the boundaries are, what crosses them, and how the teams
   on either side relate to each other.
 
-Don't reach for this skill to decide whether something is an Entity or a
-Value Object — that's tactical. Reach for this skill when the question is
+Don't reach for this file to decide whether something is an Entity or a
+Value Object — that's tactical. Reach for it when the question is
 "does this belong in the same model as that?", "who owns this concept?", or
 "how do these two systems talk without corrupting each other?"
 
@@ -53,7 +47,7 @@ things kept in sync:
 
 A Bounded Context is the boundary within which a model is unified — one
 consistent set of terms, no internal contradictions. It's the primary unit
-this skill works in.
+this file works in.
 
 When helping design or evolve a system:
 
@@ -156,45 +150,6 @@ using the definition above plus a concrete example — don't just name-drop
 the pattern. If a question sits right at the tactical/strategic boundary
 (e.g. "what's the difference between a Module and a Bounded Context",
 "where do Aggregates fit into a Context Map"), answer the strategic half
-here and point to `chottomatte-archi` for the tactical half rather
-than improvising tactical guidance in this file.
+here and take the tactical half from the main `chottomatte-archi` skill (its
+"Relationship to DDD" section) rather than improvising it here.
 
-## Token self-audit
-
-This file loads **in full** whenever the skill triggers and stays resident
-for the rest of the session; `references/` files load only if the body
-points at one. When asked to reduce token cost — or before adding anything
-here — audit in this order and report what you would move, and why:
-
-- **Needed only sometimes?** Material for one framework, one tool's exact
-  commands, or a section about extending the skill itself → move to
-  `references/` behind a pointer that names the condition precisely.
-- **A reference opened on almost every trigger?** Then it costs *more*
-  there than inline — a tool call, an extra assistant turn, and a lost
-  prefix cache. Bring it back inline.
-- **Does a step here run a command?** Its output is tokens too, charged
-  every run and kept for the session. Suppress progress/debug noise and
-  bound what gets echoed.
-
-Never split a rule from its own statement: a reference shows how to satisfy
-a rule in one environment, it never holds the rule. **Relocate, never
-delete** — removing guidance to save tokens is a regression, not a saving.
-
-## When this skill doesn't cover the case
-
-If a real situation doesn't map cleanly onto anything above — an
-integration shape none of the Context Map patterns quite fit, a boundary
-question with no clean answer — don't silently improvise and move on. Make
-the best call for the situation, then flag the gap:
-
-```
-## Skill improvement proposal
-- Skill: gyakuten-ddd
-- Situation: <what you were doing>
-- Gap: <what these rules don't cover, or got wrong>
-- Proposed rule: <the addition, worded as a rule, ready to paste in>
-- Suggested location: <the section of this file it belongs in>
-```
-
-This is for gaps in the rules themselves, not a judgment call that turned
-out debatable.

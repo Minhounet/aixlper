@@ -9,10 +9,10 @@ description: Enforces dependency inversion via interfaces and constructor inject
 time* (test-first, one behavior per step) — this skill only covers how the
 code should be *structured* (dependency inversion, constructor injection).
 Orthogonal and composable, not a dependency: load the other one too when
-writing new code, not just restructuring existing code. `gyakuten-ddd`
-covers the boundary *between* models/teams/systems (Bounded Context, Context
-Map) — language-agnostic, one level up from this skill's single-model
-dependency rules. Load it too once a second model, team, or external system
+writing new code, not just restructuring existing code. The boundary
+*between* models/teams/systems (Bounded Context, Context Map, Anticorruption
+Layer) is one level up from this skill's single-model dependency rules: see
+`references/ddd-strategic.md` once a second model, team, or external system
 enters the picture. `kanpeki-fp` covers how logic should be *expressed*
 (pure guards, Either/Option, sealed types, no mutation) — load it too when
 implementing with functional style, which is the default for this codebase.
@@ -471,6 +471,7 @@ with this skill — read the file only when the case at hand calls for it.
 | `references/spring.md` | The project uses Spring, or config values must be resolved at the composition root (`@Configuration`/`@Bean`, binding a logger's injection point, environment-driven config objects, and the no-Spring resolver equivalent). |
 | `references/ecm-ports.md` | Wrapping a heavy concrete SDK (Nuxeo `DocumentModel`, Documentum `IDfSysObject`) behind a narrow port — including the two-port rule for syncing to an external system, and pulling deterministic computation out of the seam. |
 | `references/nuxeo-addon.md` | Packaging a Nuxeo addon: enforcing dependency direction with Maven modules, composite log4j2, platform-seeded vocabularies. |
+| `references/ddd-strategic.md` | A second model, team, service or external system is involved: drawing a Bounded Context boundary, choosing between conforming to an upstream model and wrapping it in an Anticorruption Layer, naming a Context Map relationship, Core Domain vs. Generic Subdomain — or the user asks to explain one of these terms. Language-agnostic. |
 | `references/testing-across-the-seam.md` | Proving an **adapter or listener** translates correctly at the seam — Nuxeo `FeaturesRunner`/`@Deploy` integration tests (including the per-branch checklist for listener changes), and the unresolved Documentum/DFC case. Not needed for ordinary use case tests: those are covered by the two-tier rule just below. |
 
 The dependency rule itself never lives in those files — it is stated above

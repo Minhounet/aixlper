@@ -1566,3 +1566,57 @@ broken one it flagged two tests in one red, a green that weakened a test, a
 compile-error red, an unlabelled commit, a red that already passed, and a
 step out of order (exit 1). The first version picked Maven's `Errors: 0`
 summary as the failure line; that was fixed before commit.
+
+## Usefulness ablation: gyakuten-ddd, kurae-bash, kanpeki-fp
+
+The author asked which skill looked least useful. The guess was
+`gyakuten-ddd`: mostly textbook DDD that a current model already knows, with
+`kanpeki-fp` and `kurae-bash` as runners-up. The author said to test before
+deciding. The first eval cases for all three were written, each targeting a
+rule a model without the skill could plausibly miss, and run on Sonnet with
+3 runs per arm and the no-skill ablation on ($2.26 total). Per-case details
+are in each skill's `evals/README.md`.
+
+| Skill | Cases | Skill effect |
+|---|---|---|
+| `gyakuten-ddd` | 4 | **None.** 1.00 with and without on every case. |
+| `kurae-bash` | 2 | **Narrow.** Pattern 1 (`bind -x` + `read`): 1.00 vs 0.00. Patterns 6/10: no effect. |
+| `kanpeki-fp` | 1 | **Strong.** 1.00 vs 0.00. Without the skill the model doesn't choose the house Vavr style. |
+
+The guess held for `gyakuten-ddd`: on Sonnet the baseline reached every
+targeted rule without it, including the contested-term split, the explicit
+conform-or-wrap choice, and challenging the senior-staff allocation away from
+the Core Domain. The caveat is the one `objection-conception`'s `done-gate`
+taught: the prompts state the conflicting facts plainly, so they may make
+the problem too visible. Learning mode also has a non-behavioral argument
+for keeping it, since the author is learning DDD. The eval can't measure
+that. No decision taken yet; this entry records the evidence the decision
+will rest on.
+
+### Decision: fold gyakuten-ddd into chottomatte-archi, trim kurae-bash
+
+The author chose the recommended option for each skill.
+
+- **`gyakuten-ddd` is now `chottomatte-archi/references/ddd-strategic.md`,**
+  and the skill is retired. The content was moved word for word apart from
+  "this skill" wording, following "relocate, never delete". It loads only
+  when `chottomatte-archi`'s pointer table sends a reader there: a second
+  model, team or external system, or a request to explain a strategic term.
+  **Accepted loss:** `chottomatte-archi`'s description is Java-specific, so a
+  plain "what's a bounded context" question in a non-Java session no longer
+  triggers anything. The ablation showed the model answers that well without
+  help.
+- **`kurae-bash` keeps seven patterns.** Atomic writes, strict mode and
+  `grep -vxF` (old patterns 6, 9, 10) moved to
+  `references/everyday-hygiene.md`, because the baseline applied them
+  unprompted. Pattern 1 (`bind -x` + `read`), the only one with a measured
+  effect, stays first. The remaining patterns were renumbered: the old 7 and 8
+  are now 6 and 7. `SKILL.md` went from 13.5KB to 11.4KB.
+- **`kanpeki-fp` is unchanged:** it has a strong measured effect.
+
+**Post-change check (Sonnet, 3 runs, 2026-10-04, $1.37):** `kurae-bash`
+results were unchanged after the trim (`bind-x-prompt` 1.00 with vs 0.00
+without, `bookmark-remove` 1.00/1.00). `chottomatte-archi`'s three cases
+scored 1.00 3/3 each with the skill only, after its Related-skills note and
+pointer table were edited. That is no regression against its earlier
+calibration (0.76–1.00).
