@@ -6,6 +6,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 |---|---|---|
 | `guard-pipeline` | Pure `Either` guards with no logging inside, side effects composed at the end, and a sealed `SkipReason` logged with record deconstruction | 2026-10-03: with 1.00 / without 0.00; 2026-10-04 (after the clarity/laziness/logging/memoize additions): with 1.00 / without 0.22 |
 | `clarity-refactor` | Clarity patterns on a long method: loop → pipeline, named steps, sealed `switch`, no reassigned local; pure per-element steps; the lazy fallback; the public signature kept | 2026-10-04: with 0.92 / without 0.67 (Δ +0.25); re-run after later additions: with 1.00 / without 0.75 (Δ +0.25) |
+| `failing-import` | Implementing a public method that can fail: `Try` instead of `try/catch` around each throwing call only, validation failures as values, a sealed result of its own as the public return type | 2026-10-04: with 0.89 / without 0.33 (Δ +0.56) |
 
 **Strong discriminator.** Without the skill, Sonnet wrote reasonable code,
 but not this style. One run used a `check()` helper that logs inside the
@@ -40,3 +41,12 @@ cases scored 1.00 with the skill, 3/3. `clarity-refactor`'s noisy
 was again `pure-steps`, failing 0/3 without the skill. `guard-pipeline`
 without the skill reached `pure-guards` once out of 3 and `sealed-reason`
 never.
+
+**`failing-import`: the skill decides the error-handling shape.** ($0.54)
+Both arms produce validation failures as values, so that grader does not
+discriminate. Without the skill, all 3 runs use `try/catch` blocks and return
+`Either<ImportError, String>` from the public method: a sealed error type,
+but Vavr in a public signature. With the skill, all 3 runs return a sealed
+`ImportResult` of their own built with one `fold`, and use `Try` for the
+parse. One run still wrapped `ledger.post` in a `try/catch`. That's the only
+with-skill failure, and it's a real one, not grader noise.

@@ -1833,3 +1833,25 @@ built them, Vavr would leak into callers' dependencies, and frameworks
 don't understand it. A sealed result keeps exhaustive handling and names
 each outcome. `composition.md`'s "no `Try` in an interface signature" trap
 now points to the same split.
+
+### Eval: failing-import, the Try and Either rules in practice
+
+The author asked to see what implementing a method that can fail looks like
+under the skill. The new case is `failing-import`: a public `importInvoice`
+that parses JSON (Jackson throws), validates the amount and currency, and
+posts to a ledger (which throws when down). Sonnet, 3+3 runs, $0.54:
+**with 0.89, without 0.33.**
+
+- Without the skill (3/3): `try/catch` blocks, and the public method
+  returns `Either<ImportError, String>`. Failures are values with a sealed
+  error type, which is good, but Vavr leaks into the public API.
+- With the skill (3/3): a sealed `ImportResult` (`Posted`, `MalformedJson`,
+  `InvalidAmount`, `UnsupportedCurrency`, `LedgerUnavailable`) built from an
+  internal `Either` pipeline with one `fold`, `Try` around `readValue`, and
+  `recover(LedgerUnavailableException.class, …)` limited to the specific
+  exception. One run kept a `try/catch` around `ledger.post`, a real miss.
+- Validation-as-values passed in both arms: Sonnet doesn't throw for
+  validation unprompted, so that grader doesn't discriminate.
+
+The two rules added today (`Try` as the `try/catch` replacement, and a
+sealed result for a public API) are the ones that make the difference.
