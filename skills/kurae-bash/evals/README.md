@@ -23,3 +23,8 @@ common shell knowledge. Run cost: $0.68.
 `references/everyday-hygiene.md`. `bookmark-remove` stays as a regression
 check that moving them cost nothing: the baseline already passes it, so the
 skill passing it too is the expected result.
+
+**Re-run after the trim (Sonnet, 3+3 runs, 2026-10-04, $0.68):** identical
+results. `bind-x-prompt` scored 1.00 with the skill and 0.00 without;
+`bookmark-remove` scored 1.00 in both arms. Moving the three patterns out cost
+nothing measurable.

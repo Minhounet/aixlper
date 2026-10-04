@@ -1613,3 +1613,10 @@ The author chose the recommended option for each skill.
   effect, stays first. The remaining patterns were renumbered: the old 7 and 8
   are now 6 and 7. `SKILL.md` went from 13.5KB to 11.4KB.
 - **`kanpeki-fp` is unchanged:** it has a strong measured effect.
+
+**Post-change check (Sonnet, 3 runs, 2026-10-04, $1.37):** `kurae-bash`
+results were unchanged after the trim (`bind-x-prompt` 1.00 with vs 0.00
+without, `bookmark-remove` 1.00/1.00). `chottomatte-archi`'s three cases
+scored 1.00 3/3 each with the skill only, after its Related-skills note and
+pointer table were edited. That is no regression against its earlier
+calibration (0.76–1.00).
