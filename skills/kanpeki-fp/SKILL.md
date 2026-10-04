@@ -1,6 +1,6 @@
 ---
 name: kanpeki-fp
-description: Enforces functional programming style with Vavr for Java — pure guards, Either/Option for error paths, sealed types for discriminated results, no mutation, no side effects inside decision methods. Use whenever implementing logic that involves filtering, branching, or error handling in Java with Vavr on the classpath.
+description: Enforces functional programming style with Vavr for Java, aimed at clearer code and shorter, simpler methods — pure guards, Either/Option for error paths, sealed types for discriminated results, loops turned into named pipelines, expressions over reassigned locals, no mutation, no side effects inside decision methods. Use whenever implementing or refactoring logic that involves filtering, branching, looping or error handling in Java with Vavr on the classpath, including the refactor step of a TDD cycle.
 ---
 
 # Functional Programming — Vavr Style
@@ -19,7 +19,40 @@ filters, guards, or decides must do exactly one thing: return a value that
 represents its decision. Logging, metrics, and other side effects are never
 inside the decision method — they are composed *around* it at the call site.
 
+## Purpose: clearer code, shorter methods
+
+Every pattern here exists to make the code easier to read: short methods,
+shallow nesting, no clever constructs. FP is the means, not the goal. If
+applying a pattern makes a method harder to read, don't apply it (see "When
+FP hurts clarity" below). Unit tests are what make these moves safe: with a
+green test around the code, a rewrite into a pipeline is checked, not hoped.
+
+The patterns can be applied in `igiari-tdd`'s refactor step and in a
+`kaizen-refactor` pass, as long as tests stay green before and after.
+
+### Changing a signature: internal is free, an interface is not
+
+Some patterns change a return type (`String` → `Option<String>`, `T` →
+`Either<E, T>`). Whether that is allowed depends on who sees the signature:
+
+- **Internal** — a `private` or package-private method, or any method whose
+  every caller is changed in the same step: change it freely. It is a
+  refactor like any other.
+- **An interface** — a port or other Java `interface`, a `public` API used
+  outside the module, a method a unit test calls directly, a framework or
+  wire contract: keep the signature. Change it only when the new type is a
+  game changer (for example, it removes a whole class of null bugs or a
+  helper every caller needs), and then not silently: show the before/after
+  signature and why, and get it approved. Inside an `igiari-tdd` cycle that
+  is a plan deviation, and the test that calls it changes in RED, not in
+  REFACTOR.
+
+Each pattern below is tagged **[keeps signature]** or **[changes
+signature]** so this check is quick.
+
 ## Guards and filters: pure methods returning Either
+
+**[changes signature]** when an existing guard returned `boolean` or threw.
 
 A guard method answers a yes/no question and carries its reason as a value.
 Never log or throw inside a guard — return the outcome:
@@ -87,6 +120,9 @@ components). Variants with components follow the same form: list the component
 types inside the parentheses and bind them to local names.
 
 ## Option instead of null
+
+**[changes signature]** — internal readers: just do it; a reader behind an
+interface: see the signature rule above.
 
 Never return null to signal absence. Return `Option<T>`:
 
@@ -156,6 +192,9 @@ than travelling inward.
 
 ## Either for error paths in use cases
 
+**[changes signature]** — a use case is usually behind a port, so this is
+normally decided when the use case is designed, not in a refactor step.
+
 When a use case can fail for a known business reason (not an exception),
 return `Either<Failure, Success>` rather than throwing or returning a
 nullable result:
@@ -169,6 +208,138 @@ Either<SyncFailure, SyncResult> execute(CreerDocumentCommand cmd) {
 
 Left = known failure (retryable or not), Right = success. The caller decides
 what to do with each — no exception-based flow control.
+
+## Clarity patterns: shortening long methods
+
+### 1. Loop → pipeline  **[keeps signature]**
+
+A `for` loop that fills a mutable list, map or counter becomes a pipeline.
+The accumulator and its mutation disappear:
+
+```java
+// before
+List<String> ids = new ArrayList<>();
+for (Document d : docs) {
+    if (d.isPublished()) {
+        ids.add(d.getId());
+    }
+}
+return ids;
+
+// after
+return docs.stream()
+    .filter(Document::isPublished)
+    .map(Document::getId)
+    .toList();
+```
+
+Use `foldLeft` (Vavr) or `reduce` for a sum or a single combined value,
+`groupBy` for a map of lists, `partition` for "two lists split by a
+predicate". A loop with an early `return` on the first match is `find`
+(`stream().filter(...).findFirst()` / Vavr `find`). Keep the loop when its
+body has real side effects per element in a fixed order (I/O, Nuxeo calls)
+— that is the imperative shell, not logic.
+
+### 2. Name the steps  **[keeps signature]**
+
+A lambda longer than one line becomes a private method, and the pipeline
+uses its method reference. The top-level method then reads like a table of
+contents:
+
+```java
+return candidates.stream()
+    .filter(this::isEligible)
+    .map(this::toInvitation)
+    .toList();
+```
+
+This is the main tool against long methods: each step gets a name that says
+what it means, and each named step can be read (and tested through its
+caller) on its own.
+
+### 3. Expressions, not reassigned locals  **[keeps signature]**
+
+A local declared first and assigned in branches becomes a single expression
+— a ternary for two cases, a `switch` expression for more:
+
+```java
+// before
+String label;
+if (status == Status.DRAFT) {
+    label = "draft";
+} else if (status == Status.PUBLISHED) {
+    label = "live";
+} else {
+    label = "archived";
+}
+
+// after
+String label = switch (status) {
+    case DRAFT -> "draft";
+    case PUBLISHED -> "live";
+    case ARCHIVED -> "archived";
+};
+```
+
+Every local is assigned once. Nested ternaries are not an expression win —
+use a `switch` or a named method instead.
+
+### 4. Switch on a sealed type to produce a value  **[keeps signature]**
+
+The exhaustive `switch` shown above for logging also replaces
+`if (x instanceof A) ... else if (x instanceof B) ...` chains that compute a
+value. Use record pattern destructuring, and no `default` branch, so adding
+a variant breaks compilation at every site that must handle it:
+
+```java
+BigDecimal fee(Shipment s) {
+    return switch (s) {
+        case Shipment.Standard(BigDecimal weight) -> weight.multiply(RATE);
+        case Shipment.Express(BigDecimal weight, int hours) -> expressFee(weight, hours);
+        case Shipment.Pickup() -> BigDecimal.ZERO;
+    };
+}
+```
+
+### 5. Functional core, imperative shell  **[keeps signature]** of the outer method
+
+This is "the one principle" applied to a whole method. Split a method that
+mixes reading, deciding and writing into three parts: the shell reads
+(I/O, Nuxeo, gateway), passes plain values to a pure core that decides, then
+acts on the decision. The core takes values and returns a value — no
+session, no logger, no mocks needed to unit-test it:
+
+```java
+void onEvent(Event event) {                              // shell
+    Option<Document> doc = loadDocument(event);
+    doc.map(publicationPolicy::decide)                   // pure core
+       .forEach(this::apply);                            // shell
+}
+```
+
+The outer method keeps its signature. The extracted core is new, so its
+signature is free to choose (usually `Either`/`Option`/a sealed result).
+
+## When FP hurts clarity
+
+FP style that is harder to read than the imperative version it replaces is a
+regression. Don't:
+
+- **Nest a lambda inside a lambda.** Extract the inner one into a named
+  method (pattern 2).
+- **Chain more than about 5–6 steps** in one pipeline. Split it into named
+  sub-pipelines that each return a value.
+- **Put `Tuple2`/`Tuple3` in a signature.** A tuple's `_1`/`_2` say nothing;
+  use a record with named components. A tuple local inside one pipeline is
+  fine.
+- **Curry or partially apply** (`Function3.curried()`) in business code.
+  Pass a lambda or use a small record instead.
+- **Wrap a value that is never null in `Option`** just to avoid an `if`.
+  `Option` marks real absence; anywhere else it is noise.
+- **Use `peek` to mutate** an outside variable. `peek` is for side effects
+  at the end of a pipeline (logging), never for building a result.
+
+When in doubt, write both versions and keep the one that reads more easily.
 
 ## Immutability
 
@@ -187,6 +358,12 @@ what to do with each — no exception-based flow control.
   inherently imperative and stateful. Wrap them at the seam (per
   `chottomatte-archi`); don't try to make them functional inside the listener.
   The functional pipeline starts *after* the Nuxeo call returns a value.
+
+## Where to look for more
+
+| Read | When |
+|---|---|
+| `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), wraps a throwing library call with `Try`, updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
 
 ## Token self-audit
 

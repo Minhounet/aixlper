@@ -1620,3 +1620,45 @@ without, `bookmark-remove` 1.00/1.00). `chottomatte-archi`'s three cases
 scored 1.00 3/3 each with the skill only, after its Related-skills note and
 pointer table were edited. That is no regression against its earlier
 calibration (0.76–1.00).
+
+## kanpeki-fp: purpose, signature rule, clarity patterns
+
+The author asked whether any FP pattern was missing, and stated what the
+skill is for: making code clearer to them, avoiding long methods and
+complex constructs, best used with unit tests, and usable in `igiari-tdd`'s
+refactor step. None of that was written in the skill. It was framed around
+purity and error paths (guards, Either/Option, sealed reasons), with almost
+nothing on readability or method size.
+
+**Purpose section added.** FP is the means, clarity is the goal; a pattern
+that makes a method harder to read is not applied. Tests are what make the
+moves safe.
+
+**Signature rule, as the author refined it.** First proposed as "don't
+change the return type unless it's a game changer". The author corrected
+it: it depends on whether an *interface* is hurt. Internal methods
+(private, package-private, or every caller changed in the same step)
+change freely. An interface (a port, a public API used elsewhere, a method
+a unit test calls directly, a framework/wire contract) keeps its signature
+unless the change is a game changer, shown and approved. Inside an
+`igiari-tdd` cycle that is a plan deviation. Each pattern is tagged
+**[keeps signature]** / **[changes signature]** so the check is quick.
+
+**Inline (apply on almost every refactor, so `SKILL.md`):** loop → pipeline,
+name the steps (method references instead of multi-line lambdas), expressions
+over reassigned locals, exhaustive sealed `switch` that produces a value,
+functional core / imperative shell. Plus a "When FP hurts clarity" list:
+nested lambdas, chains past ~5–6 steps, tuples in signatures, currying,
+`Option` around never-null values, `peek` that mutates.
+
+**`references/composition.md` (situational):** `Either.traverseRight` /
+`sequenceRight`, `Validation` for collecting all errors, `Try` → `Either`
+at a throwing boundary, record withers, behavior as a parameter. This is
+the skill's first reference file.
+
+**`igiari-tdd`'s refactor checklist** got one bullet pointing at the
+clarity patterns and the signature rule.
+
+No eval case added. The existing `guard-pipeline` case still covers the
+original rules; the new patterns are unmeasured until dogfooding or a
+regression makes a case worth paying for.

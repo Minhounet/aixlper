@@ -230,6 +230,10 @@ destination — it never moves up when you're allowed to build the road.
    - Is there a name (variable, method) that doesn't say what it means?
    - Did this step leave a magic literal that should be a constant?
    - Is there now a guard clause / early return that would remove nesting?
+   - Is the method you touched getting long or nested — a loop filling a
+     mutable list, a multi-line lambda, a local assigned in branches? Apply
+     `kanpeki-fp`'s "Clarity patterns" (its signature rule decides whether
+     a return type may change here).
    - Does the current structure fight the next behavior you already know
      is coming? If so, **make room, never add**: only behavior-preserving
      moves (rename, extract method, reorder) that make the next change
