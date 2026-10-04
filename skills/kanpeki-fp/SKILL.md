@@ -395,7 +395,8 @@ add noise.
 | Need | Use |
 |---|---|
 | A fallback, or a value used on one branch only, at most once | a lambda / `Supplier<T>` parameter |
-| A costly **pure** value that may be needed zero or several times | `Lazy.of(this::compute)` — computed on first `get()`, then cached |
+| A costly **pure** value, no argument, needed zero or several times | `Lazy.of(this::compute)` — computed on first `get()`, then cached (prefer it to `Function0.memoized()`) |
+| A costly **pure** function called again with the same arguments, from a small bounded set | `Function1.of(this::compute).memoized()` (`Function2`…) as an instance field — one result per distinct argument; conditions and traps in `references/cost.md` |
 | A sequence where only the first few elements may be consumed | `stream()` / Vavr `Stream`/`Iterator` — `filter(...).findFirst()` stops at the first match |
 
 `Lazy` is related to `IO` (both hold a computation without running it) but
@@ -458,7 +459,7 @@ When in doubt, write both versions and keep the one that reads more easily.
 | `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), wraps a throwing library call with `Try`, updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
 | `references/option-reader.md` | You're refactoring a nullable reader of external data and its mop-up helper, and want the worked before/after. |
 | `references/haskell-mapping.md` | You're reasoning in Haskell/FP terms (Reader, Writer, IO, `Debug.Trace`) and need the Java equivalent used in this codebase. |
-| `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field. |
+| `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field — or you're about to memoize a function or cache results. |
 | `references/concurrency.md` | **Before** using `Future`/`CompletableFuture`, running calls in parallel, or touching a Nuxeo or Documentum session from another thread — it holds the rule for all three. |
 
 ## Token self-audit

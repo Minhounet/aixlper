@@ -1773,3 +1773,21 @@ split a rule from its own statement": the rule now lives only in the
 reference. That's accepted because the reference is exactly what a reader
 opens at the moment the rule applies, and the pointer row says so ("read
 **before** using `Future`… it holds the rule"). `SKILL.md` is at 20.9KB.
+
+### Memoizing vs Lazy
+
+The author asked about memoizing, whether Vavr supports it (`FunctionN.memoized()`),
+and whether to use memoize or `Lazy`. Settled:
+
+- No argument → `Lazy`, preferred over `Function0.memoized()` for intent.
+- With arguments → `FunctionN.of(...).memoized()` as an instance field.
+- Used at most once → neither, a lambda.
+
+This is one new row in the Laziness table in `SKILL.md` (the `Lazy` row now
+says "no argument"). The details went into a "Memoizing" section of
+`references/cost.md`: the four conditions (pure, costly, repeated
+arguments, small bounded argument set, since Vavr's cache never evicts),
+the choice of tool by how long the cache lives (local `Map` / memoized
+field / a real cache such as Caffeine), and the traps (remote calls,
+session-bound objects, `null`, recursive `computeIfAbsent`, a `static`
+cache).
