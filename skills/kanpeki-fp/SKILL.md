@@ -320,6 +320,92 @@ void onEvent(Event event) {                              // shell
 The outer method keeps its signature. The extracted core is new, so its
 signature is free to choose (usually `Either`/`Option`/a sealed result).
 
+#### The decision as data: the shell carries out what the core returns
+
+Java has no `IO` type to mark a function as effectful, and none is needed:
+the core never performs an effect, it returns a value that **describes** it.
+Model the possible effects as a sealed type; the shell runs them with one
+exhaustive `switch`, and is the only place they happen:
+
+```java
+sealed interface Action {
+    record Publish(String docId, String target) implements Action {}
+    record Notify(String userId, String message) implements Action {}
+    record Skip(SkipReason reason)              implements Action {}
+}
+
+Action decide(Document doc) { ... }                      // pure
+
+void apply(Action action) {                              // shell
+    switch (action) {
+        case Action.Publish(String id, String target) -> publisher.publish(id, target);
+        case Action.Notify(String user, String msg)   -> mailer.send(user, msg);
+        case Action.Skip(SkipReason r)                -> logSkipReason(r);
+    }
+}
+```
+
+A unit test asserts on what *would* happen —
+`assertEquals(new Action.Publish("42", "web"), decide(doc))` — with no mock
+and nothing actually happening. Several effects → return `List<Action>`;
+the shell runs them in order.
+
+Use this when the core chooses *between* effects. When an effect sits
+genuinely in the middle (save, then call a gateway with the saved id), put
+it behind a port (`chottomatte-archi`) and fake it in tests instead. Don't
+build an `IO` of your own out of `Supplier`/`Runnable` chains: in Java it
+costs readability and buys no compiler guarantee.
+
+## Laziness: don't compute what may not be needed
+
+### The eager-fallback trap  **[keeps signature]**
+
+A fallback passed as a value is computed **every time**, even when it isn't
+used. Pass a lambda instead whenever the fallback costs anything:
+
+```java
+opt.getOrElse(buildDefault())          // buildDefault() always runs
+opt.getOrElse(() -> buildDefault())    // runs only when opt is empty
+```
+
+Same trap: `Either.getOrElse` vs `getOrElseGet`, `Optional.orElse` vs
+`orElseGet`, `Option.orElse(Option)` vs `orElse(Supplier)`, and a log
+argument built by string concatenation instead of `{}` placeholders. A
+constant or an already-computed local is fine eager — the lambda would only
+add noise.
+
+### Which tool
+
+| Need | Use |
+|---|---|
+| A fallback, or a value used on one branch only, at most once | a lambda / `Supplier<T>` parameter |
+| A costly **pure** value that may be needed zero or several times | `Lazy.of(this::compute)` — computed on first `get()`, then cached |
+| A sequence where only the first few elements may be consumed | `stream()` / Vavr `Stream`/`Iterator` — `filter(...).findFirst()` stops at the first match |
+
+`Lazy` is related to `IO` (both hold a computation without running it) but
+it runs **once** and caches. So it holds pure computations only: a side
+effect inside `Lazy` runs once, at whatever moment the first `get()`
+happens, and never again.
+
+### Is it costly? Classify before you defer
+
+Don't make something lazy because it *might* be slow — the extra lambda or
+`Lazy` costs clarity and saves nothing on a cheap value. It's costly when
+any of these holds:
+
+- **It leaves the process:** a query (docbase, database), a remote call, a
+  file read, a Nuxeo `getDocument`/`query`. Always treat as costly.
+- **It builds something heavy:** an `ObjectMapper`, a JAXB context, a
+  compiled `Pattern`, a big lookup map — usually better as a field built
+  once than as a lazy local.
+- **It scales with the data:** a loop or stream over a collection of
+  unknown size, especially inside another loop.
+- **It was measured:** a profiler (IntelliJ's, async-profiler) or a timed
+  log line on real data shows it. For anything that is only pure in-memory
+  work on small inputs, measure before deferring — don't guess.
+
+Otherwise it's cheap: compute it eagerly, the straightforward way.
+
 ## When FP hurts clarity
 
 FP style that is harder to read than the imperative version it replaces is a
@@ -358,12 +444,18 @@ When in doubt, write both versions and keep the one that reads more easily.
   inherently imperative and stateful. Wrap them at the seam (per
   `chottomatte-archi`); don't try to make them functional inside the listener.
   The functional pipeline starts *after* the Nuxeo call returns a value.
+- **`Future` in the core** — `Future` starts running on another thread the
+  moment it's created, so it is an effect, not a value. It belongs in the
+  shell, for independent slow I/O calls run in parallel, and only when the
+  gain is real. Never hand a session (Nuxeo `CoreSession`, Documentum
+  `IDfSession`) to another thread. Details: `references/concurrency.md`.
 
 ## Where to look for more
 
 | Read | When |
 |---|---|
 | `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), wraps a throwing library call with `Try`, updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
+| `references/concurrency.md` | You're about to use `Future`/`CompletableFuture`, run calls in parallel, or touch a Nuxeo or Documentum session from another thread. |
 
 ## Token self-audit
 

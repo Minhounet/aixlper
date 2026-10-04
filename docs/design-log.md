@@ -1662,3 +1662,34 @@ clarity patterns and the signature rule.
 No eval case added. The existing `guard-pipeline` case still covers the
 original rules; the new patterns are unmeasured until dogfooding or a
 regression makes a case worth paying for.
+
+### Follow-up: side effects without IO, laziness, Future
+
+The author asked how to handle side effects when Vavr has no `IO`, then
+whether `Lazy` is close to `IO` and still useful for not computing too early,
+then whether anything covers `Future` and how to tell something is costly.
+
+- **Decision as data**, added under clarity pattern 5. The core returns a
+  sealed `Action` describing the effect, and the shell runs it with one
+  exhaustive `switch`. Tests assert on the returned value without mocks.
+  Effects that sit in the middle of a use case go behind a port instead. A
+  home-made `IO` out of `Supplier`/`Runnable` is ruled out: it costs
+  readability and gives no compiler guarantee.
+- **Laziness section**, inline because the eager-fallback trap
+  (`getOrElse(compute())`) can show up in almost any code. It includes a
+  "which tool" table (a lambda or `Supplier` for one use, `Lazy` for a cached
+  pure value, streams for sequences) and the author's point that `Lazy`
+  relates to `IO`. Since `Lazy` runs once and caches, it holds only pure
+  computations. There's also a **"Is it costly?"** checklist: the call leaves
+  the process, builds something heavy, scales with the data, or was
+  measured. Anything else is computed eagerly.
+- **Future:** a one-line rule inline (it's an effect, so shell only; never
+  hand a session to another thread), plus a new `references/concurrency.md`.
+  The reference covers eagerness, `Try` results, an explicit executor, when
+  parallelism is worth it, a bounded `await`, and virtual threads as the
+  simpler option on Java 21.
+- **Documentum note (author's recollection, unverified):** futures only
+  worked when each task used a distinct `IDfSessionManager`. It is recorded
+  in `concurrency.md` as the safe default until confirmed. It went there and
+  not into `mujitsu-documentum`, because that skill covers bash
+  `iapi`/`idql` scripts, not DFC Java code.
