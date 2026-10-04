@@ -65,3 +65,9 @@ questions but are not confounded like `igiari-tdd`'s retired
 `plan-then-one-test`: Sonnet's lower score reflects real, sometimes-skipped
 discipline (the approval pause, the non-determinism/staticness line), not a
 sandbox or grader artifact. Full cost/run history: `docs/design-log.md`.
+
+**2026-10-04, after the "load `igiari-tdd` and `kanpeki-fp` before the plan"
+sentence:** Sonnet, 3 runs, skill arm only ($0.73). All three cases scored
+1.00 3/3, including `plan-structure-first`, which still pauses for approval.
+No regression from the extra loads. The sentence was measured by the
+cross-skill `evals/skill-chain-from-archi` (0.33 → 1.00).

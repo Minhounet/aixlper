@@ -16,6 +16,11 @@ Layer) is one level up from this skill's single-model dependency rules: see
 enters the picture. `kanpeki-fp` covers how logic should be *expressed*
 (pure guards, Either/Option, sealed types, no mutation) — load it too when
 implementing with functional style, which is the default for this codebase.
+**When the task will write production code, load `igiari-tdd` and
+`kanpeki-fp` before presenting the structural plan**, not after its
+approval: the test plan is written against this plan, and the plan's
+signatures must already follow `kanpeki-fp` (e.g. a sealed result, not
+`Either`, at a public API).
 
 ## The one principle that matters most
 

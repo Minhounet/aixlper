@@ -1923,3 +1923,16 @@ code, load `igiari-tdd` and `kanpeki-fp` before presenting the structural
 plan. But `chottomatte-archi` is the subject of the next planned study
 (`docs/next-session-chottomatte.md`), so the change is left for the author
 to decide, and `skill-chain-from-archi` is there to measure it.
+
+**Fix applied at the author's request.** One sentence was added to
+`chottomatte-archi`'s Related skills: "When the task will write production
+code, load `igiari-tdd` and `kanpeki-fp` before presenting the structural
+plan, not after its approval". It gives the reason: the test plan is written
+against the structural plan, and the plan's signatures must already follow
+`kanpeki-fp`. Re-run (Sonnet, 3 runs, $1.18): `skill-chain-from-archi` went
+from 0.33 to **1.00**, and `skill-chain-natural` stayed at 1.00.
+`chottomatte-archi`'s own three cases (skill arm only, $0.73) all scored
+1.00, and `plan-structure-first` still pauses for approval, so the extra
+loads didn't weaken the gate. Note for the next chottomatte study: this
+sentence is new and co-designed only lightly. Review it with the author like
+any other rule.
