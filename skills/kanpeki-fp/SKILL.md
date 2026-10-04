@@ -1,6 +1,6 @@
 ---
 name: kanpeki-fp
-description: Enforces functional programming style with Vavr for Java — pure guards, Either/Option for error paths, sealed types for discriminated results, no mutation, no side effects inside decision methods. Use whenever implementing logic that involves filtering, branching, or error handling in Java with Vavr on the classpath.
+description: Enforces functional programming style with Vavr for Java, aimed at clearer code and shorter, simpler methods — pure guards, Either/Option for error paths, sealed types for discriminated results, loops turned into named pipelines, expressions over reassigned locals, no mutation, no side effects inside decision methods. Use whenever implementing or refactoring logic that involves filtering, branching, looping or error handling in Java with Vavr on the classpath, including the refactor step of a TDD cycle.
 ---
 
 # Functional Programming — Vavr Style
@@ -19,7 +19,40 @@ filters, guards, or decides must do exactly one thing: return a value that
 represents its decision. Logging, metrics, and other side effects are never
 inside the decision method — they are composed *around* it at the call site.
 
+## Purpose: clearer code, shorter methods
+
+Every pattern here exists to make the code easier to read: short methods,
+shallow nesting, no clever constructs. FP is the means, not the goal. If
+applying a pattern makes a method harder to read, don't apply it (see "When
+FP hurts clarity" below). Unit tests are what make these moves safe: with a
+green test around the code, a rewrite into a pipeline is checked, not hoped.
+
+The patterns can be applied in `igiari-tdd`'s refactor step and in a
+`kaizen-refactor` pass, as long as tests stay green before and after.
+
+### Changing a signature: internal is free, an interface is not
+
+Some patterns change a return type (`String` → `Option<String>`, `T` →
+`Either<E, T>`). Whether that is allowed depends on who sees the signature:
+
+- **Internal** — a `private` or package-private method, or any method whose
+  every caller is changed in the same step: change it freely. It is a
+  refactor like any other.
+- **An interface** — a port or other Java `interface`, a `public` API used
+  outside the module, a method a unit test calls directly, a framework or
+  wire contract: keep the signature. Change it only when the new type is a
+  game changer (for example, it removes a whole class of null bugs or a
+  helper every caller needs), and then not silently: show the before/after
+  signature and why, and get it approved. Inside an `igiari-tdd` cycle that
+  is a plan deviation, and the test that calls it changes in RED, not in
+  REFACTOR.
+
+Each pattern below is tagged **[keeps signature]** or **[changes
+signature]** so this check is quick.
+
 ## Guards and filters: pure methods returning Either
+
+**[changes signature]** when an existing guard returned `boolean` or threw.
 
 A guard method answers a yes/no question and carries its reason as a value.
 Never log or throw inside a guard — return the outcome:
@@ -88,52 +121,25 @@ types inside the parentheses and bind them to local names.
 
 ## Option instead of null
 
-Never return null to signal absence. Return `Option<T>`:
+**[changes signature]** — internal readers: just do it; a reader behind an
+interface: see the signature rule above.
 
-```java
-private Option<DocumentEventContext> toDocumentContext(Event event) {
-    return event.getContext() instanceof DocumentEventContext ctx
-        ? Option.some(ctx)
-        : Option.none();
-}
-```
+Never return null to signal absence. Return `Option<T>`.
 
 Chain with `flatMap`/`map`; call `.peek()`/`.onEmpty()` for side effects.
 `Option` composes with `Either` — `option.toEither(leftValue)` converts when
 you need to carry a reason.
 
-### A reader of external data returns Option, and kills its null-mopping helper
+### A reader of external data returns Option
 
 Anything that reads a value out of a system you don't control — a Nuxeo
-property, a header, a config entry — is the classic place nulls leak inward.
-Have it return `Option<T>` at the point of the read, not a nullable `T` that
-every caller then has to remember to check.
-
-The tell that this is needed: a companion helper whose whole job is to clean up
-after the nullable one (`nullToEmpty`, `orDefault`, `safeGet`). That helper is
-absence-handling smeared across call sites. Once the reader returns `Option`,
-it has nothing left to do — delete it.
-
-```java
-// before — nullable read, plus a helper to mop up after it
-protected String asString(DocumentModel doc, String xpath) {
-    Serializable value = doc.getPropertyValue(xpath);
-    return value == null ? null : String.valueOf(value);
-}
-protected String nullToEmpty(String value) {
-    return value == null ? "" : value;
-}
-
-// after — absence is in the type; the mop-up helper is gone
-protected Option<String> asString(DocumentModel doc, String xpath) {
-    return Option.of(doc.getPropertyValue(xpath)).map(String::valueOf);
-}
-```
-
-Each caller then states its own intent instead of inheriting one global
-default: `.getOrElse("")` where empty is meaningful, `.filter(s ->
-!s.isBlank())` where blank counts as absent, `.getOrElse(() -> buildIt())` for
-a computed fallback.
+property, a header, a config entry — returns `Option<T>` at the point of
+the read, not a nullable `T` every caller must remember to check. The tell
+it's needed: a companion helper that only mops up after the nullable one
+(`nullToEmpty`, `orDefault`, `safeGet`). Once the reader returns `Option`,
+delete that helper; each caller states its own default (`.getOrElse("")`,
+`.filter(s -> !s.isBlank())`, `.getOrElse(() -> buildIt())`). Worked
+before/after: `references/option-reader.md`.
 
 ### Option stops at a boundary you don't own
 
@@ -154,21 +160,197 @@ where your model meets a contract you don't control, and spelling it out makes
 the seam visible. What matters is that the null is confined to that line rather
 than travelling inward.
 
-## Either for error paths in use cases
+## Known failures: in the signature, as Either or a sealed result
 
-When a use case can fail for a known business reason (not an exception),
-return `Either<Failure, Success>` rather than throwing or returning a
-nullable result:
+**[changes signature]** — a use case is usually behind a port, so this is
+normally decided when the use case is designed, not in a refactor step.
+
+A known business failure (not an exception) is **always** visible in the
+return type — never a throw, a `null` or a silent default. Which type
+depends on who calls the method:
+
+| Caller | Return type |
+|---|---|
+| The same class (private helpers, pipelines) | `Either` freely — `flatMap`, `traverse`, `peekLeft` |
+| Your own module (a use case or port only it uses) | `Either<Failure, Success>` |
+| Other modules or teams (a public API) | **A sealed result of your own** — named outcomes, no Vavr in the caller's dependencies |
+| A framework (REST, Nuxeo operation, listener) | The framework's language — a status, the exception it expects, a log — converted in the shell |
+
+The public result is built from the internal `Either` with one `fold`.
+
+`Left`/`Right` say nothing to a reader outside the code that built them; a
+sealed result names each outcome and the caller still gets an exhaustive
+`switch`. Inside the module, `Either` keeps its value: chaining.
+
+## Clarity patterns: shortening long methods
+
+### 1. Loop → pipeline  **[keeps signature]**
+
+A `for` loop that fills a mutable list, map or counter becomes a pipeline.
+The accumulator and its mutation disappear.
+
+Use `foldLeft` (Vavr) or `reduce` for a sum or a single combined value,
+`groupBy` for a map of lists, `partition` for "two lists split by a
+predicate". A loop with an early `return` on the first match is `find`
+(`stream().filter(...).findFirst()` / Vavr `find`). Keep the loop when its
+body has real side effects per element in a fixed order (I/O, Nuxeo calls)
+— that is the imperative shell, not logic.
+
+### 2. Name the steps  **[keeps signature]**
+
+A lambda longer than one line becomes a private method, and the pipeline
+uses its method reference. The top-level method then reads like a table of
+contents:
 
 ```java
-Either<SyncFailure, SyncResult> execute(CreerDocumentCommand cmd) {
-    return gateway.creerDocument(cmd)
-        .filterOrElse(SyncResult::isSuccess, r -> new SyncFailure.Rejected(r.errorMessage()));
-}
+return candidates.stream()
+    .filter(this::isEligible)
+    .map(this::toInvitation)
+    .toList();
 ```
 
-Left = known failure (retryable or not), Right = success. The caller decides
-what to do with each — no exception-based flow control.
+This is the main tool against long methods: each step gets a name that says
+what it means, and each named step can be read (and tested through its
+caller) on its own.
+
+**Which form a function takes.** Default: a plain method, passed as a
+method reference (`this::isEligible`). When the function needs a parameter,
+write a method that **builds** it, and end its name with the functional
+type it returns, so it's never mistaken for the operation itself —
+`olderThanPredicate(age)`, `expressFeeFunction(rate)`.
+
+A `static final` field only for a constant built by composition with no
+logic of its own (`Comparator.comparing(...).thenComparing(...)`). Never a
+static field holding a lambda that needs instance state.
+
+### 3. Expressions, not reassigned locals  **[keeps signature]**
+
+A local declared first and assigned in branches becomes a single expression
+— a ternary for two cases, a `switch` expression for more.
+
+Every local is assigned once. Nested ternaries are not an expression win —
+use a `switch` or a named method instead.
+
+### 4. Switch on a sealed type to produce a value  **[keeps signature]**
+
+The exhaustive `switch` shown above for logging also replaces
+`if (x instanceof A) ... else if (x instanceof B) ...` chains that compute a
+value. Use record pattern destructuring, and no `default` branch, so adding
+a variant breaks compilation at every site that must handle it:
+`case Shipment.Express(BigDecimal weight, int hours) -> expressFee(weight, hours);`
+
+### 5. Functional core, imperative shell  **[keeps signature]** of the outer method
+
+This is "the one principle" applied to a whole method. Split a method that
+mixes reading, deciding and writing into three parts: the shell reads
+(I/O, Nuxeo, gateway), passes plain values to a pure core that decides, then
+acts on the decision. The core takes values and returns a value — no
+session, no logger, no mocks needed to unit-test it.
+
+The outer method keeps its signature. The extracted core is new, so its
+signature is free to choose (usually `Either`/`Option`/a sealed result).
+
+#### The decision as data: the shell carries out what the core returns
+
+Java has no `IO` type to mark a function as effectful, and none is needed:
+the core never performs an effect, it returns a value that **describes** it.
+Model the possible effects as a sealed type; the shell runs them with one
+exhaustive `switch`, and is the only place they happen.
+
+A unit test asserts on what *would* happen —
+`assertEquals(new Action.Publish("42", "web"), decide(doc))` — with no mock
+and nothing actually happening. Several effects → return `List<Action>`;
+the shell runs them in order.
+
+Use this when the core chooses *between* effects. When an effect sits
+genuinely in the middle (save, then call a gateway with the saved id), put
+it behind a port (`chottomatte-archi`) and fake it in tests instead. Don't
+build an `IO` of your own out of `Supplier`/`Runnable` chains: in Java it
+costs readability and buys no compiler guarantee.
+
+## Logging: diagnostic stays static, behavior becomes explicit
+
+Ask one question: **would a test want to assert on it?**
+
+- **No — diagnostic** (`debug`/`trace`/`warn` for whoever is debugging):
+  keep `private static final Logger log`. The hidden dependency is
+  acceptable because it is called **only from the shell**, at the end of a
+  pipeline (`peek`/`peekLeft`/`forEach` over the result) — never from a
+  guard, a mapping step or a decision. Use `{}` placeholders, not
+  concatenation.
+- **Yes — behavior** (an audit trail, a "skipped" event someone relies on):
+  make it explicit. First choice: the core **returns** it as a value
+  (`SkipReason`, `Action`) and the shell logs it. Second choice: a port
+  with a domain name (`SkipReporter`, or a `Consumer<SkipReason>`),
+  injected through the **constructor**; the test passes one that collects
+  into a list.
+
+Never pass a `Logger` as a method parameter: it clutters every signature
+and is still not a domain concept. Don't return a value-plus-log-list just
+to stay pure; that pays off only when the log *is* the output (an import
+report). How these map to Reader/Writer/IO: `references/haskell-mapping.md`.
+
+## Laziness: don't compute what may not be needed
+
+### The eager-fallback trap  **[keeps signature]**
+
+A fallback passed as a value is computed **every time**, even when it isn't
+used. Pass a lambda instead whenever the fallback costs anything:
+
+```java
+opt.getOrElse(buildDefault())          // buildDefault() always runs
+opt.getOrElse(() -> buildDefault())    // runs only when opt is empty
+```
+
+Same trap: `Either.getOrElse` vs `getOrElseGet`, `Optional.orElse` vs
+`orElseGet`, `Option.orElse(Option)` vs `orElse(Supplier)`, and a log
+argument built by string concatenation instead of `{}` placeholders. A
+constant or an already-computed local is fine eager — the lambda would only
+add noise.
+
+### Which tool
+
+| Need | Use |
+|---|---|
+| A fallback, or a value used on one branch only, at most once | a lambda / `Supplier<T>` parameter |
+| A costly **pure** value, no argument, needed zero or several times | `Lazy.of(this::compute)` — computed on first `get()`, then cached (prefer it to `Function0.memoized()`) |
+| A costly **pure** function called again with the same arguments, from a small bounded set | `Function1.of(this::compute).memoized()` (`Function2`…) as an instance field — one result per distinct argument; conditions and traps in `references/cost.md` |
+| A sequence where only the first few elements may be consumed | `stream()` / Vavr `Stream`/`Iterator` — `filter(...).findFirst()` stops at the first match |
+
+`Lazy` is related to `IO` (both hold a computation without running it) but
+it runs **once** and caches. So it holds pure computations only: a side
+effect inside `Lazy` runs once, at whatever moment the first `get()`
+happens, and never again.
+
+### Defer only what is costly
+
+Don't make something lazy because it *might* be slow — the extra lambda or
+`Lazy` costs clarity and saves nothing on a cheap value. Anything that
+leaves the process (a query, a remote call, a file read, a Nuxeo fetch) is
+always costly. For anything else, classify it with the checklist in
+`references/cost.md` before deferring; if it doesn't qualify, compute it
+eagerly, the straightforward way.
+
+## When FP hurts clarity
+
+FP style that is harder to read than the imperative version it replaces is a
+regression. Don't:
+
+- **Nest a lambda inside a lambda.** Extract the inner one into a named
+  method (pattern 2).
+- **Chain more than about 5–6 steps** in one pipeline. Split it into named
+  sub-pipelines that each return a value.
+- **Put `Tuple2`/`Tuple3` in a signature.** A tuple's `_1`/`_2` say nothing;
+  use a record with named components. A tuple local inside one pipeline is
+  fine.
+- **Curry or partially apply** (`Function3.curried()`) in business code.
+  Pass a lambda or use a small record instead.
+- **Wrap a value that is never null in `Option`** just to avoid an `if`.
+  `Option` marks real absence; anywhere else it is noise.
+- **Use `peek` to mutate** an outside variable. `peek` is for side effects
+  at the end of a pipeline (logging), never for building a result.
+
+When in doubt, write both versions and keep the one that reads more easily.
 
 ## Immutability
 
@@ -179,14 +361,28 @@ what to do with each — no exception-based flow control.
 
 ## What NOT to use Vavr for
 
-- **`Try` for control flow** — `Try` wraps exceptions; use it only at the
-  boundary of code that genuinely throws (third-party libraries, I/O). Never
-  use `Try` as a substitute for `Either` when the failure is a known business
-  outcome, not an unexpected exception.
+- **`Try` for a business outcome** — **do** use `Try` instead of a
+  `try/catch` around a call that genuinely throws (a library, I/O,
+  parsing), keeping the lambda to that one call and turning it into `Either`
+  right after. Never throw your own exception to model a known business
+  outcome and catch it with `Try`: that outcome is an `Either` from the
+  start. Equivalents of `catch`/`finally`/try-with-resources and the traps:
+  `references/composition.md`.
 - **Nuxeo API calls** — Nuxeo's `CoreSession`, `DocumentModel`, etc. are
   inherently imperative and stateful. Wrap them at the seam (per
   `chottomatte-archi`); don't try to make them functional inside the listener.
   The functional pipeline starts *after* the Nuxeo call returns a value.
+
+## Where to look for more
+
+| Read | When |
+|---|---|
+| `references/examples.md` | You want the worked code for a pattern above — one section per pattern, same names. |
+| `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), replaces a `try/catch` with `Try` (or wraps a throwing library call), updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
+| `references/option-reader.md` | You're refactoring a nullable reader of external data and its mop-up helper, and want the worked before/after. |
+| `references/haskell-mapping.md` | You're reasoning in Haskell/FP terms (Reader, Writer, IO, `Debug.Trace`) and need the Java equivalent used in this codebase. |
+| `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field — or you're about to memoize a function or cache results. |
+| `references/concurrency.md` | **Before** using `Future`/`CompletableFuture`, running calls in parallel, or touching a Nuxeo or Documentum session from another thread — it holds the rule for all three. |
 
 ## Token self-audit
 

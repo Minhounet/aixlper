@@ -1620,3 +1620,319 @@ without, `bookmark-remove` 1.00/1.00). `chottomatte-archi`'s three cases
 scored 1.00 3/3 each with the skill only, after its Related-skills note and
 pointer table were edited. That is no regression against its earlier
 calibration (0.76–1.00).
+
+## kanpeki-fp: purpose, signature rule, clarity patterns
+
+The author asked whether any FP pattern was missing, and stated what the
+skill is for: making code clearer to them, avoiding long methods and
+complex constructs, best used with unit tests, and usable in `igiari-tdd`'s
+refactor step. None of that was written in the skill. It was framed around
+purity and error paths (guards, Either/Option, sealed reasons), with almost
+nothing on readability or method size.
+
+**Purpose section added.** FP is the means, clarity is the goal; a pattern
+that makes a method harder to read is not applied. Tests are what make the
+moves safe.
+
+**Signature rule, as the author refined it.** First proposed as "don't
+change the return type unless it's a game changer". The author corrected
+it: it depends on whether an *interface* is hurt. Internal methods
+(private, package-private, or every caller changed in the same step)
+change freely. An interface (a port, a public API used elsewhere, a method
+a unit test calls directly, a framework/wire contract) keeps its signature
+unless the change is a game changer, shown and approved. Inside an
+`igiari-tdd` cycle that is a plan deviation. Each pattern is tagged
+**[keeps signature]** / **[changes signature]** so the check is quick.
+
+**Inline (apply on almost every refactor, so `SKILL.md`):** loop → pipeline,
+name the steps (method references instead of multi-line lambdas), expressions
+over reassigned locals, exhaustive sealed `switch` that produces a value,
+functional core / imperative shell. Plus a "When FP hurts clarity" list:
+nested lambdas, chains past ~5–6 steps, tuples in signatures, currying,
+`Option` around never-null values, `peek` that mutates.
+
+**`references/composition.md` (situational):** `Either.traverseRight` /
+`sequenceRight`, `Validation` for collecting all errors, `Try` → `Either`
+at a throwing boundary, record withers, behavior as a parameter. This is
+the skill's first reference file.
+
+**`igiari-tdd`'s refactor checklist** got one bullet pointing at the
+clarity patterns and the signature rule.
+
+No eval case added. The existing `guard-pipeline` case still covers the
+original rules; the new patterns are unmeasured until dogfooding or a
+regression makes a case worth paying for.
+
+### Follow-up: side effects without IO, laziness, Future
+
+The author asked how to handle side effects when Vavr has no `IO`, then
+whether `Lazy` is close to `IO` and still useful for not computing too early,
+then whether anything covers `Future` and how to tell something is costly.
+
+- **Decision as data**, added under clarity pattern 5. The core returns a
+  sealed `Action` describing the effect, and the shell runs it with one
+  exhaustive `switch`. Tests assert on the returned value without mocks.
+  Effects that sit in the middle of a use case go behind a port instead. A
+  home-made `IO` out of `Supplier`/`Runnable` is ruled out: it costs
+  readability and gives no compiler guarantee.
+- **Laziness section**, inline because the eager-fallback trap
+  (`getOrElse(compute())`) can show up in almost any code. It includes a
+  "which tool" table (a lambda or `Supplier` for one use, `Lazy` for a cached
+  pure value, streams for sequences) and the author's point that `Lazy`
+  relates to `IO`. Since `Lazy` runs once and caches, it holds only pure
+  computations. There's also a **"Is it costly?"** checklist: the call leaves
+  the process, builds something heavy, scales with the data, or was
+  measured. Anything else is computed eagerly.
+- **Future:** a one-line rule inline (it's an effect, so shell only; never
+  hand a session to another thread), plus a new `references/concurrency.md`.
+  The reference covers eagerness, `Try` results, an explicit executor, when
+  parallelism is worth it, a bounded `await`, and virtual threads as the
+  simpler option on Java 21.
+- **Documentum note (author's recollection, unverified):** futures only
+  worked when each task used a distinct `IDfSessionManager`. It is recorded
+  in `concurrency.md` as the safe default until confirmed. It went there and
+  not into `mujitsu-documentum`, because that skill covers bash
+  `iapi`/`idql` scripts, not DFC Java code.
+
+### Eval: clarity-refactor, and the cost checklist moved out
+
+`SKILL.md` had reached 20.1KB, so the "Is it costly?" checklist moved to
+`references/cost.md`. The rule stays inline, with the one always-true case
+(anything that leaves the process is costly). `SKILL.md` is now 19.9KB.
+
+The author asked for an eval and an example, to see whether the refactor
+style suits them. The new case `clarity-refactor` gives the model a
+60-line `summarize` method that does everything in one place: a loop with
+mutable accumulators, an `instanceof` chain over a sealed type, a label
+reassigned in branches, a log built by string concatenation, a nullable
+private helper and a remote fallback. Its public signature is pinned by a
+test.
+
+Result (Sonnet, 3+3 runs, $0.98 for two runs): **with 0.92, without 0.67**.
+The clarity patterns themselves don't discriminate, because Sonnet applies
+them unprompted. Nor do the lazy fallback or the signature rule. What does
+is the original principle: without the skill the log stays inside the
+mapping step (3/3) and the `switch` uses type patterns with accessors
+(3/3). With the skill, both are fixed 3/3. The first grader set missed this.
+The answers showed it, which is the CLAUDE.md lesson again: read the
+outputs, not only the score. Details are in `evals/README.md`.
+
+Implication, not yet acted on: the clarity patterns add tokens without a
+measured behavior change on Sonnet. They may still matter on a cheaper
+model or as the author's own reference. Measuring that is a `--model haiku`
+run, not a reason to cut them now.
+
+### Logging section and the Haskell mapping
+
+The author pointed out that a static logger is a hidden dependency, since
+it isn't passed as a parameter, and asked whether the two options were the
+Reader and Writer monads. They are. Added:
+
+- **"Logging" section, inline.** The test is "would a test want to assert
+  on it?". Diagnostic logging keeps the static logger, called from the shell
+  only. Behavior is returned as a value (first choice) or goes through a
+  domain-named port injected by constructor (second choice). Never pass a
+  `Logger` as a parameter. A value-plus-log wrapper is only worth it when the
+  log is the output.
+- **`references/haskell-mapping.md`:** the table the author asked for,
+  mapping Reader → constructor injection, Writer → returned
+  `SkipReason`/`Action`, IO → the shell, `Debug.Trace` → static logger, plus
+  laziness and concurrency. It's a reference because it translates concepts
+  and holds no rule; the rules stay inline.
+
+**Size follow-up.** The worked before/after for "a reader of external data
+returns Option" moved to `references/option-reader.md`. The rule stays
+inline in a short paragraph that keeps the tell (a mop-up helper) and the
+per-caller defaults. `SKILL.md` went from 21.2KB to 20.5KB, still slightly
+over the ~20KB guideline. The remaining sections either apply on most
+triggers or are rules, not lookups.
+
+### Function-valued members: method reference, builder, static constant
+
+The author asked whether a function is better held in a static field or
+returned by a method, and then asked that a method which builds a function
+be obvious from its name. Added to clarity pattern 2:
+
+- **The default** is a plain method passed as a method reference.
+- **A builder method** returns a function only when the function needs a
+  parameter. Chosen by the author from three options: its name **ends with
+  the functional type it returns** (`olderThanPredicate(age)`,
+  `expressFeeFunction(rate)`). It works for private helpers too. Rejected: a
+  holder class like `InvoicePredicates.olderThan`, which doesn't fit private
+  one-off builders, and mixing the two by scope, which adds one more rule.
+- **A `static final` field** holds only a composed constant, such as a
+  `Comparator` chain. Reasons against static lambdas in general: `F.apply(x)`
+  reads worse, stack traces show `lambda$static$0`, forward references hit
+  initialization-order traps, and the generic types get verbose. There's no
+  performance difference.
+
+**Concurrency bullet moved out, at the author's request.** The `Future`
+rule (an effect, so shell only; no session handed to another thread) now
+opens `references/concurrency.md`. This is a knowing exception to "never
+split a rule from its own statement": the rule now lives only in the
+reference. That's accepted because the reference is exactly what a reader
+opens at the moment the rule applies, and the pointer row says so ("read
+**before** using `Future`… it holds the rule"). `SKILL.md` is at 20.9KB.
+
+### Memoizing vs Lazy
+
+The author asked about memoizing, whether Vavr supports it (`FunctionN.memoized()`),
+and whether to use memoize or `Lazy`. Settled:
+
+- No argument → `Lazy`, preferred over `Function0.memoized()` for intent.
+- With arguments → `FunctionN.of(...).memoized()` as an instance field.
+- Used at most once → neither, a lambda.
+
+This is one new row in the Laziness table in `SKILL.md` (the `Lazy` row now
+says "no argument"). The details went into a "Memoizing" section of
+`references/cost.md`: the four conditions (pure, costly, repeated
+arguments, small bounded argument set, since Vavr's cache never evicts),
+the choice of tool by how long the cache lives (local `Map` / memoized
+field / a real cache such as Caffeine), and the traps (remote calls,
+session-bound objects, `null`, recursive `computeIfAbsent`, a `static`
+cache).
+
+**Full eval re-run after all of the above** (Sonnet, 3+3 runs, $0.98):
+`guard-pipeline` scored with 1.00 / without 0.22, and `clarity-refactor`
+with 1.00 / without 0.75. No regression from the additions or the moves to
+`references/`. The new sections (laziness, logging, function builders,
+memoization) have no case of their own, so this proves they didn't break
+the measured rules. It doesn't prove they work.
+
+### Try instead of try/catch, stated positively
+
+The author said they like using `Try` instead of `try/catch`. The skill
+already allowed that, but it only said so in the negative, as a "What NOT to
+use Vavr for" bullet. That bullet is now a positive rule: use `Try` instead
+of `try/catch` around a call that genuinely throws, with the lambda limited
+to that one call, then convert to `Either`. Throwing your own exception for
+a business outcome and catching it with `Try` stays forbidden.
+`references/composition.md` gained a `try/catch` → `Try` equivalents table
+(`recover`, `recoverWith`, `andFinally`, `withResources`, `run`,
+`onFailure`, `getOrElseThrow`) and the traps: it catches bugs too, it runs
+immediately, fatal errors pass through, no `Try` in an interface signature,
+and catching undoes nothing.
+
+### Either rule rewritten: the failure is in the signature, the type depends on the caller
+
+The author asked whether exposing `Either` as a return type is right, or
+whether it should stay an internal mechanism. Answer agreed with the
+author: the *failure* must stay visible in the signature (otherwise it
+comes back as a throw, `null` or a silent default), but the *Vavr type*
+needn't. "Either for error paths in use cases" is replaced by "Known
+failures: in the signature, as Either or a sealed result", which decides
+by caller:
+- the same class → `Either` freely;
+- your own module → `Either`;
+- other modules or teams → a sealed result of your own, built from the
+  internal `Either` with one `fold`;
+- a framework → its own language, converted in the shell.
+
+Reasons recorded inline: `Left`/`Right` mean nothing outside the code that
+built them, Vavr would leak into callers' dependencies, and frameworks
+don't understand it. A sealed result keeps exhaustive handling and names
+each outcome. `composition.md`'s "no `Try` in an interface signature" trap
+now points to the same split.
+
+### Eval: failing-import, the Try and Either rules in practice
+
+The author asked to see what implementing a method that can fail looks like
+under the skill. The new case is `failing-import`: a public `importInvoice`
+that parses JSON (Jackson throws), validates the amount and currency, and
+posts to a ledger (which throws when down). Sonnet, 3+3 runs, $0.54:
+**with 0.89, without 0.33.**
+
+- Without the skill (3/3): `try/catch` blocks, and the public method
+  returns `Either<ImportError, String>`. Failures are values with a sealed
+  error type, which is good, but Vavr leaks into the public API.
+- With the skill (3/3): a sealed `ImportResult` (`Posted`, `MalformedJson`,
+  `InvalidAmount`, `UnsupportedCurrency`, `LedgerUnavailable`) built from an
+  internal `Either` pipeline with one `fold`, `Try` around `readValue`, and
+  `recover(LedgerUnavailableException.class, …)` limited to the specific
+  exception. One run kept a `try/catch` around `ledger.post`, a real miss.
+- Validation-as-values passed in both arms: Sonnet doesn't throw for
+  validation unprompted, so that grader doesn't discriminate.
+
+The two rules added today (`Try` as the `try/catch` replacement, and a
+sealed result for a public API) are the ones that make the difference.
+
+### Examples pass: long code blocks to references/examples.md
+
+At the author's request, `SKILL.md` was brought back to the ~20KB guideline
+(22.6KB → 20.0KB) by moving the long code blocks into a new
+`references/examples.md`, with one section per pattern under the same name.
+Moved: `toDocumentContext`, the `Either`-inside / sealed-result-outside pair,
+loop → pipeline, the function builder, expressions versus reassigned
+locals, the value-producing sealed `switch`, the shell/core split, and the
+`Action` type. Every rule's prose stayed inline, along with a one-line
+example where it carries the rule (the record-deconstruction `case`, the
+builder names, the eager-fallback pair).
+
+**Kept inline deliberately:** the guard, `flatMap`/`peekLeft` pipeline,
+`SkipReason` and logging-switch examples. They are the house style that
+`guard-pipeline` measures (1.00 vs 0.22), so they weren't risked. The short
+pattern-2 pipeline and the `getOrNull` seam line also stayed: they're cheap
+and they're the rule itself.
+
+**Regression check** (Sonnet, 3+3 runs, $1.53): all three cases scored the
+same as before the move. `guard-pipeline` 1.00 / 0.22, `clarity-refactor`
+1.00 / 0.83, `failing-import` 0.89 / 0.33.
+
+**Open question for the token audit:** if `examples.md` turns out to be
+opened on most triggers, it costs more than it saves (a tool call plus a
+lost prefix cache). The eval traces don't show whether it was read. Check it
+in real use before moving anything else out.
+
+## Cross-skill eval: do chottomatte-archi, igiari-tdd and kanpeki-fp load together?
+
+The author asked whether `chottomatte-archi` implies `igiari-tdd`, which
+implies `kanpeki-fp`. Skills have no dependency mechanism (the portable
+frontmatter has no "requires" field). Each skill's "Related skills"
+paragraph tells the model to load the others, so the links are
+instructions, not guarantees, and no eval measured them.
+
+**New: root `evals/` + `scripts/eval_skill_chain.sh` + `make eval-chain`.**
+A skill's own `evals/` runs against a one-skill plugin, so a cross-skill
+case needs a plugin holding all three. The repo root isn't one: a first
+attempt with `claude plugin eval .` loaded no plugin (`plugins: []`) and
+was discarded ($0.38). The script copies the three skills into a temporary
+plugin (`.claude-plugin/plugin.json` + `skills/`) and runs the cases there.
+Graders are `tool_used` checks on `Skill` with `input_match` on the skill
+name, so the cases run with `--ablation none`.
+
+**Results (Sonnet, 3 runs, $0.83):**
+- `skill-chain-natural`: a Java feature request that names no skill. **1.00**:
+  all three loaded up front, chottomatte → igiari → kanpeki, before the
+  structural plan and the approval pause.
+- `skill-chain-from-archi`: the same request plus "use the
+  chottomatte-archi skill". **0.33**: only `chottomatte-archi` loads. The
+  model presents the structural plan and stops at its approval gate, and
+  `igiari-tdd` / `kanpeki-fp` are never loaded.
+
+**Reading:** they load together because each description matches, not
+because one skill's text pulls in the next. Invoked by name,
+`chottomatte-archi`'s "load the other one too when…" doesn't fire before
+its plan gate. The plan the author approves then lacks the TDD test plan
+and `kanpeki-fp`'s expression rules. In that run, the plan's public use case
+returned `Either` where `kanpeki-fp` now asks for a sealed result at a
+public API.
+
+**Not changed yet.** The obvious fix is one sentence in
+`chottomatte-archi`'s Related skills: when the task will write production
+code, load `igiari-tdd` and `kanpeki-fp` before presenting the structural
+plan. But `chottomatte-archi` is the subject of the next planned study
+(`docs/next-session-chottomatte.md`), so the change is left for the author
+to decide, and `skill-chain-from-archi` is there to measure it.
+
+**Fix applied at the author's request.** One sentence was added to
+`chottomatte-archi`'s Related skills: "When the task will write production
+code, load `igiari-tdd` and `kanpeki-fp` before presenting the structural
+plan, not after its approval". It gives the reason: the test plan is written
+against the structural plan, and the plan's signatures must already follow
+`kanpeki-fp`. Re-run (Sonnet, 3 runs, $1.18): `skill-chain-from-archi` went
+from 0.33 to **1.00**, and `skill-chain-natural` stayed at 1.00.
+`chottomatte-archi`'s own three cases (skill arm only, $0.73) all scored
+1.00, and `plan-structure-first` still pauses for approval, so the extra
+loads didn't weaken the gate. Note for the next chottomatte study: this
+sentence is new and co-designed only lightly. Review it with the author like
+any other rule.
