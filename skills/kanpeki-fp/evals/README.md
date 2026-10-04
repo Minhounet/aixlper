@@ -4,8 +4,8 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 
 | Case | Targets | Sonnet, 3+3 runs |
 |---|---|---|
-| `guard-pipeline` | Pure `Either` guards with no logging inside, side effects composed at the end, and a sealed `SkipReason` logged with record deconstruction | 2026-10-03: with 1.00 / without 0.00 |
-| `clarity-refactor` | Clarity patterns on a long method: loop → pipeline, named steps, sealed `switch`, no reassigned local; pure per-element steps; the lazy fallback; the public signature kept | 2026-10-04: with 0.92 / without 0.67 (Δ +0.25) |
+| `guard-pipeline` | Pure `Either` guards with no logging inside, side effects composed at the end, and a sealed `SkipReason` logged with record deconstruction | 2026-10-03: with 1.00 / without 0.00; 2026-10-04 (after the clarity/laziness/logging/memoize additions): with 1.00 / without 0.22 |
+| `clarity-refactor` | Clarity patterns on a long method: loop → pipeline, named steps, sealed `switch`, no reassigned local; pure per-element steps; the lazy fallback; the public signature kept | 2026-10-04: with 0.92 / without 0.67 (Δ +0.25); re-run after later additions: with 1.00 / without 0.75 (Δ +0.25) |
 
 **Strong discriminator.** Without the skill, Sonnet wrote reasonable code,
 but not this style. One run used a `check()` helper that logs inside the
@@ -31,3 +31,12 @@ that look compliant, with no rationale exposed (Haiku judge, 3 votes). The
 `label` wording was clarified after the first run, and the noise stayed.
 Before trusting a single failure, read the answer, or try
 `--judge-model sonnet`.
+
+**Full-suite re-run, 2026-10-04 ($0.98, Sonnet, 3+3 runs).** This followed
+the decision-as-data, laziness, logging, function-builder and memoization
+additions, and the moves to `references/`. There was no regression: both
+cases scored 1.00 with the skill, 3/3. `clarity-refactor`'s noisy
+`clarity-patterns` grader passed all six runs this time. The discriminator
+was again `pure-steps`, failing 0/3 without the skill. `guard-pipeline`
+without the skill reached `pure-guards` once out of 3 and `sealed-reason`
+never.

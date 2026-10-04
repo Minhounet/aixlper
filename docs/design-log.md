@@ -1791,3 +1791,10 @@ the choice of tool by how long the cache lives (local `Map` / memoized
 field / a real cache such as Caffeine), and the traps (remote calls,
 session-bound objects, `null`, recursive `computeIfAbsent`, a `static`
 cache).
+
+**Full eval re-run after all of the above** (Sonnet, 3+3 runs, $0.98):
+`guard-pipeline` scored with 1.00 / without 0.22, and `clarity-refactor`
+with 1.00 / without 0.75. No regression from the additions or the moves to
+`references/`. The new sections (laziness, logging, function builders,
+memoization) have no case of their own, so this proves they didn't break
+the measured rules. It doesn't prove they work.
