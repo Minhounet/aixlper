@@ -138,38 +138,16 @@ Chain with `flatMap`/`map`; call `.peek()`/`.onEmpty()` for side effects.
 `Option` composes with `Either` — `option.toEither(leftValue)` converts when
 you need to carry a reason.
 
-### A reader of external data returns Option, and kills its null-mopping helper
+### A reader of external data returns Option
 
 Anything that reads a value out of a system you don't control — a Nuxeo
-property, a header, a config entry — is the classic place nulls leak inward.
-Have it return `Option<T>` at the point of the read, not a nullable `T` that
-every caller then has to remember to check.
-
-The tell that this is needed: a companion helper whose whole job is to clean up
-after the nullable one (`nullToEmpty`, `orDefault`, `safeGet`). That helper is
-absence-handling smeared across call sites. Once the reader returns `Option`,
-it has nothing left to do — delete it.
-
-```java
-// before — nullable read, plus a helper to mop up after it
-protected String asString(DocumentModel doc, String xpath) {
-    Serializable value = doc.getPropertyValue(xpath);
-    return value == null ? null : String.valueOf(value);
-}
-protected String nullToEmpty(String value) {
-    return value == null ? "" : value;
-}
-
-// after — absence is in the type; the mop-up helper is gone
-protected Option<String> asString(DocumentModel doc, String xpath) {
-    return Option.of(doc.getPropertyValue(xpath)).map(String::valueOf);
-}
-```
-
-Each caller then states its own intent instead of inheriting one global
-default: `.getOrElse("")` where empty is meaningful, `.filter(s ->
-!s.isBlank())` where blank counts as absent, `.getOrElse(() -> buildIt())` for
-a computed fallback.
+property, a header, a config entry — returns `Option<T>` at the point of
+the read, not a nullable `T` every caller must remember to check. The tell
+it's needed: a companion helper that only mops up after the nullable one
+(`nullToEmpty`, `orDefault`, `safeGet`). Once the reader returns `Option`,
+delete that helper; each caller states its own default (`.getOrElse("")`,
+`.filter(s -> !s.isBlank())`, `.getOrElse(() -> buildIt())`). Worked
+before/after: `references/option-reader.md`.
 
 ### Option stops at a boundary you don't own
 
@@ -467,6 +445,7 @@ When in doubt, write both versions and keep the one that reads more easily.
 | Read | When |
 |---|---|
 | `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), wraps a throwing library call with `Try`, updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
+| `references/option-reader.md` | You're refactoring a nullable reader of external data and its mop-up helper, and want the worked before/after. |
 | `references/haskell-mapping.md` | You're reasoning in Haskell/FP terms (Reader, Writer, IO, `Debug.Trace`) and need the Java equivalent used in this codebase. |
 | `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field. |
 | `references/concurrency.md` | You're about to use `Future`/`CompletableFuture`, run calls in parallel, or touch a Nuxeo or Documentum session from another thread. |

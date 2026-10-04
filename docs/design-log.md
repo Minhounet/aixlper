@@ -1739,3 +1739,10 @@ Reader and Writer monads. They are. Added:
   `SkipReason`/`Action`, IO → the shell, `Debug.Trace` → static logger, plus
   laziness and concurrency. It's a reference because it translates concepts
   and holds no rule; the rules stay inline.
+
+**Size follow-up.** The worked before/after for "a reader of external data
+returns Option" moved to `references/option-reader.md`. The rule stays
+inline in a short paragraph that keeps the tell (a mop-up helper) and the
+per-caller defaults. `SKILL.md` went from 21.2KB to 20.5KB, still slightly
+over the ~20KB guideline. The remaining sections either apply on most
+triggers or are rules, not lookups.
