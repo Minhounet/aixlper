@@ -127,6 +127,7 @@ global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/settings.template.json     # public-safe; secrets injected at install
 
 docs/design-log.md                # session-by-session history for active-work skills
+evals/                            # cross-skill evals (scripts/eval_skill_chain.sh, make eval-chain)
 ```
 
 ### Keeping SKILL.md small: progressive disclosure
@@ -178,6 +179,9 @@ by the client — but there is a validate/test pipeline, the equivalent of
   `skills/<name>/evals/` directory (`case.yaml`/`prompt.md` + grader
   files), including a no-skill baseline comparison.
 - `make ci` — both, in order.
+- `make eval-chain` — the cross-skill cases in `evals/` (do the Java skills
+  load together?), run through `scripts/eval_skill_chain.sh`, which bundles
+  the three Java skills into a temporary plugin. Not part of `make eval`.
 
 **GitHub Actions runs `make validate` only, deliberately.** `make eval` spends
 real API money — roughly $17 for the eight Java-skill cases across two models at

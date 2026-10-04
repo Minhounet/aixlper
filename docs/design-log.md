@@ -1882,3 +1882,44 @@ same as before the move. `guard-pipeline` 1.00 / 0.22, `clarity-refactor`
 opened on most triggers, it costs more than it saves (a tool call plus a
 lost prefix cache). The eval traces don't show whether it was read. Check it
 in real use before moving anything else out.
+
+## Cross-skill eval: do chottomatte-archi, igiari-tdd and kanpeki-fp load together?
+
+The author asked whether `chottomatte-archi` implies `igiari-tdd`, which
+implies `kanpeki-fp`. Skills have no dependency mechanism (the portable
+frontmatter has no "requires" field). Each skill's "Related skills"
+paragraph tells the model to load the others, so the links are
+instructions, not guarantees, and no eval measured them.
+
+**New: root `evals/` + `scripts/eval_skill_chain.sh` + `make eval-chain`.**
+A skill's own `evals/` runs against a one-skill plugin, so a cross-skill
+case needs a plugin holding all three. The repo root isn't one: a first
+attempt with `claude plugin eval .` loaded no plugin (`plugins: []`) and
+was discarded ($0.38). The script copies the three skills into a temporary
+plugin (`.claude-plugin/plugin.json` + `skills/`) and runs the cases there.
+Graders are `tool_used` checks on `Skill` with `input_match` on the skill
+name, so the cases run with `--ablation none`.
+
+**Results (Sonnet, 3 runs, $0.83):**
+- `skill-chain-natural`: a Java feature request that names no skill. **1.00**:
+  all three loaded up front, chottomatte → igiari → kanpeki, before the
+  structural plan and the approval pause.
+- `skill-chain-from-archi`: the same request plus "use the
+  chottomatte-archi skill". **0.33**: only `chottomatte-archi` loads. The
+  model presents the structural plan and stops at its approval gate, and
+  `igiari-tdd` / `kanpeki-fp` are never loaded.
+
+**Reading:** they load together because each description matches, not
+because one skill's text pulls in the next. Invoked by name,
+`chottomatte-archi`'s "load the other one too when…" doesn't fire before
+its plan gate. The plan the author approves then lacks the TDD test plan
+and `kanpeki-fp`'s expression rules. In that run, the plan's public use case
+returned `Either` where `kanpeki-fp` now asks for a sealed result at a
+public API.
+
+**Not changed yet.** The obvious fix is one sentence in
+`chottomatte-archi`'s Related skills: when the task will write production
+code, load `igiari-tdd` and `kanpeki-fp` before presenting the structural
+plan. But `chottomatte-archi` is the subject of the next planned study
+(`docs/next-session-chottomatte.md`), so the change is left for the author
+to decide, and `skill-chain-from-archi` is there to measure it.
