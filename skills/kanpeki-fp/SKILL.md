@@ -356,6 +356,28 @@ it behind a port (`chottomatte-archi`) and fake it in tests instead. Don't
 build an `IO` of your own out of `Supplier`/`Runnable` chains: in Java it
 costs readability and buys no compiler guarantee.
 
+## Logging: diagnostic stays static, behavior becomes explicit
+
+Ask one question: **would a test want to assert on it?**
+
+- **No — diagnostic** (`debug`/`trace`/`warn` for whoever is debugging):
+  keep `private static final Logger log`. The hidden dependency is
+  acceptable because it is called **only from the shell**, at the end of a
+  pipeline (`peek`/`peekLeft`/`forEach` over the result) — never from a
+  guard, a mapping step or a decision. Use `{}` placeholders, not
+  concatenation.
+- **Yes — behavior** (an audit trail, a "skipped" event someone relies on):
+  make it explicit. First choice: the core **returns** it as a value
+  (`SkipReason`, `Action`) and the shell logs it. Second choice: a port
+  with a domain name (`SkipReporter`, or a `Consumer<SkipReason>`),
+  injected through the **constructor**; the test passes one that collects
+  into a list.
+
+Never pass a `Logger` as a method parameter: it clutters every signature
+and is still not a domain concept. Don't return a value-plus-log-list just
+to stay pure; that pays off only when the log *is* the output (an import
+report). How these map to Reader/Writer/IO: `references/haskell-mapping.md`.
+
 ## Laziness: don't compute what may not be needed
 
 ### The eager-fallback trap  **[keeps signature]**
@@ -445,6 +467,7 @@ When in doubt, write both versions and keep the one that reads more easily.
 | Read | When |
 |---|---|
 | `references/composition.md` | A loop or method combines **several** fallible results (a list of `Either`, errors to collect rather than stop at the first), wraps a throwing library call with `Try`, updates an immutable record, or passes behavior as a parameter instead of a template method/Strategy class. |
+| `references/haskell-mapping.md` | You're reasoning in Haskell/FP terms (Reader, Writer, IO, `Debug.Trace`) and need the Java equivalent used in this codebase. |
 | `references/cost.md` | You're deciding whether a value that does **not** leave the process (in-memory work, building an object) is costly enough to defer with a lambda, `Lazy` or a field. |
 | `references/concurrency.md` | You're about to use `Future`/`CompletableFuture`, run calls in parallel, or touch a Nuxeo or Documentum session from another thread. |
 

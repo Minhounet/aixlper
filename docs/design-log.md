@@ -1721,3 +1721,21 @@ Implication, not yet acted on: the clarity patterns add tokens without a
 measured behavior change on Sonnet. They may still matter on a cheaper
 model or as the author's own reference. Measuring that is a `--model haiku`
 run, not a reason to cut them now.
+
+### Logging section and the Haskell mapping
+
+The author pointed out that a static logger is a hidden dependency, since
+it isn't passed as a parameter, and asked whether the two options were the
+Reader and Writer monads. They are. Added:
+
+- **"Logging" section, inline.** The test is "would a test want to assert
+  on it?". Diagnostic logging keeps the static logger, called from the shell
+  only. Behavior is returned as a value (first choice) or goes through a
+  domain-named port injected by constructor (second choice). Never pass a
+  `Logger` as a parameter. A value-plus-log wrapper is only worth it when the
+  log is the output.
+- **`references/haskell-mapping.md`:** the table the author asked for,
+  mapping Reader → constructor injection, Writer → returned
+  `SkipReason`/`Action`, IO → the shell, `Debug.Trace` → static logger, plus
+  laziness and concurrency. It's a reference because it translates concepts
+  and holds no rule; the rules stay inline.
