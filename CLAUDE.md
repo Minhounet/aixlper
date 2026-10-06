@@ -59,7 +59,7 @@ starting, rather than force-fitting it into a `SKILL.md`.
 
 ## Active work: skills still being designed
 
-Five skills are in active design and are **not** stable. For each, the
+Six skills are in active design and are **not** stable. For each, the
 `SKILL.md` is the source of truth for its current rules, and
 `docs/design-log.md` holds the session-by-session history — every rule
 addition, correction and worked example, with the reasoning behind it.
@@ -67,7 +67,7 @@ Read the `SKILL.md` when you need the rule; read the log when you need the
 *why*. Don't restate either here: this section is a map, not a summary.
 Keep the log updated whenever a skill changes.
 
-For all five: expect them to keep growing from ongoing conversation with
+For all six: expect them to keep growing from ongoing conversation with
 the author. Don't treat any as complete, and **don't remove or "clean up"
 sections without the author asking.**
 
@@ -78,6 +78,7 @@ sections without the author asking.**
 | `mujitsu-documentum` | **Unverified** | Written from general DQL/API knowledge, never run against a real docbase. Treat every pattern as a draft; don't cite it as settled. Known-weak spot: pattern 4's `get_type_attr_count` is a named placeholder, not confirmed DQL. |
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
 | `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`.claude/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design, traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived. |
+| `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not checked; `references/nuxeo.md` is a placeholder waiting for the author's real setup. |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
 by one with the author, evals checked against the no-skill baseline). The
@@ -113,6 +114,9 @@ implementation, shown and re-approved — never silent substitution.
   edit to the `SKILL.md` plus a log entry, same discipline as above.
 - **`kaizen-refactor`:** nothing decided yet beyond
   `make validate`.
+- **`tonosaman-deploy`:** dogfood with a throwaway project per runtime, run
+  for real against the engine (Docker here; Podman still to do). The Nuxeo
+  reference is written from the author's own work config, not from memory.
 
 ## Repository layout
 
