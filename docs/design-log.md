@@ -1936,3 +1936,67 @@ from 0.33 to **1.00**, and `skill-chain-natural` stayed at 1.00.
 loads didn't weaken the gate. Note for the next chottomatte study: this
 sentence is new and co-designed only lightly. Review it with the author like
 any other rule.
+
+## tonosaman-deploy: build, then run the fresh artifact in a container
+
+**Origin.** The author wanted to deploy quickly with Docker or Podman. That
+turned out to mean the Java project being worked on, not this repo: build
+it, then start a container with the updated artifact. Projects come in
+three kinds: a plain JDK batch, a Spring Boot app, or Nuxeo, where setup is
+harder. Named after the Steel Samurai (Tonosaman, トノサマン), at the
+author's choice.
+
+**Shape.** A plain skill. Build-then-refresh is followed inline, and none of
+the five subagent criteria in `CLAUDE.md` apply. It is a separate skill from
+`igiari-tdd`, which decides *when* to build; this one decides how to get what
+was built running. Following progressive disclosure, `SKILL.md` holds the
+rules that apply to every runtime, and one reference per runtime holds the
+templates and commands: `jdk-batch.md`, `spring-boot.md`, `nuxeo.md`, plus
+`podman-docker-api.md` for tools that need the Docker API.
+
+**Core rule: stable image, swapped artifact.** The image holds the runtime;
+the jar is bind-mounted read-only under a stable name, so a new build needs
+only a container recreate. The image is rebuilt only when the runtime itself
+changes. Engine-neutral by default (`Containerfile` + `compose.yaml`), with
+Podman preferred when both are installed: no daemon, rootless, and no Docker
+Desktop licence. The catch is that Testcontainers and Buildpacks need
+Podman's API socket, hence the separate reference.
+
+**Nuxeo left as a placeholder on purpose.** The author will provide a
+working config from real use. Writing the setup from memory would repeat
+`mujitsu-documentum`'s unverified weak spot, so `nuxeo.md` only lists the
+questions that config must answer and tells the model not to generate a
+Nuxeo setup from scratch in the meantime.
+
+**Dogfood, first run (Docker 29, Compose, Maven).** A throwaway project for
+each of the two checked runtimes, run for real:
+
+- *JDK batch:* `compose run --rm` passed the arguments through and returned
+  the container's exit code (3 for the forced failure). After a code change
+  and a jar-only rebuild, the next run used the new code without an image
+  rebuild.
+- *Spring Boot 3.5:* `compose up -d --force-recreate --wait` blocked until
+  the actuator health check passed. A jar swap and recreate took about 6
+  seconds, and `/hello` returned the new value. A forced startup failure made
+  `--wait` exit with 1 after 2 seconds, and filtering logs for `APPLICATION
+  FAILED TO START` found the cause.
+
+The run surfaced two problems, both now rules in `SKILL.md`:
+
+1. **A missing jar becomes a root-owned directory.** With the short mount
+   syntax and no jar built yet, Docker created `target/app.jar/` as a
+   directory. The container then failed with `Invalid or corrupt jarfile`,
+   and the directory would block the next build. Fix: the long mount syntax
+   with `create_host_path: false`, which was checked to refuse to start and
+   name the missing path.
+2. **Bounding output hid the exit code.** `compose run ... | tail` reported
+   `exit=0` because that was `tail`'s code. The output rules now say to use
+   `pipefail` or `PIPESTATUS`.
+
+Two smaller findings went into the references: the `eclipse-temurin` JRE
+image includes `curl` (so an in-container health check works), and the JVM's
+`Picked up JAVA_TOOL_OPTIONS` stderr line is expected noise.
+
+**Not checked yet:** anything under Podman (rootless, SELinux `:Z`,
+`podman compose` providers, whether `--wait` works there), Jib, and the
+`podman-docker-api.md` steps.

@@ -19,6 +19,7 @@ tool — no per-client fork.
 | [`kurae-bash`](skills/kurae-bash/SKILL.md) | Seven hardening patterns for robust, interactive bash CLI tools: `bind -x` keybinding dispatch, annotation-driven command registries, double-load guards, framework-free testing, and more. |
 | [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close. |
+| [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
 
 ## Installing
 
