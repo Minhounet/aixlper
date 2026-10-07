@@ -2044,3 +2044,44 @@ image includes `curl` (so an in-container health check works), and the JVM's
 **Not checked yet:** anything under Podman (rootless, SELinux `:Z`,
 `podman compose` providers, whether `--wait` works there), Jib, and the
 `podman-docker-api.md` steps.
+
+## Measuring a cycle: `global/cycle-cost.py`
+
+**Origin.** The author wanted a measure of what one "implement" or "fix"
+request costs once it enters the chain: `chottomatte-archi` plan, then
+`igiari-tdd` cycles with `kanpeki-fp` in the refactor step. Tokens and
+dollars, per cycle, so cycles can be compared over time.
+
+**Why not a step in the skills.** The model never sees its own token counts,
+so a "report what you used" instruction would produce a made-up number. A
+step that runs a script would work, but it would be resident cost in three
+`SKILL.md` files, it relies on the model remembering to run it, and the
+script would not reach Gemini CLI anyway. Everything needed is already on
+disk after the fact, so the measure is a script the author runs by hand,
+installed with the rest of `global/`. The skills are unchanged.
+
+**What it reads.** Claude Code writes each session to
+`~/.claude/projects/<project>/<session>.jsonl`, and each API response there
+carries its model and `usage`. Subagent runs (`igiari-tdd`'s delegated run)
+are in `<session>/subagents/*.jsonl` and are included, labelled. Checked on
+a live session, three points the script depends on:
+- One response is written as several lines (one per content block) with
+  the same `message.id` and the same `usage`; counting lines double-counts.
+  The script keeps one per id.
+- A skill load shows up as a `Skill` tool call and as a meta user message
+  starting `Base directory for this skill:`; a typed slash command shows up
+  as `<command-name>`. Any of the three starts the cycle, at the prompt that
+  led to it.
+- The four counters are priced separately (input, cache write 5m at 1.25x,
+  cache write 1h at 2x, cache read, output). On this session's first turn
+  the formula gave exactly Claude Code's own per-model figure from the
+  transcript's `cost-state` record ($0.3485606 for Opus 5.5).
+
+**Known limits.** The transcript misses background calls (title generation,
+prompt suggestions), so the result is a slight lower bound: about 8% under
+Claude Code's own figure on that first turn. The price table is hard-coded
+with its date; a LiteLLM gateway may bill differently, so its `spend`
+before and after stays the real invoice. The cycle runs to the end of the
+session: a second cycle in the same session doesn't reload the skills, so
+it can't be told apart automatically. The per-prompt table shows where each
+phase (plan, approval, implementation) went instead.

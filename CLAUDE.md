@@ -128,6 +128,7 @@ skills/<skill-name>/evals/        # claude plugin eval cases for the skill
 
 global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
+global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
 
 docs/design-log.md                # session-by-session history for active-work skills
@@ -250,9 +251,11 @@ of each skill, not a fork per client.
 `global/` holds the author's own `~/.claude` config — the global `CLAUDE.md`
 and the `java.md` / `nuxeo.md` it `@`-imports, `litellm-budget.py` (the script
 `settings.template.json` wires into `statusLine` and the `SessionStart` hook
-for the gateway budget display), and `settings.template.json` itself.
+for the gateway budget display), `cycle-cost.py` (run by hand after an
+implement/fix cycle: reads the session transcript and prices it — see
+`docs/design-log.md`), and `settings.template.json` itself.
 `scripts/install-global.sh` installs them onto any machine, chmod'ing
-`litellm-budget.py` back to executable since content-only comparison would
+the scripts back to executable since content-only comparison would
 otherwise leave a restored or hand-copied file non-executable.
 
 `settings.template.json` also pins `model`. A re-install overwrites whatever
