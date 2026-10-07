@@ -75,7 +75,20 @@ below — these are mechanical, not judgment calls:
   'final' class".
 - a line that exceeds 121 characters → break at a natural boundary: stream
   chains get one operation per line (dot leading); long method calls get
-  one argument per line. See java.md for the full convention and examples.
+  one argument per line; when the receiver itself is long, extract it into
+  a named variable first (an extract-variable, itself Tier 1):
+  ```java
+  list.stream()
+      .filter(Item::isActive)
+      .map(Item::name)
+      .toList();
+
+  var service = registry.lookup(DocumentService.class);
+  service.processLifecycle(
+          session,
+          document,
+          transitionName);
+  ```
 
 These are safe enough to apply in a batch — fix every Tier 1 finding
 across the file/class under review, run the existing test suite once at
@@ -94,6 +107,25 @@ Two sections are kept out of this skill's always-loaded body and live in
 - **"Class can be record class"** — why the accessor shape decides whether
   that specific inspection finding is Tier 1 or Tier 2.
 
+**Tier 2 — judgment-call refactors.** Anything that changes shape rather
+than syntax — replacing a conditional with polymorphism, promoting a
+primitive to a value object, extracting a Strategy, splitting a class on
+SRP, or any style-level move `kanpeki-fp` governs — is not mechanically
+guaranteed safe, so it doesn't get applied on sight. Gate it the same way
+igiari-tdd's refactor step gates its own advanced refinements: only act
+when a concrete trigger is actually met by the code in front of you (see
+igiari-tdd's "Advanced refinement — triggered, not anticipated" section
+for the current threshold list — same triggers, same discipline, not
+duplicated here). A candidate that doesn't meet a trigger gets logged, not
+applied and not asked about — same "log, don't ask" rule as igiari-tdd.
+
+One difference from igiari-tdd's version of this gate: there, the trigger
+list is checked against code just written this cycle. Here it's checked
+against a whole file or class you're reviewing, so triggers like "3rd
+same-type conditional" or "3rd reason to change" are far more likely to
+already be met — don't let the higher hit rate become a reason to loosen
+the gate itself.
+
 ## The safety net: test coverage before Tier 2
 
 Before making a Tier 2 change, confirm the code being touched is actually
@@ -109,6 +141,27 @@ covered:
    reading. Either scope the pass down to Tier 1 only, or propose adding
    characterization tests first (tests that pin today's actual behavior,
    not the behavior you're about to introduce) before any Tier 2 move.
+
+**Who writes the characterization tests.** By the time you know a Tier 2
+change is needed, you already know what the code is *supposed* to become —
+and tests written with that in mind drift toward pinning the intended
+behavior instead of the actual one, quirks and bugs included. You can't
+un-know the plan, so hand the writing to a context that never saw it:
+
+- **Where the client can spawn a subagent** (e.g. Claude Code): give it
+  only the code under test and its existing tests, with the instruction
+  "pin what this code does today, including behavior that looks wrong;
+  change no production code." Give it neither the findings, the triage,
+  nor the refactor you have in mind. Prefer one without file-edit access
+  to production sources if the client allows narrowing its tools.
+- **Where it can't** (e.g. Gemini CLI): triage may tell you a Tier 2
+  change exists, but write the characterization tests from the code alone
+  *before* designing that change, and state in the summary that the same
+  context later planned the refactor.
+
+Either way, the tests are only accepted once they run green against the
+**unchanged** code. A test that fails there is pinning the wrong behavior —
+fix the test, never the production code, at this stage.
 
 Tier 2 changes go one at a time, each with its own green check — never
 batch several judgment-call refactors before running tests, even when

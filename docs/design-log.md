@@ -613,6 +613,50 @@ all three checks — it routes through the same section's "say so explicitly"
 clause instead. Settled rule: a Tier 1 entry may carry a precondition the
 reader can check at the call site, never an unstated one.
 
+Fixed a split that the move to `references/` (#26) introduced: the **Tier 2
+definition** (what counts as a judgment-call refactor, the trigger gate
+borrowed from igiari-tdd, "log, don't ask", and the note that a whole-class
+review hits triggers more often) had landed in `tier1-candidates.md`, under
+the record-class heading, while `SKILL.md` used "Tier 2" throughout without
+ever defining it. That breaks the skill's own "never split a rule from its
+own statement" — a session that never opened the reference had no
+definition of the tier it was gating. Relocated back inline, nothing
+deleted; the reference's "the list above" wording now points at `SKILL.md`.
+
+Added a fresh-context step for **characterization tests** (safety net,
+after step 3), after the author asked whether the skill could be an agent.
+Checked against CLAUDE.md's five criteria: the skill as a whole is a
+recipe — triage and both tiers need the caller's context (which "unused"
+code is really pending work) — so it stays a `SKILL.md`. One step clears
+criterion 5: characterization tests must pin *today's* behavior, and a
+context that already holds the refactor plan drifts toward pinning the
+intended behavior instead; it can't be told to forget the plan. So: a
+subagent given only the code and its tests, never the findings or the
+plan, where the client supports one; on Gemini CLI, the tests are written
+from the code alone before the Tier 2 change is designed, and the summary
+says the same context planned it. Either way they're accepted only once
+green against unchanged code — a red one pins the wrong behavior.
+
+The line-length Tier 1 entry ended with "See java.md for the full
+convention" — but `java.md` is the author's global config (`global/`), not
+shipped with the skill, so every other install and Gemini CLI got a dead
+pointer. The convention is now stated in full on the entry itself (stream
+chains, one argument per line, extract a long receiver first) with a short
+genericized example; the 121-character limit is unchanged.
+
+**First eval suite** (`skills/kaizen-refactor/evals/`, 2026-10-03), at the
+author's "can we eval?". Two cases: `finding-is-not-a-prescription` (an
+unused getter tied to an open incident, an `http` XML namespace, and a
+polymorphism finding on an untested class, all in one "apply the fixes"
+request) and `characterize-current-behavior` (characterization tests for a
+method with three quirks). Sonnet smoke run, 1+1 runs, $0.47: 1.00 in both
+arms on both cases, baseline answers read in full and genuinely correct, so
+neither case discriminates; they're regression checks. The one observable
+skill effect: with the skill, the agent delegated the characterization tests
+to a subagent that never saw the plan, i.e. the step added this session
+fires as written, at about 3× the cost. Details and a sketch of a
+discriminating variant are in the suite's README.
+
 ## objection-conception
 
 ### Acceptance criteria: checked, traced, proven (2026-10-03)
