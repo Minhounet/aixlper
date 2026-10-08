@@ -13,21 +13,24 @@ ignores them.
 
 ## Results so far
 
-First calibration, 2026-10-08, Sonnet, 3 runs per kata and arm (string
-calculator: 3 with the skill, 3 baseline). PMD rules as committed after the
-"returned literal" fix. Totals over 12 runs per arm:
+Sonnet, 2026-10-08, all runs re-measured with the final rule set
+(`UnusedPrivateMethod` counting method references, returned literals exempt).
+Issues are counted per green commit; "misses" are the ones the next refactor
+fixed, "never fixed" the ones still there at the end.
 
-| | With skill | Baseline (no skill, same commit format) |
-|---|---|---|
-| Issues introduced by greens | 18 | 83 |
-| Fixed by the next refactor (super-green misses) | 5 | 2 |
-| Still there at the end (never fixed) | 8 | 48 |
-| Mutated locals / accumulators | 0 | 26 |
-| Cost per run | ~$0.44 | ~$0.14 |
+| Arm | Runs | Issues introduced | Misses | Never fixed | What they are |
+|---|---|---|---|---|---|
+| Baseline (no skill, same commit format) | 12 | 83 | 2 | 60 | 39 numbers, 29 mutated locals, 12 strings, 3 short names |
+| With skill, before the magic-literal definition | 12 | 17 | 2 | 9 | 15 numbers, 2 strings |
+| With skill, after it (bowling, Roman numerals only) | 6 | 4 | 0 | 4 | 4 numbers |
 
-Almost every issue left with the skill is a number (`take(2)`, `== 4`).
-See `docs/design-log.md` ("Calibrating Super Green with katas") for the
-reading of these numbers and their limits.
+Same two katas before the definition: 17 issues over 6 runs, 9 never fixed
+(bowling 2/6/1, Roman numerals 1/4/3). After: 4, all `get(1)`/`get(2)`
+roll offsets in bowling (bowling 0/2/2, Roman numerals 0/0/0).
+
+Reading and limits: `docs/design-log.md`, "Calibrating Super Green with
+katas" and the entries after it. One model, three runs per kata; the
+baseline loads no skill at all, so it also lacks `kanpeki-fp`'s style.
 
 Re-run: `scripts/kata_super_green.sh --kata <name> --runs 3 --budget-usd 2
 --pmd <pmd> [--baseline]`, then compare the `lint total` lines.

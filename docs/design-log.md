@@ -2295,3 +2295,28 @@ in the kata runs were this false positive, including the one first reported
 above as a real unreported miss. `super-green-pmd.xml` now uses its own
 name-based rule, which counts method references as uses. All runs are being
 re-measured with the final rule set.
+
+### Final numbers of the first calibration, and what's left
+
+Re-measured with the final rule set (table in `katas/igiari-tdd/README.md`):
+baseline 83 issues introduced over 12 runs (60 never fixed), skill before the
+magic-literal definition 17 (9 never fixed), after it 4 over 6 runs on the
+two literal-heavy katas (bowling, Roman numerals). On those two katas,
+before vs after: 17 → 4 issues, 9 → 4 never fixed.
+
+**Self-reported misses, after the correction:** the measured misses are 2 in
+all (both Roman numerals, first batch), and the agent reported 0 and nothing
+for them. One bowling run reported 1 miss the rule set doesn't see. Too few
+cases to say more than "the self-count isn't reliable on its own".
+
+**Left over, for the author:**
+- The 4 remaining issues are the roll offsets in bowling (`get(1)`, `get(2)`
+  after a strike or spare). Is "the roll after the next one" a domain rule to
+  name (e.g. `FIRST_BONUS_ROLL`), or an index? The definition doesn't say,
+  and PMD only exempts array indexes.
+- The step-history rewrite (a `reset` before the audit) and the bundled cycle
+  seen in the first batch are still open.
+- Where the "load kanpeki-fp" instruction lives (body today, description
+  possibly better).
+
+Spend for the whole calibration: about $19 of the $30 budget (Sonnet only).
