@@ -2350,7 +2350,19 @@ introduced, 0 never fixed. Across the three bowling batches: 9 → 4 → 2
 introduced, 9 → 4 → 0 never fixed. The remaining 2 were fixed by the next
 refactor, so they're misses, not leftovers.
 
-**Not yet measured:** the fix-forward rule (no wrong step happened in any
-run since it was written).
+**Fix-forward, measured with an eval** (`fix-forward`): 5/5 with the
+skill, 0/5 without. Without the skill, the answer is always "nothing is
+pushed, amend `red 5` and rebase", which is exactly the reflex the rule
+exists to stop. The first run scored 0.2 for two reasons that weren't the
+rule's fault. The skill didn't trigger on a git-only question, so the
+prompt now says the session uses igiari-tdd, as a real session would after
+the earlier cycles. And the grader failed a correct answer for using
+`git revert --no-commit` in the working tree.
 
-Total spend for the calibration session: about $26 of the $30 budget.
+That correct answer also exposed a real gap, now in the rule: once the
+input is corrected, the code already committed in `green 5` makes the test
+pass, so a red fix that only changes the test isn't a valid red (the audit
+re-runs every red). The red fix backs the production change out in the
+working tree, and the green fix restores it.
+
+Total spend for the calibration session: about $27.5 of the $30 budget.

@@ -475,7 +475,11 @@ time is fine. **A wrong step is fixed forward, never reset.** If a red
 failed for the wrong reason or a green is broken, add a new commit that
 corrects it (same N, e.g. `red 5 (fix): real newline in the input`) and say
 so in that cycle's summary. No `reset`, `amend` or rebase: the audit must
-see the mistake, not a history that hides it. Each cycle gets its own
+see the mistake, not a history that hides it. A red fix must still fail
+at its own commit: if the code already committed makes the corrected test
+pass, back that production change out in the working tree for the red fix
+(`git revert --no-commit`, or check out the file from before the green),
+then restore it as the green fix. Each cycle gets its own
 commits too: never fold one cycle's red or green into another cycle's
 commit.
 

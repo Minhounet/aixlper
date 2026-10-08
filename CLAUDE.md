@@ -133,6 +133,7 @@ global/settings.template.json     # public-safe; secrets injected at install
 
 docs/design-log.md                # session-by-session history for active-work skills
 evals/                            # cross-skill evals (scripts/eval_skill_chain.sh, make eval-chain)
+katas/igiari-tdd/                 # approved kata plans for scripts/kata_super_green.sh (not eval cases)
 ```
 
 ### Keeping SKILL.md small: progressive disclosure
@@ -187,6 +188,12 @@ by the client — but there is a validate/test pipeline, the equivalent of
 - `make eval-chain` — the cross-skill cases in `evals/` (do the Java skills
   load together?), run through `scripts/eval_skill_chain.sh`, which bundles
   the three Java skills into a temporary plugin. Not part of `make eval`.
+- `scripts/kata_super_green.sh` — runs an `igiari-tdd` kata headless
+  (`claude -p`, plan pre-approved, prompt silent about the measurement) in a
+  throwaway Maven project, then audits the history with PMD per green
+  (`skills/igiari-tdd/scripts/super-green-pmd.xml`); `--baseline` is the
+  no-skill arm. Costs money (~$0.45 a run on Sonnet) and needs a PMD 7
+  launcher (`--pmd`). Results and their reading: `katas/igiari-tdd/README.md`.
 
 **GitHub Actions runs `make validate` only, deliberately.** `make eval` spends
 real API money — roughly $17 for the eight Java-skill cases across two models at

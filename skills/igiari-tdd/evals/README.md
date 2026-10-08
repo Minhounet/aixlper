@@ -17,6 +17,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | `super-green-gate-dead-code` | **Not discriminating.** 5/5 on both arms: any model removes a `println` and a commented-out loop. Kept as a regression check. |
 | `super-green-gate-clean` | **False-positive check, passing.** 5/5 on both arms: with the skill, the gate doesn't make the agent rewrite an already clean green. |
 | `super-green-gate-literal` | **Strong.** 4/5 vs 0/5 (Δ 0.80, Sonnet, 2026-10-08), after the magic-literal definition. The miss answered "commit, clean in refactor", the no-skill answer. |
+| `fix-forward` | **Strong.** 5/5 vs 0/5 (Δ 1.00, Sonnet, 2026-10-08). Without the skill the answer is always "nothing is pushed, amend/rebase". First version scored 0.2: the skill didn't load on a git-only question (prompt now names it), and the grader wrongly failed a working-tree `git revert --no-commit`. |
 
 ## `one-test-per-step` — weak discriminator
 
