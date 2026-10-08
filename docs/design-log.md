@@ -2206,8 +2206,9 @@ reported separately.
   with PMD. It's the one "green owns" item that isn't checkable as written.
 - **Self-reported misses under-count.** The agent's "Super-green misses"
   matched PMD in 7 of 12 runs, was lower in 3, and was missing from the
-  report in 1. One unreported miss was real: a green left `parseOperand`
-  unused after introducing a loop (dead code).
+  report in 1. (A correction: this entry first called a `parseOperand`
+  "unused private method" a real unreported miss. It was a PMD false
+  positive, see below.)
 - **Step history rewritten.** In one run the agent hit a wrong red at cycle
   5, then `reset` its red/green 5 commits and redid them, which "never
   rewrite them before the audit" forbids. It said so in its report, but the
@@ -2284,3 +2285,13 @@ Open question for the author: put the load instruction in the skill's
 **Second kata batch, after the magic-literal definition** (with skill,
 Sonnet, same PMD rules): bowling 0/2/2 issues introduced per run (before:
 2/6/1), Roman numerals 0/0 (before: 1/4/3; the third run is pending).
+
+### Correction: PMD's UnusedPrivateMethod misses method references
+
+PMD 7's `UnusedPrivateMethod` flags a private method used only through a
+method reference (`RomanNumerals::appendNumeral` passed to `foldLeft`,
+`StringCalculator::parseOperand` passed to `map`). Both findings of that rule
+in the kata runs were this false positive, including the one first reported
+above as a real unreported miss. `super-green-pmd.xml` now uses its own
+name-based rule, which counts method references as uses. All runs are being
+re-measured with the final rule set.

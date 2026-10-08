@@ -19,7 +19,20 @@
   <!-- Dead code, and needless ceremony -->
   <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
   <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
-  <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+  <!-- Not PMD's UnusedPrivateMethod: it misses uses through a method
+       reference (Type::method passed to foldLeft), a false positive seen in
+       the kata runs. Name-based, so overloads are not told apart. -->
+  <rule name="UnusedPrivateMethod" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="private method never called: dead code">
+    <description>Green owns no dead code: a private method with no call and no method reference to its name.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//MethodDeclaration[@Visibility = 'private']
+  [not(@Name = //MethodCall/@MethodName)]
+  [not(@Name = //MethodReference/@MethodName)]
+]]></value></property></properties>
+  </rule>
   <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
   <rule ref="category/java/bestpractices.xml/UnusedAssignment"/>
   <rule ref="category/java/codestyle.xml/UnnecessaryLocalBeforeReturn"/>
