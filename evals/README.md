@@ -28,3 +28,20 @@ when the task will write production code, load `igiari-tdd` and `kanpeki-fp`
 before presenting the structural plan. Re-run (Sonnet, 3 runs, $1.18):
 `skill-chain-from-archi` **1.00** (3/3 load all three before the plan, up
 from 0.33), and `skill-chain-natural` 1.00 (unchanged).
+
+## `skill-chain-option-parameter` (2026-10-08)
+
+A passing green whose private helper takes an `Option` parameter, offered for
+the `green 2` commit with the three skills bundled. Does igiari-tdd's gate catch
+it, and does it load `kanpeki-fp`, which owns the rule?
+
+| Run | Gate catches it | `kanpeki-fp` loaded | Cost |
+|---|---|---|---|
+| igiari-tdd only *mentions* kanpeki-fp's signature rules | 5/5 | **0/5** | $0.51 |
+| igiari-tdd says to load kanpeki-fp before the first gate | 5/5 | **3/5** | $0.62 |
+
+**Reading:** the gate passes on the example alone (`no Option parameter` is
+written in igiari-tdd's "green owns" line), so it doesn't prove the chain. The
+load count does: a pointer that only names a skill never loaded it, the same
+finding as `skill-chain-from-archi`. An explicit "load it before the first
+gate" got it to 3/5, not 5/5. Sonnet, 5 runs.

@@ -16,6 +16,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | `super-green-gate-null` | **Moderate.** 5/5 vs 2/5 (Δ 0.60, Sonnet). |
 | `super-green-gate-dead-code` | **Not discriminating.** 5/5 on both arms: any model removes a `println` and a commented-out loop. Kept as a regression check. |
 | `super-green-gate-clean` | **False-positive check, passing.** 5/5 on both arms: with the skill, the gate doesn't make the agent rewrite an already clean green. |
+| `super-green-gate-literal` | **Strong.** 4/5 vs 0/5 (Δ 0.80, Sonnet, 2026-10-08), after the magic-literal definition. The miss answered "commit, clean in refactor", the no-skill answer. |
 
 ## `one-test-per-step` — weak discriminator
 

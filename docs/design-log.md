@@ -2259,3 +2259,28 @@ with-only). In the second batch, the two with-skill failures (`literal`,
 answer word for word. Without traces it can't be told whether the skill
 fired; the indicator separates "skill not loaded" from "skill loaded and
 wrong" from now on.
+
+### Option-parameter evals: the pointer didn't load the skill
+
+Two cases (numbers in `evals/README.md` and `skills/kanpeki-fp/evals/README.md`).
+`kanpeki-fp/option-parameter` measures the rule itself: Δ 0.80 once the
+scenario stopped rewarding a lucky inline. `skill-chain-option-parameter`
+answers the author's question: "if igiari-tdd doesn't call kanpeki-fp, how
+do we know it's not super green?". The gate caught the parameter 5/5 in both
+runs, but on the strength of the example written in igiari-tdd's own line:
+`kanpeki-fp` was loaded **0/5** while igiari-tdd only named it. After adding
+"load `kanpeki-fp` before the first gate", it was loaded 3/5.
+
+So a rule that exists only in `kanpeki-fp` reaches a TDD session about 3
+times in 5 on Sonnet. Three backstops, in order of reliability:
+1. the PMD rule in the per-green audit, which doesn't depend on loading;
+2. the example in igiari-tdd's "green owns" line, which covered this case
+   alone (it doesn't cover kanpeki-fp's other signature rules);
+3. the load instruction.
+Open question for the author: put the load instruction in the skill's
+`description` (read before triggering) rather than the body, the way
+`chottomatte-archi` got the other two loaded.
+
+**Second kata batch, after the magic-literal definition** (with skill,
+Sonnet, same PMD rules): bowling 0/2/2 issues introduced per run (before:
+2/6/1), Roman numerals 0/0 (before: 1/4/3; the third run is pending).

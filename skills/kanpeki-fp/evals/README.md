@@ -58,3 +58,13 @@ Sonnet, 3+3 runs).** `guard-pipeline` scored with 1.00 / without 0.22,
 the scores from before the move, so there's no regression. The guard,
 `SkipReason` and logging-switch examples stayed inline on purpose: they are
 what `guard-pipeline` measures.
+
+## `option-parameter` (2026-10-08)
+
+"Option is an output, never a parameter". First version: Δ 1.00, but
+misleading. The no-skill arm also removed the `Option` parameter (5/5) by
+inlining a one-line helper for unrelated reasons, and failed only for not
+naming the rule. Reworked so inlining isn't the natural move (the helper has
+two callers and does two things): **5/5 with the skill, 1/5 without (Δ 0.80)**,
+Sonnet, 5 runs, $0.53. Without the skill, the answer reshapes the helper (takes
+a `Customer`, or `remindAll` delegates) and keeps the `Option` parameter.
