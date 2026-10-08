@@ -17,12 +17,16 @@
 #   - with --lint-cmd, runs a static analyzer at each green, its parent,
 #     each refactor and HEAD: issues each green introduced, which refactor
 #     fixed (super-green misses) and which survive to HEAD (never fixed)
-# Rule 5 (minimal green) is a judgment: read the green diffs yourself.
+#   - with --ahead-cmd and --generalize-from N, flags every green before N
+#     that introduces a generalization construct (loop, stream, fold,
+#     recursion): building ahead of the tests, rule 5
+# Rule 5 beyond that is a judgment: read the green diffs yourself.
 #
 # usage: audit-tdd-history.sh --base <rev> [--test-cmd "<scoped test cmd>"]
 #          [--full-cmd "<full build cmd>"] [--test-path src/test/]
 #          [--main-path src/main/] [--test-marker '@Test|@ParameterizedTest']
 #          [--lint-cmd "<analyzer cmd>"]
+#          [--ahead-cmd "<analyzer cmd>" --generalize-from <N>]
 #   --base      the commit the task started from (its steps are base..HEAD)
 #   --test-cmd  run at each red commit; omit to skip the red re-run
 #   --full-cmd  run once at HEAD; omit to skip the final build
@@ -30,10 +34,15 @@
 #               (PMD's text format, Sonar export, anything); line and column
 #               numbers are stripped so an issue keeps its identity when code
 #               moves. scripts/super-green-pmd.xml is a ready rule set.
+#   --ahead-cmd same output contract, listing generalization constructs
+#               (scripts/generalization-pmd.xml is a ready rule set)
+#   --generalize-from  the first green the plan allows to generalize (the
+#               first test a single branch can't satisfy); greens before it
+#               that add a construct are violations
 # exit 0: clean; 1: a violation; 2: usage error
 
 set -u
-base= test_cmd= full_cmd= lint_cmd= test_path=src/test/ main_path=src/main/
+base= test_cmd= full_cmd= lint_cmd= ahead_cmd= gen_from= test_path=src/test/ main_path=src/main/
 marker='@Test|@ParameterizedTest'
 while [ $# -gt 0 ]; do
   case $1 in
@@ -41,6 +50,8 @@ while [ $# -gt 0 ]; do
     --test-cmd) test_cmd=$2; shift 2;;
     --full-cmd) full_cmd=$2; shift 2;;
     --lint-cmd) lint_cmd=$2; shift 2;;
+    --ahead-cmd) ahead_cmd=$2; shift 2;;
+    --generalize-from) gen_from=$2; shift 2;;
     --test-path) test_path=$2; shift 2;;
     --main-path) main_path=$2; shift 2;;
     --test-marker) marker=$2; shift 2;;
@@ -122,7 +133,7 @@ done
 echo "--- possible super-green misses (read each: green owns it, or make-room?) ---"
 echo "${misses:- none}" | sed 's/,$//'
 
-if [ -n "$test_cmd" ] || [ -n "$full_cmd" ] || [ -n "$lint_cmd" ]; then
+if [ -n "$test_cmd" ] || [ -n "$full_cmd" ] || [ -n "$lint_cmd" ] || [ -n "$ahead_cmd" ]; then
   wt=$(mktemp -d) || exit 2
   trap 'git worktree remove --force "$wt" >/dev/null 2>&1; rm -rf "$wt"' EXIT
   git worktree add -q --detach "$wt" "$head" || exit 2
@@ -148,11 +159,12 @@ if [ -n "$test_cmd" ]; then
   done
 fi
 
-# Issues at commit $1, one per line, line numbers stripped, each repeat
-# numbered so identical issues compare as a multiset.
+# Issues at commit $1 from analyzer $2 (default: --lint-cmd), one per line,
+# line numbers stripped, each repeat numbered so identical issues compare
+# as a multiset.
 lint_at() {
   git -C "$wt" checkout -q --detach "$1"
-  (cd "$wt" && eval "$lint_cmd" 2>/dev/null) | grep -v '^[[:space:]]*$' |
+  (cd "$wt" && eval "${2:-$lint_cmd}" 2>/dev/null) | grep -v '^[[:space:]]*$' |
     sed -E 's#^(.*[^0-9]):[0-9]+(:[0-9]+)?:#\1:#; s#[[:space:]]+# #g' |
     sort | awk '{ print $0 " #" (++seen[$0]) }'
 }
@@ -182,6 +194,25 @@ if [ -n "$lint_cmd" ]; then
     printf '%s\n' "$new" | sed 's/ #[0-9]*$//; s/^/    /'
   done
   echo "lint total: introduced $total_new, super-green misses $total_missed, never fixed $total_left"
+fi
+
+if [ -n "$ahead_cmd" ] && [ -n "$gen_from" ]; then
+  echo "--- building ahead (generalization before green $gen_from) ---"
+  ahead=0
+  for c in $(git rev-list --reverse "$base..HEAD"); do
+    step=$(git log -1 --format=%s "$c" | grep -oE 'green [0-9]+' | head -1)
+    [ -n "$step" ] || continue
+    n=${step#* }
+    [ "$n" -lt "$gen_from" ] || continue
+    new=$(only_in "$(lint_at "$c" "$ahead_cmd")" "$(lint_at "$c^" "$ahead_cmd")")
+    if [ -n "$new" ]; then
+      echo "green $n: BUILDS AHEAD (rule 5)"; flag; ahead=$((ahead + 1))
+      printf '%s\n' "$new" | sed 's/ #[0-9]*$//; s/^/    /'
+    else
+      echo "green $n: ok"
+    fi
+  done
+  echo "ahead total: $ahead green(s) built ahead"
 fi
 
 if [ -n "$full_cmd" ]; then

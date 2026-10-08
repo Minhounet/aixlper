@@ -11,6 +11,18 @@ fixed (super-green misses), issues still there at the end (never fixed).
 These files are not eval cases (no `prompt.md`), so `claude plugin eval`
 ignores them.
 
+**Building ahead (rule 5).** Cleanliness isn't the whole of super green:
+for an AI, the bigger risk is doing more than the tests ask. An optional
+`<kata>.audit` sidecar, never shown to the agent, declares
+`GENERALIZE_FROM=<N>`, the first green allowed to loop, stream, fold or
+recurse. The harness passes it to the audit with
+`skills/igiari-tdd/scripts/generalization-pmd.xml`, and any earlier green
+that adds such a construct counts as building ahead. Declared for
+`string-calculator` (4) and `bowling` (2, weak: it can't tell rolls from
+frames). Not declared for `roman-numerals` or `password-validator`: rule 5
+doesn't give an unambiguous threshold there, and a guessed one would
+measure the guess.
+
 ## Results so far
 
 Sonnet, 2026-10-08, all runs re-measured with the final rule set
@@ -39,3 +51,14 @@ baseline loads no skill at all, so it also lacks `kanpeki-fp`'s style.
 
 Re-run: `scripts/kata_super_green.sh --kata <name> --runs 3 --budget-usd 2
 --pmd <pmd> [--baseline]`, then compare the `lint total` lines.
+
+### Building ahead, re-measured on the existing runs
+
+| Kata | With skill | Baseline |
+|---|---|---|
+| String calculator (loop allowed from green 4) | 0/3 runs build ahead | **2/3**: a `for` loop summing all operands at green 3 (two numbers) |
+| Bowling (from green 2) | 0/9 | 0/3 |
+
+Bowling's threshold is too early to discriminate. String calculator is the
+one real signal so far, and it matches the `generalize-just-enough` eval
+(1.0 with the skill vs 0.0 without).

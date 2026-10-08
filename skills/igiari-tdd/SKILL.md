@@ -525,7 +525,11 @@ either make-room (say so, one line) or a miss you didn't report (add it,
 with its proposal). When a static analyzer is available, also pass it as
 `--lint-cmd` (PMD with this skill's `scripts/super-green-pmd.xml`, or the
 project's Sonar): it reports, per green, the issues it introduced, which
-ones its refactor fixed (misses) and which ones are still there at the end.
+ones its refactor fixed (misses) and which ones are still there at the end. When the plan says which test first needs a loop
+(the first one a fixed number of branches can't satisfy), also pass
+`--generalize-from <that test's N>` with `--ahead-cmd` (PMD with
+`scripts/generalization-pmd.xml`): any earlier green that adds a loop, a
+stream, a fold or a recursion is a rule-5 violation.
 
 ### Delegated run — opt-in
 

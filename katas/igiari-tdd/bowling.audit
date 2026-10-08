@@ -1,0 +1,4 @@
+# Not shown to the agent. Test 2 (twenty 1s) is the first that needs to sum
+# an arbitrary number of rolls; green 1 (all gutters) must not iterate.
+# Weak check: it cannot tell a loop over rolls from a loop over frames.
+GENERALIZE_FROM=2

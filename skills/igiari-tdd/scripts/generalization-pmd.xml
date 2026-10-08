@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!-- PMD 7 rules listing generalization constructs: loops, streams, folds,
+     recursion. Used by the audit's ahead-cmd option to flag a green that
+     generalizes before the plan's first test that needs it (rule 5).
+     Not a quality rule set: each finding is a construct, not a defect. -->
+<ruleset name="igiari-generalization"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  <description>Constructs that iterate over an arbitrary count.</description>
+
+  <rule name="Loop" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="loop">
+    <description>for, for-each, while and do loops.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//ForStatement | //ForeachStatement | //WhileStatement | //DoStatement
+]]></value></property></properties>
+  </rule>
+
+  <rule name="Pipeline" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="pipeline over a collection">
+    <description>Streams and collection folds: stream, IntStream, fold, reduce, sum, iterate.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//MethodCall[@MethodName = ('stream', 'foldLeft', 'foldRight', 'fold', 'reduce',
+                            'sum', 'iterate', 'range', 'rangeClosed')]
+]]></value></property></properties>
+  </rule>
+
+  <rule name="Recursion" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="recursion">
+    <description>A method that calls itself (by name; overloads not told apart).</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//MethodCall[not(*[1][self::VariableAccess or self::FieldAccess])]
+  [@MethodName = ancestor::MethodDeclaration[1]/@Name]
+]]></value></property></properties>
+  </rule>
+</ruleset>

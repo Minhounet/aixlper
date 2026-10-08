@@ -2395,3 +2395,27 @@ author's call. The skill still never edits itself.
 
 Not measured yet: whether agents actually write the file. The next kata run
 will show it (`ls .skill-proposals` in the run's work dir).
+
+### Measuring restraint, not just cleanliness
+
+The author's point: since an AI's natural green is already fairly clean,
+super green is mostly about *restraint*, not doing more than the tests ask.
+That was evaluated (`generalize-just-enough`, Δ 1.00) but not measured on
+real runs: PMD's quality rules can't see over-building, and coverage or
+mutation testing can't either (a general `stream().sum()` is fully covered
+by the `"1,2"` test).
+
+**Deterministic check added.** `scripts/generalization-pmd.xml` lists
+generalization constructs: loops, `stream`/`fold`/`reduce`/`sum`/`iterate`,
+and recursion (a method calling itself by name). It deliberately leaves out
+`Option.map`/`flatMap`, which don't iterate. The audit's
+`--ahead-cmd`/`--generalize-from N` flags any green before N that adds one,
+as a rule-5 violation. Katas declare N in a `<kata>.audit` sidecar that the
+prompt never includes.
+
+**On the existing runs:** string calculator, 0/3 with the skill vs 2/3
+without (a `for` loop over all operands at green 3, with only two in the
+tests). Bowling (N=2) caught nothing on either side: summing twenty rolls
+already needs a loop, so the check can't see a premature loop over
+*frames*. No threshold for Roman numerals and the password validator, where
+rule 5 itself leaves the point open.

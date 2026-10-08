@@ -31,6 +31,11 @@ while [ $# -gt 0 ]; do
   esac
 done
 plan="$repo/katas/igiari-tdd/$kata.md"
+# Optional sidecar, never shown to the agent: GENERALIZE_FROM=<first green
+# the plan allows to loop/stream/recurse>, checked by the audit (rule 5).
+gen_from=
+[ -f "$repo/katas/igiari-tdd/$kata.audit" ] &&
+  gen_from=$(sed -n 's/^GENERALIZE_FROM=\([0-9][0-9]*\)$/\1/p' "$repo/katas/igiari-tdd/$kata.audit")
 [ -f "$plan" ] || { echo "no kata: $plan" >&2; exit 2; }
 command -v "$pmd" >/dev/null || { echo "PMD not found: $pmd (use --pmd)" >&2; exit 2; }
 out=${out:-$(mktemp -d)}
@@ -114,13 +119,17 @@ the skill says. There is no IDE attached; use Maven."
       --max-turns "$max_turns" --max-budget-usd "$budget" \
       --output-format json > "$dir/result.json" 2> "$dir/stderr.txt")
   cost=$(python3 -I -c "import json,sys; print(round(json.load(open(sys.argv[1])).get('total_cost_usd',0),3))" "$dir/result.json" 2>/dev/null || echo "?")
+  ahead_args=()
+  [ -z "$gen_from" ] || ahead_args=(--generalize-from "$gen_from"
+    --ahead-cmd "$pmd check -d src/main -R $repo/skills/igiari-tdd/scripts/generalization-pmd.xml -f text --no-progress --no-cache")
   (cd "$dir/work" && bash "$repo/skills/igiari-tdd/scripts/audit-tdd-history.sh" --base "$base" \
     --test-cmd "mvn -o -B -q --no-transfer-progress test" \
-    --lint-cmd "$pmd check -d src/main -R $repo/skills/igiari-tdd/scripts/super-green-pmd.xml -f text --no-progress --no-cache") \
-    > "$dir/audit.txt" 2>&1
+    --lint-cmd "$pmd check -d src/main -R $repo/skills/igiari-tdd/scripts/super-green-pmd.xml -f text --no-progress --no-cache" \
+    "${ahead_args[@]}") > "$dir/audit.txt" 2>&1
   audit=$?
   greens=$(grep -cE '^green [0-9]+ +prod' "$dir/audit.txt")
   lint=$(grep '^lint total' "$dir/audit.txt" | sed 's/^lint total: //')
   blame=$(sed -n '/possible super-green misses/{n;p}' "$dir/audit.txt")
-  echo "$kata${baseline:+ (baseline)} #$i  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  blame:$blame"
+  ahead=$(grep '^ahead total' "$dir/audit.txt" | sed 's/^ahead total: //')
+  echo "$kata${baseline:+ (baseline)} #$i  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  ahead: ${ahead:-n/a}  blame:$blame"
 done
