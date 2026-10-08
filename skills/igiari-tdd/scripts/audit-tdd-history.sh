@@ -13,24 +13,33 @@
 #   - the final build passes at the last commit
 #   - lists each refactor that rewrites production lines its own green
 #     wrote: possible super-green misses, to read (not a violation)
+#   - with --lint-cmd, runs a static analyzer at each green, its parent,
+#     each refactor and HEAD: issues each green introduced, which refactor
+#     fixed (super-green misses) and which survive to HEAD (never fixed)
 # Rule 5 (minimal green) is a judgment: read the green diffs yourself.
 #
 # usage: audit-tdd-history.sh --base <rev> [--test-cmd "<scoped test cmd>"]
 #          [--full-cmd "<full build cmd>"] [--test-path src/test/]
 #          [--main-path src/main/] [--test-marker '@Test|@ParameterizedTest']
+#          [--lint-cmd "<analyzer cmd>"]
 #   --base      the commit the task started from (its steps are base..HEAD)
 #   --test-cmd  run at each red commit; omit to skip the red re-run
 #   --full-cmd  run once at HEAD; omit to skip the final build
+#   --lint-cmd  run from the checkout root, prints one issue per line
+#               (PMD's text format, Sonar export, anything); line and column
+#               numbers are stripped so an issue keeps its identity when code
+#               moves. scripts/super-green-pmd.xml is a ready rule set.
 # exit 0: clean; 1: a violation; 2: usage error
 
 set -u
-base= test_cmd= full_cmd= test_path=src/test/ main_path=src/main/
+base= test_cmd= full_cmd= lint_cmd= test_path=src/test/ main_path=src/main/
 marker='@Test|@ParameterizedTest'
 while [ $# -gt 0 ]; do
   case $1 in
     --base) base=$2; shift 2;;
     --test-cmd) test_cmd=$2; shift 2;;
     --full-cmd) full_cmd=$2; shift 2;;
+    --lint-cmd) lint_cmd=$2; shift 2;;
     --test-path) test_path=$2; shift 2;;
     --main-path) main_path=$2; shift 2;;
     --test-marker) marker=$2; shift 2;;
@@ -104,7 +113,7 @@ done
 echo "--- possible super-green misses (read each: green owns it, or make-room?) ---"
 echo "${misses:- none}" | sed 's/,$//'
 
-if [ -n "$test_cmd" ] || [ -n "$full_cmd" ]; then
+if [ -n "$test_cmd" ] || [ -n "$full_cmd" ] || [ -n "$lint_cmd" ]; then
   wt=$(mktemp -d) || exit 2
   trap 'git worktree remove --force "$wt" >/dev/null 2>&1; rm -rf "$wt"' EXIT
   git worktree add -q --detach "$wt" "$head" || exit 2
@@ -128,6 +137,42 @@ if [ -n "$test_cmd" ]; then
       echo "$step: fails: ${reason:-<no failure line found, read the output>}"
     fi
   done
+fi
+
+# Issues at commit $1, one per line, line numbers stripped, each repeat
+# numbered so identical issues compare as a multiset.
+lint_at() {
+  git -C "$wt" checkout -q --detach "$1"
+  (cd "$wt" && eval "$lint_cmd" 2>/dev/null) | grep -v '^[[:space:]]*$' |
+    sed -E 's#^(.*[^0-9]):[0-9]+(:[0-9]+)?:#\1:#; s#[[:space:]]+# #g' |
+    sort | awk '{ print $0 " #" (++seen[$0]) }'
+}
+only_in() { comm -23 <(printf '%s\n' "$1" | sort) <(printf '%s\n' "$2" | sort) | grep -v '^$'; }
+
+if [ -n "$lint_cmd" ]; then
+  echo "--- static analysis per step ---"
+  at_head=$(lint_at "$head")
+  total_new=0 total_missed=0 total_left=0
+  for c in $(git rev-list --reverse "$base..HEAD"); do
+    step=$(git log -1 --format=%s "$c" | grep -oE 'green [0-9]+' | head -1)
+    [ -n "$step" ] || continue
+    n=${step#* }
+    new=$(only_in "$(lint_at "$c")" "$(lint_at "$c^")")
+    count=$(printf '%s\n' "$new" | grep -c .)
+    total_new=$((total_new + count))
+    [ "$count" -gt 0 ] || { echo "green $n: introduces 0"; continue; }
+    refactor=$(git rev-list --reverse "$c..HEAD" | while read -r r; do
+      git log -1 --format=%s "$r" | grep -qE "refactor $n([^0-9]|$)" && { echo "$r"; break; }
+    done)
+    missed=
+    [ -z "$refactor" ] || missed=$(only_in "$new" "$(lint_at "$refactor")")
+    left=$(comm -12 <(printf '%s\n' "$new" | sort) <(printf '%s\n' "$at_head" | sort) | grep -v '^$')
+    m=$(printf '%s\n' "$missed" | grep -c .) l=$(printf '%s\n' "$left" | grep -c .)
+    total_missed=$((total_missed + m)) total_left=$((total_left + l))
+    echo "green $n: introduces $count, fixed in refactor $n: $m, still at HEAD: $l"
+    printf '%s\n' "$new" | sed 's/ #[0-9]*$//; s/^/    /'
+  done
+  echo "lint total: introduced $total_new, super-green misses $total_missed, never fixed $total_left"
 fi
 
 if [ -n "$full_cmd" ]; then

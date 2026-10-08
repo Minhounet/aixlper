@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!-- PMD 7 rules for igiari-tdd's "green owns" list: issues a super green
+     shouldn't leave for refactor. Used by the audit script (lint-cmd option).
+     Run on production code only. Cross-cycle concerns (duplication,
+     complexity grown over cycles) are refactor's, so they're left out. -->
+<ruleset name="igiari-super-green"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  <description>Green owns: names, guard clauses, no mutation, no magic literal, no null, no dead code.</description>
+
+  <!-- Names that say what they mean -->
+  <rule ref="category/java/codestyle.xml/ShortVariable"/>
+  <rule ref="category/java/codestyle.xml/ShortMethodName"/>
+
+  <!-- Dead code, and needless ceremony -->
+  <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+  <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+  <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+  <rule ref="category/java/bestpractices.xml/UnusedAssignment"/>
+  <rule ref="category/java/codestyle.xml/UnnecessaryLocalBeforeReturn"/>
+  <rule ref="category/java/design.xml/SimplifyBooleanReturns"/>
+  <rule ref="category/java/codestyle.xml/UselessParentheses"/>
+
+  <!-- No mutation -->
+  <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters"/>
+  <rule ref="category/java/bestpractices.xml/AvoidReassigningLoopVariables"/>
+
+  <rule name="ElseAfterReturn" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="else after a branch that returns: use a guard clause">
+    <description>Green owns guard clauses: no else when the if branch returns.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//IfStatement[@Else = true()]
+  [*[2][self::ReturnStatement or self::Block[*[last()][self::ReturnStatement]]]]
+]]></value></property></properties>
+  </rule>
+
+  <rule name="MutatedLocal" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="local variable reassigned: compute it once, or extract a function">
+    <description>Green owns no mutated locals or accumulators. Loop counters are ignored.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//MethodDeclaration//AssignmentExpression/VariableAccess[1]
+  [@Name = ancestor::MethodDeclaration//LocalVariableDeclaration/VariableDeclarator/VariableId/@Name]
+  [not(ancestor::ForUpdate)]
+|
+//MethodDeclaration//UnaryExpression[@Operator = ('++', '--')]/VariableAccess
+  [@Name = ancestor::MethodDeclaration//LocalVariableDeclaration/VariableDeclarator/VariableId/@Name]
+  [not(ancestor::ForUpdate)]
+]]></value></property></properties>
+  </rule>
+
+  <rule name="MagicLiteral" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="literal in logic: name it as a constant">
+    <description>Green owns no magic literal: a non-empty string or a number other than 0 or 1 inside a method.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//MethodDeclaration//StringLiteral[@Empty = false()]
+|
+//MethodDeclaration//NumericLiteral[not(@Image = ('0', '1'))][not(parent::ArrayAccess)]
+]]></value></property></properties>
+  </rule>
+
+  <rule name="NullInCode" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="null in production code: use Option">
+    <description>Green owns no null (igiari-tdd Code style).</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[//NullLiteral]]></value></property></properties>
+  </rule>
+
+  <rule name="ThrowInLogic" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="throw in production code: a known business failure is a value, unless the plan names an external contract">
+    <description>Signal to read, not always a miss: a planned external-contract throw is fine.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[//ThrowStatement]]></value></property></properties>
+  </rule>
+</ruleset>

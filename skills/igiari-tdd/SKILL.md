@@ -469,7 +469,10 @@ The audit also lists every refactor that rewrites production lines its own
 green wrote. That list is evidence, not a verdict. Compare it with your
 "Super-green misses" count: a listed refactor that isn't in your count is
 either make-room (say so, one line) or a miss you didn't report (add it,
-with its proposal).
+with its proposal). When a static analyzer is available, also pass it as
+`--lint-cmd` (PMD with this skill's `scripts/super-green-pmd.xml`, or the
+project's Sonar): it reports, per green, the issues it introduced, which
+ones its refactor fixed (misses) and which ones are still there at the end.
 
 ### Delegated run — opt-in
 
