@@ -2157,3 +2157,60 @@ judge of its own fix; an unreviewed example quietly becomes a rule; and
 the skill runs in other projects, where its own file isn't reliably
 writable (and never is under Gemini CLI). Same pattern as "Skill
 improvement proposal".
+
+### Calibrating Super Green with katas and evals (first measurement)
+
+**Method.** The step is what matters, and it can't be seen in finished code.
+It can be seen in the history, because the skill commits every step. Two
+instruments:
+
+- **Static analysis per step.** `audit-tdd-history.sh --lint-cmd` runs an
+  analyzer at each green, its parent, its refactor and HEAD, and reports
+  per green: issues introduced, fixed by the next refactor (a measured
+  super-green miss), still present at the end (never fixed). Line numbers
+  are stripped so an issue keeps its identity when code moves.
+  `scripts/super-green-pmd.xml` maps the "green owns" list onto PMD 7:
+  short names, unused code, else after return, mutated locals, magic
+  numbers and strings, `null`, `throw`. On the ladder's examples: dirty 6
+  issues, super 0. Sonar can be plugged in the same way.
+- **Kata harness.** `scripts/kata_super_green.sh` gives an approved plan
+  (`katas/igiari-tdd/*.md`) to a fresh `claude -p` in a throwaway Maven
+  project, then audits it. The prompt never mentions super green or the
+  measurement. `--baseline` runs the same kata, same commit format, with no
+  skill.
+
+**First run (Sonnet, 12 runs per arm, about $10 in all):** see
+`katas/igiari-tdd/README.md` for the table. With the skill, greens introduced
+18 issues (baseline 83), 8 survived to the end (baseline 48), and there
+were no mutated locals (baseline 26). Gate evals: Δ 1.00 (accumulator),
+0.80 (nesting), 0.60 (null). The dead-code case doesn't discriminate. The
+clean case shows no over-fixing.
+
+**Limits of this reading.** One model, three runs per kata. The baseline
+loads no skill at all, so the gap mixes super green with `kanpeki-fp`'s
+style (no mutation, Vavr), which the skill run also loads. Only the gate
+evals isolate super green itself. The no-skill runs are also cheaper and
+shorter.
+
+**Rule set corrected after the first pass.** `MagicLiteral` flagged
+`return "I";`, the hardcoded return rule 5 explicitly allows. Literals
+returned as the whole result are now exempt, and numbers and strings are
+reported separately.
+
+**Friction surfaced, not yet decided (author's call):**
+- **"No magic literal" is undefined.** Every issue left with the skill is a
+  literal: `take(2)`/`get(2)` in bowling (rolls per frame), `number == 4` in
+  Roman numerals, and in the nesting eval `year % 4`. Is a domain number
+  that reads as itself (`% 4` in a leap-year rule) magic? Is a symbol table
+  (`"I"`, `"V"`) a literal or data? The agents disagree with each other and
+  with PMD. It's the one "green owns" item that isn't checkable as written.
+- **Self-reported misses under-count.** The agent's "Super-green misses"
+  matched PMD in 7 of 12 runs, was lower in 3, and was missing from the
+  report in 1. One unreported miss was real: a green left `parseOperand`
+  unused after introducing a loop (dead code).
+- **Step history rewritten.** In one run the agent hit a wrong red at cycle
+  5, then `reset` its red/green 5 commits and redid them, which "never
+  rewrite them before the audit" forbids. It said so in its report, but the
+  audit can no longer see the mistake.
+- **One run bundled two cycles** (red 2 merged into cycle 3), flagged by the
+  audit as out of order.

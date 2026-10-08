@@ -11,7 +11,11 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | `generalize-just-enough` | **Strong, and the only case with a measured skill effect.** 1.00 with skill vs 0.00 without (Δ 1.00, judges unanimous, 2026-10-02, after one grader fix). |
 | `one-test-per-step` | **Weak — do not read as a model signal.** |
 | `scoped-build-and-evidence-gradle` | **Moderate, Sonnet-only so far.** 0.83 average across 6 Sonnet samples (2026-09-22); `cache-honesty` shows real judge noise — see below. Still no Opus data. |
-| `super-green-gate` | **New, not yet run.** A minimal but dirty green offered for the `green 3` commit; PASS cleans it before committing without generalizing. Expected to discriminate: classic TDD says commit and clean in refactor. Run with and without the skill before trusting a score. |
+| `super-green-gate` | **Strong.** 5/5 with skill vs 0/5 without (Δ 1.00, Sonnet, 2026-10-08). Without the skill the answer is always "commit it, clean up in refactor". |
+| `super-green-gate-nesting` | **Strong.** 4/5 vs 0/5 (Δ 0.80, Sonnet). The one miss flattened the nesting but left `4`/`100` bare: "magic literal" is undefined in the skill. |
+| `super-green-gate-null` | **Moderate.** 5/5 vs 2/5 (Δ 0.60, Sonnet). |
+| `super-green-gate-dead-code` | **Not discriminating.** 5/5 on both arms: any model removes a `println` and a commented-out loop. Kept as a regression check. |
+| `super-green-gate-clean` | **False-positive check, passing.** 5/5 on both arms: with the skill, the gate doesn't make the agent rewrite an already clean green. |
 
 ## `one-test-per-step` — weak discriminator
 
