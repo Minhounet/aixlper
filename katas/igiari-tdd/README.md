@@ -28,6 +28,11 @@ Same two katas before the definition: 17 issues over 6 runs, 9 never fixed
 (bowling 2/6/1, Roman numerals 1/4/3). After: 4, all `get(1)`/`get(2)`
 roll offsets in bowling (bowling 0/2/2, Roman numerals 0/0/0).
 
+Bowling after the offset clause was added to the definition (3 runs): 0/0/2
+issues introduced, **0 never fixed**. The 2 were fixed in the next refactor
+(misses). Bowling over the three batches: 9 → 4 → 2 introduced, 9 → 4 → 0
+never fixed.
+
 Reading and limits: `docs/design-log.md`, "Calibrating Super Green with
 katas" and the entries after it. One model, three runs per kata; the
 baseline loads no skill at all, so it also lacks `kanpeki-fp`'s style.

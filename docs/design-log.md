@@ -2345,8 +2345,12 @@ Spend for the whole calibration: about $19 of the $30 budget (Sonnet only).
   between 4/5 and 5/5, so the calibration doesn't look Sonnet-specific. The
   without-skill arm wasn't run on Opus, to save budget.
 
-**Not yet measured:** the fix-forward rule in a real kata (no wrong step
-happened since it was written), and the bowling offsets after the
-definition change.
+**Bowling after the offset clause** (3 runs, $1.62): 0/0/2 issues
+introduced, 0 never fixed. Across the three bowling batches: 9 → 4 → 2
+introduced, 9 → 4 → 0 never fixed. The remaining 2 were fixed by the next
+refactor, so they're misses, not leftovers.
 
-Total spend for the calibration session: about $24 of the $30 budget.
+**Not yet measured:** the fix-forward rule (no wrong step happened in any
+run since it was written).
+
+Total spend for the calibration session: about $26 of the $30 budget.
