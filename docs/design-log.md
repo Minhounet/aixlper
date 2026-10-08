@@ -2214,3 +2214,28 @@ reported separately.
   audit can no longer see the mistake.
 - **One run bundled two cycles** (red 2 merged into cycle 3), flagged by the
   audit as out of order.
+
+### Reported by the author: `Option` passed as a method parameter
+
+**Observed in real use** (on the `igiari-tdd` version before the Super Green
+calibration): the agent wrote a method taking an `Option<...>` parameter.
+That's a known bad practice. The method then has to handle both cases
+internally, the caller can pass `Option.none()` where it meant "don't call
+this", and the signature hides what the method really needs. The usual
+fixes: the caller resolves the `Option` (`map`, `fold`, `getOrElse`) and
+passes the plain value; or two methods (or an overload) when absence is a
+genuinely different operation.
+
+**Gap.** No skill states it. `igiari-tdd`'s "Code style" makes `Option` the
+default for an absent value, which, read literally, invites `Option`
+everywhere, parameters included. `kanpeki-fp` uses `Option` only as a
+record component (`Ticket.assignee`), a different case: a value that may be
+absent is data, not an input contract.
+
+**Planned (to apply once the running eval batch is done, so it doesn't mix
+into its measurement):** a "Code style" rule in `igiari-tdd`: `Option` is
+for values and return types, never for a method or constructor parameter
+the author writes. Record components are exempt. Also a matching PMD rule
+(`OptionParameter`) in `super-green-pmd.xml`, so the kata audit counts it.
+Whether `kanpeki-fp` should own it instead is an open question for the
+author.
