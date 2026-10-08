@@ -1,6 +1,6 @@
 ---
 name: igiari-tdd
-description: Enforces one-test-at-a-time Test-Driven Development for Java, non-negotiably — never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle, and test-scoped builds during the loop with a full project build only at the very end. Use whenever writing or changing Java production code, and load kanpeki-fp with it: the green gate checks kanpeki-fp's signature rules.
+description: Enforces one-test-at-a-time Test-Driven Development for Java, non-negotiably — never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle, and test-scoped builds during the loop with a full project build only at the very end. Use whenever writing or changing Java production code, and load kanpeki-fp with it — the green gate checks kanpeki-fp's signature rules.
 ---
 
 # Java TDD — Baby Steps
