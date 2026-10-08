@@ -104,6 +104,21 @@
 ]]></value></property></properties>
   </rule>
 
+  <rule name="ValueNamedConstant" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="constant named after its own value: name the rule it stands for">
+    <description>Green owns naming the rule, not the value: FOUR = 4 or COMMA = "," only moves the literal.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//FieldDeclaration[pmd-java:modifiers() = 'static'][pmd-java:modifiers() = 'final']/VariableDeclarator/VariableId
+  [@Name = ('ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN',
+            'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE', 'TWENTY', 'FIFTY',
+            'HUNDRED', 'ONE_HUNDRED', 'THOUSAND', 'ONE_THOUSAND',
+            'COMMA', 'SPACE', 'NEWLINE', 'DOT', 'COLON', 'SEMICOLON', 'DASH',
+            'HYPHEN', 'SLASH', 'PIPE', 'TAB', 'EMPTY', 'EMPTY_STRING')]
+]]></value></property></properties>
+  </rule>
+
   <rule name="NullInCode" language="java"
         class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
         message="null in production code: use Option">

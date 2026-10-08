@@ -2366,3 +2366,32 @@ re-runs every red). The red fix backs the production change out in the
 working tree, and the green fix restores it.
 
 Total spend for the calibration session: about $27.5 of the $30 budget.
+
+### Two calibration proposals adopted from the kata runs, and a proposals file
+
+The agents' own end-of-task "Calibration example proposal"s (5 of the skill
+runs had at least one) surfaced two real boundaries the ladder missed. The
+author adopted both:
+
+- **Naming means naming the rule, not the value.** A Roman-numerals green
+  wrote `private static final int FOUR = 4;`, which satisfies "no magic
+  literal" to the letter and says nothing. Now a ladder rung ("Renamed, not
+  named": `COMMA = ","` instead of `DELIMITER`) and a sentence under the
+  magic-literal definition. Also a PMD rule, `ValueNamedConstant`, which
+  flags `static final` constants named after a number or punctuation word
+  (`FOUR`, `TEN`, `COMMA`, `SPACE`...). Checked: flags `FOUR` and `COMMA`,
+  leaves `DELIMITER`, `ROLLS_PER_FRAME` and instance fields alone.
+- **A green that generalizes owns the literals it carries over.** The two
+  misses in the last bowling batch were offsets brought into green 5's new
+  recursion from earlier hardcoded frames. The rule now says those lines
+  are this green's to name.
+
+**Proposals file.** Proposals used to live only in the end-of-task report,
+which scrolls away. The skill now also appends every calibration proposal
+and every "Skill improvement proposal" to `.skill-proposals/igiari-tdd.md`
+at the project root: after the audit, outside every step commit, never
+overwritten, each entry dated. Committing, ignoring or deleting it is the
+author's call. The skill still never edits itself.
+
+Not measured yet: whether agents actually write the file. The next kata run
+will show it (`ls .skill-proposals` in the run's work dir).

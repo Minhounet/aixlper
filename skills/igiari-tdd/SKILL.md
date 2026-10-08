@@ -111,6 +111,7 @@ test 3, `add("1,2") == 3`, is red.
 | Faked: `numbers.equals("1,2") ? 3 : Integer.parseInt(numbers)` | **Invalid** | Literal per test input (rule 5). |
 | Over-built: `Arrays.stream(numbers.split(",")).mapToInt(Integer::parseInt).sum()` | **Invalid** | Clean, but a loop on one multi-number test (rule 5). |
 | Dirty: below | **Plain green, a miss** | Passes and minimal, but leaves cleanup for refactor. |
+| Renamed, not named: the super version below with `COMMA = ","` instead of `DELIMITER` | **Plain green, a miss** | The literal moved into a constant named after its own value: the rule ("what separates numbers") is still unnamed. |
 | Super: below | **Super green** | Minimal *and* nothing left on the "green owns" list. |
 
 Dirty: minimal, but `else` after `return`, `p`/`r`, a mutated
@@ -183,6 +184,18 @@ as itself" (`year % 4`, `take(2)`). Two cases are not magic:
 not domain rules. When one of them is a rule (a minimum length of 1), it
 counts.
 
+**Naming means naming the rule, not the value.** A constant named after
+its own value (`FOUR = 4`, `COMMA = ","`, `TWO = 2`) moves the literal
+without saying what it means: still a miss. Name what it stands for
+(`DELIMITER`, `ROLLS_PER_FRAME`, or a table such as
+`SUBTRACTIVE_NUMERALS`).
+
+**A green that generalizes owns the literals it carries over.** When a
+green turns an earlier hardcoded case into a loop, a recursion or a table,
+every literal it brings into the new code is a line this green wrote.
+Name them in this green, even if the earlier green that introduced them
+got away with it.
+
 **Super-green gate — before the `green N` commit.** Read your own green
 diff against the "green owns" list. Any hit → fix it now, re-run the
 scoped test, then commit. Don't leave it for refactor.
@@ -213,6 +226,15 @@ The author decides what happens to it: a new ladder rung (it shows a new
 boundary), an eval case (it's a repeat), or nothing. Don't add it to the
 ladder yourself. The agent that missed is the weakest judge of the fix,
 and an unreviewed example quietly becomes a rule.
+
+**Keep the proposals in a file, not only in the report.** At the end of
+the task, after the audit, append every calibration example proposal and
+every "Skill improvement proposal" (see the last section) to
+`.skill-proposals/igiari-tdd.md` at the project root. Create the file if
+needed, never overwrite it, and head each entry with the date and the
+task. Leave it out of every step commit: whether it's committed, ignored
+or deleted is the author's call. A report scrolls away; the file is what
+the author reviews later. Nothing to propose → append nothing.
 
 ## Plan the tests before the first cycle
 
