@@ -20,6 +20,26 @@ Never explain what the code does — well-named identifiers already do that.
 
 Always write comments in English.
 
+## IDE inspections
+
+When the JetBrains IDE is connected in a session (via `/ide`), regularly run IDEA's
+inspections (`mcp__idea__lint_files` for a batch of changed files, `mcp__idea__get_file_problems`
+for one file) on code being worked on, not just once at the start of a task.
+
+Apply the fixes directly — don't just report them — whenever the fix is mechanical and the
+existing unit tests stay green afterward. Re-run the relevant tests after applying a fix to
+confirm before moving on.
+
+Scope strictly to code being changed in the current task. Never run a sweep across
+legacy/unrelated files and fix what turns up there — if inspection surfaces something in a
+file the current task doesn't touch, flag it and ask before fixing it.
+
+A flagged issue can be a false positive (e.g. a raw SQL table name IDEA can't resolve without
+a live DB connection) — say so rather than treating every finding as ground truth.
+
+This is a personal preference, not something to assume applies to other contributors to a
+shared repo — never add it to a project's own `CLAUDE.md`.
+
 ---
 
 # Git workflow
