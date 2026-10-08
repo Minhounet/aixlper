@@ -98,6 +98,82 @@ multiple numbers, *that's* what earns the split-and-sum logic — and refactor
 is where you'd notice something like duplicated parsing between branches,
 not where you clean up code you should never have written.
 
+### Calibrating super green: the ladder
+
+Super green is what a careful human has *after* green **and** this
+cycle's local cleanup, written in one step, and still no bigger than the
+test demands. Clean never licenses more: over-built is worse than dirty.
+Same moment for every rung: tests 1–2 pass (`add("")`, `add("5")`), and
+test 3, `add("1,2") == 3`, is red.
+
+| Rung | Verdict | Why |
+|---|---|---|
+| Faked: `numbers.equals("1,2") ? 3 : Integer.parseInt(numbers)` | **Invalid** | Literal per test input (rule 5). |
+| Over-built: `Arrays.stream(numbers.split(",")).mapToInt(Integer::parseInt).sum()` | **Invalid** | Clean, but a loop on one multi-number test (rule 5). |
+| Dirty: below | **Plain green, a miss** | Passes and minimal, but leaves cleanup for refactor. |
+| Super: below | **Super green** | Minimal *and* nothing left on the "green owns" list. |
+
+Dirty: minimal, but `else` after `return`, `p`/`r`, a mutated
+accumulator, a bare `","`:
+```java
+public int add(String numbers) {
+    if (numbers.isEmpty()) {
+        return 0;
+    } else {
+        String[] p = numbers.split(",");
+        int r = Integer.parseInt(p[0]);
+        if (p.length > 1) {
+            r = r + Integer.parseInt(p[1]);
+        }
+        return r;
+    }
+}
+```
+
+Super: same behavior, same size, nothing to clean up:
+```java
+private static final String DELIMITER = ",";
+
+public int add(String numbers) {
+    if (numbers.isEmpty()) {
+        return 0;
+    }
+    String[] operands = numbers.split(DELIMITER);
+    if (operands.length == 1) {
+        return Integer.parseInt(operands[0]);
+    }
+    return Integer.parseInt(operands[0]) + Integer.parseInt(operands[1]);
+}
+```
+Refactor still has honest work here: extracting `parseOperand()` is
+make-room (rule 6), because the duplication spans an earlier branch.
+That's refinement across cycles, not cleanup of this step.
+
+**Who owns what.** GREEN owns the quality of every line it writes or
+touches; REFACTOR owns what only shows across cycles.
+
+- **Green owns:** names that say what they mean; guard clauses and no
+  `else` after `return`; no mutated locals or accumulators; no magic
+  literal; no `null` (see "Code style"); a known business failure as a
+  value, not a throw; no dead or commented-out code; nothing the test
+  didn't ask for.
+- **Refactor owns:** duplication with code from earlier cycles, make-room
+  moves, `@ParameterizedTest` merges, advanced-refinement triggers,
+  `kanpeki-fp` clarity patterns on a method grown over cycles, and the
+  `kaizen-refactor` mechanical list.
+
+**Super-green gate — before the `green N` commit.** Read your own green
+diff against the "green owns" list. Any hit → fix it now, re-run the
+scoped test, then commit. Don't leave it for refactor.
+
+**Super-green misses are counted, not hidden.** If REFACTOR N changes a
+"green owns" item in a line that GREEN N wrote, the gate missed it. Fix
+it anyway, and name it in that cycle's refactor summary ("super-green
+miss: renamed `p` → `operands`"). At the end of the task print
+"Super-green misses: <n>" with the list, next to the deferred refinement
+notes. "Super-green misses: 0" is the target. It is also the measure:
+the `green N` → `refactor N` diffs show whether the number is honest.
+
 ## Plan the tests before the first cycle
 
 Before writing the first test, list every planned test for the current task
@@ -343,7 +419,8 @@ at a time, straight through to the end:
    scoped to its class. Show the failure output. Commit: `red N`.
 2. **GREEN** — Write the minimal production code to pass that one test.
    Confirm the test files are unchanged since `red N` (rule 9), then run
-   the same scoped test. Show the pass. Commit: `green N`.
+   the same scoped test. Show the pass. Run the super-green gate (see
+   "Calibrating super green"). Commit: `green N`.
 3. **REFACTOR** — Run the mandatory checklist above. Apply what applies.
    Re-run the scoped test, show it's still green. Commit `refactor N` only
    if something changed.
@@ -359,7 +436,8 @@ time is fine.
 When there are no more behaviors left for the current task, run the full
 project build once as the final step, then print the "Deferred refinement
 notes" list accumulated during the task (see the Advanced refinement rule
-above) — explicitly say "none" if nothing was logged. Then **audit the
+above) — explicitly say "none" if nothing was logged — and the
+"Super-green misses" count with its list ("0" if none). Then **audit the
 task's history** with `scripts/audit-tdd-history.sh` (in this skill's
 directory), passing `--base <the commit the task started from>`, the scoped
 test command as `--test-cmd`, and the full-build command as `--full-cmd`.

@@ -11,6 +11,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | `generalize-just-enough` | **Strong, and the only case with a measured skill effect.** 1.00 with skill vs 0.00 without (Δ 1.00, judges unanimous, 2026-10-02, after one grader fix). |
 | `one-test-per-step` | **Weak — do not read as a model signal.** |
 | `scoped-build-and-evidence-gradle` | **Moderate, Sonnet-only so far.** 0.83 average across 6 Sonnet samples (2026-09-22); `cache-honesty` shows real judge noise — see below. Still no Opus data. |
+| `super-green-gate` | **New, not yet run.** A minimal but dirty green offered for the `green 3` commit; PASS cleans it before committing without generalizing. Expected to discriminate: classic TDD says commit and clean in refactor. Run with and without the skill before trusting a score. |
 
 ## `one-test-per-step` — weak discriminator
 

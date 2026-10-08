@@ -2085,3 +2085,48 @@ before and after stays the real invoice. The cycle runs to the end of the
 session: a second cycle in the same session doesn't reload the skills, so
 it can't be told apart automatically. The per-prompt table shows where each
 phase (plan, approval, implementation) went instead.
+
+## igiari-tdd: calibrating Super Green
+
+**Origin.** A colleague asked how the agent tells "green" from "super green".
+The skill had one bad/good example pair (test 2), which shows the extremes
+but not the boundary: nothing said where a plain green stops and a super
+green starts, or how anyone would notice a miss. The author's definition:
+super green is what a careful human has after green **and** this cycle's
+cleanup, written in one step, still no bigger than the test demands.
+
+**What was added to `SKILL.md`** (a subsection under "Red, Super Green,
+Refining Refactor"; the existing example is unchanged):
+- **A four-rung ladder at test 3** (`add("1,2")`): faked → invalid,
+  over-built clean stream → invalid, dirty but minimal → plain green (a
+  miss), clean and minimal → super green. The over-built rung is there on
+  purpose: "clean" must never be read as permission for "more". Over-built
+  is worse than dirty.
+- **An ownership split**, so "clean" has a checkable meaning. GREEN owns the
+  quality of every line it writes or touches (names, guard clauses, no
+  mutated accumulator, no magic literal, no `null`, failures as values, no
+  dead code, nothing untested). REFACTOR owns what only shows across cycles
+  (duplication with earlier code, make-room, test merges, advanced triggers,
+  clarity patterns on a method grown over cycles, the mechanical list). This
+  keeps the existing sentence true: duplicated parsing between an old and a
+  new branch is still refactor's (`parseOperand()` is make-room, as rule 6
+  already says).
+- **A super-green gate** before the `green N` commit: read your own diff
+  against the "green owns" list and fix any hit before committing.
+- **A counted miss.** A REFACTOR N that fixes a "green owns" item in a line
+  GREEN N wrote is a super-green miss. It's named in the refactor summary and
+  totalled at the end of the task ("Super-green misses: <n>"). This is the
+  grader the author asked for: the target is 0, and the `green N` →
+  `refactor N` diffs in the history let a reviewer check the count.
+
+**Eval `super-green-gate`.** Hands the agent the dirty rung as a passing green
+and asks whether to commit it as `green 3`. PASS = clean it first, stay
+minimal, leave the tests alone. Classic TDD answers "commit, clean in
+refactor", so the no-skill baseline is expected to fail it, unlike
+`triangulate-before-generalizing`. Not run yet. Run it with and without the
+skill before reading anything into a score.
+
+**Cost.** `SKILL.md` grows from ~34KB to ~37KB, already past the ~20KB hint.
+It stays inline on purpose: the gate runs on every green, so a reference
+would be opened on nearly every trigger, the case the token rules say costs
+more than inline.
