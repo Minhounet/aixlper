@@ -128,3 +128,11 @@ code; the unprompted answer is a loop/stream sum over all parts.
 
 One model (the session's default), 10 samples per arm — enough to show the
 effect, not to measure its size precisely.
+
+## Opus pass on the super-green gate cases (2026-10-08)
+
+With the skill only (`--ablation none`), 3 runs per case: **18/18** on the six
+`super-green-gate*` cases, with the skill loaded every run. The first attempt
+lost 5 runs to an account usage limit mid-run ("session limit" from the
+agent or the judge). Those were re-run, not counted as failures. $4.47 in all.
+No no-skill Opus arm yet.

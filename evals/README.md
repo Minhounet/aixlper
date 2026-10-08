@@ -39,9 +39,15 @@ it, and does it load `kanpeki-fp`, which owns the rule?
 |---|---|---|---|
 | igiari-tdd only *mentions* kanpeki-fp's signature rules | 5/5 | **0/5** | $0.51 |
 | igiari-tdd says to load kanpeki-fp before the first gate | 5/5 | **3/5** | $0.62 |
+| ...and its `description` says "load kanpeki-fp with it" | 4/5 | **5/5** | $0.66 |
 
 **Reading:** the gate passes on the example alone (`no Option parameter` is
 written in igiari-tdd's "green owns" line), so it doesn't prove the chain. The
 load count does: a pointer that only names a skill never loaded it, the same
 finding as `skill-chain-from-archi`. An explicit "load it before the first
 gate" got it to 3/5, not 5/5. Sonnet, 5 runs.
+
+After the `description` change, kanpeki-fp loaded in every run. The one gate
+failure (judges 0/3) inlined the helper into `remind`, which the grader lists
+as a PASS. It looks like judge noise on a correct answer, not a regression.
+Re-read the grader if it repeats.

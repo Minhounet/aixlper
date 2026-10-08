@@ -2336,3 +2336,17 @@ Spend for the whole calibration: about $19 of the $30 budget (Sonnet only).
   ("load kanpeki-fp with it: the green gate checks kanpeki-fp's signature
   rules"), since the description is read before the skill triggers. The body
   instruction stays. Measured with `skill-chain-option-parameter` below.
+
+**Measured after these changes:**
+- `skill-chain-option-parameter` (Sonnet, 5 runs): kanpeki-fp loaded **5/5**,
+  up from 3/5 with the body instruction alone and 0/5 with a mention. The
+  description is what made the chain reliable.
+- **Opus**, gate cases with the skill: 18/18. Sonnet on the same cases ran
+  between 4/5 and 5/5, so the calibration doesn't look Sonnet-specific. The
+  without-skill arm wasn't run on Opus, to save budget.
+
+**Not yet measured:** the fix-forward rule in a real kata (no wrong step
+happened since it was written), and the bowling offsets after the
+definition change.
+
+Total spend for the calibration session: about $24 of the $30 budget.
