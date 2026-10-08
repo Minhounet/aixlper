@@ -2130,3 +2130,30 @@ skill before reading anything into a score.
 It stays inline on purpose: the gate runs on every green, so a reference
 would be opened on nearly every trigger, the case the token rules say costs
 more than inline.
+
+### Catching misses without trusting the agent, and growing the ladder
+
+**The gap.** The miss count above relied on the agent reporting its own
+misses. An agent that misses an item can just as easily miss reporting it.
+
+**Audit check.** `scripts/audit-tdd-history.sh` now blames, on each
+refactor's parent, the production lines the refactor removes or rewrites,
+and lists the refactors that touch lines written by their own green
+("rewrites K line(s) green N wrote", plus a summary). It doesn't fail the
+audit: a make-room extraction can legitimately touch those lines, so the
+list is evidence to read. The skill asks the agent to reconcile the list
+with its own count: each listed refactor is either make-room, said in one
+line, or an unreported miss. Checked on a throwaway history: a refactor
+renaming its own green's variable was listed, and a later refactor that
+only touched an earlier cycle's lines was not.
+
+**Self-adding examples: proposed, never applied.** The author asked whether
+the skill could add good/bad examples itself. It now turns each miss into a
+"Calibration example proposal" (bad = the green N lines, good = the
+refactor N lines, the boundary the ladder missed). The author decides
+whether it becomes a ladder rung, an eval case, or nothing. Not applied
+automatically, for three reasons: the agent that missed is the weakest
+judge of its own fix; an unreviewed example quietly becomes a rule; and
+the skill runs in other projects, where its own file isn't reliably
+writable (and never is under Gemini CLI). Same pattern as "Skill
+improvement proposal".

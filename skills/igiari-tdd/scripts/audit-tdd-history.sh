@@ -11,6 +11,8 @@
 #   - re-run at each red commit, the scoped test fails, and not on a
 #     compile error (rule 4); the first failure line is printed to judge
 #   - the final build passes at the last commit
+#   - lists each refactor that rewrites production lines its own green
+#     wrote: possible super-green misses, to read (not a violation)
 # Rule 5 (minimal green) is a judgment: read the green diffs yourself.
 #
 # usage: audit-tdd-history.sh --base <rev> [--test-cmd "<scoped test cmd>"]
@@ -41,7 +43,22 @@ head=$(git rev-parse HEAD)
 
 fail=0
 flag() { fail=1; }
-expect_red=1 last_green=0
+expect_red=1 last_green=0 green_sha= misses=
+
+# Production lines that refactor commit $1 removes or rewrites and that
+# green commit $2 wrote, counted with blame on the refactor's parent.
+own_green_lines() {
+  local c=$1 g=$2 f start len count=0
+  for f in $(git diff-tree --no-commit-id --name-only -r "$c" -- "$main_path"); do
+    while read -r start len; do
+      len=${len:-1}
+      [ "$len" -gt 0 ] || continue
+      count=$((count + $(git blame -s -l -L "$start,+$len" "$c^" -- "$f" 2>/dev/null |
+        grep -c "^$g")))
+    done < <(git diff -U0 "$c^" "$c" -- "$f" | sed -nE 's/^@@ -([0-9]+)(,([0-9]+))? .*/\1 \3/p')
+  done
+  echo "$count"
+}
 
 echo "--- steps ($base..HEAD) ---"
 for c in $(git rev-list --reverse "$base..HEAD"); do
@@ -66,16 +83,26 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
       [ "$n" -eq "$expect_red" ] || problems="OUT OF ORDER (expected green $expect_red); "
       [ "$tests" -eq 0 ] || problems="${problems}RULE 9: green touches tests; "
       [ -z "$problems" ] || { verdict=${problems%; }; flag; }
-      last_green=$n expect_red=$((n + 1))
+      last_green=$n expect_red=$((n + 1)) green_sha=$c
       ;;
     refactor)
       [ "$n" -eq "$last_green" ] || { verdict="OUT OF ORDER (refactor $n after green $last_green)"; flag; }
       [ "$tests" -gt 0 ] && verdict="ok; changes tests (must be traced)"
+      if [ -n "$green_sha" ] && [ "$mains" -gt 0 ]; then
+        own=$(own_green_lines "$c" "$green_sha")
+        if [ "$own" -gt 0 ]; then
+          verdict="$verdict; rewrites $own line(s) green $n wrote"
+          misses="$misses refactor $n ($own),"
+        fi
+      fi
       ;;
     *) verdict="NOT A STEP COMMIT"; flag;;
   esac
   printf '%-14s prod:%-2s test:%-2s %s\n' "${step:-?}" "$mains" "$tests" "$verdict"
 done
+
+echo "--- possible super-green misses (read each: green owns it, or make-room?) ---"
+echo "${misses:- none}" | sed 's/,$//'
 
 if [ -n "$test_cmd" ] || [ -n "$full_cmd" ]; then
   wt=$(mktemp -d) || exit 2

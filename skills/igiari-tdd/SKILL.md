@@ -173,6 +173,25 @@ miss: renamed `p` → `operands`"). At the end of the task print
 "Super-green misses: <n>" with the list, next to the deferred refinement
 notes. "Super-green misses: 0" is the target. It is also the measure:
 the `green N` → `refactor N` diffs show whether the number is honest.
+The end-of-task audit checks it for you (see "The cycle").
+
+**Turn each miss into a proposed example — never edit this file
+yourself.** For every miss, add this to the end-of-task report:
+
+```
+## Calibration example proposal
+- Skill: igiari-tdd
+- Cycle: green N / refactor N
+- Missed item: <the "green owns" item>
+- Bad (as committed in green N): <the lines>
+- Good (as fixed in refactor N): <the lines>
+- Boundary it shows: <why the ladder above didn't already prevent it>
+```
+
+The author decides what happens to it: a new ladder rung (it shows a new
+boundary), an eval case (it's a repeat), or nothing. Don't add it to the
+ladder yourself. The agent that missed is the weakest judge of the fix,
+and an unreviewed example quietly becomes a rule.
 
 ## Plan the tests before the first cycle
 
@@ -445,6 +464,12 @@ It checks step order, one test per red, every red failing at its own
 commit and not on a compile error, no green touching a test, and the final
 build. It prints about one line per commit and exits non-zero on a
 violation. Rule 5 stays your judgment: read the green diffs.
+
+The audit also lists every refactor that rewrites production lines its own
+green wrote. That list is evidence, not a verdict. Compare it with your
+"Super-green misses" count: a listed refactor that isn't in your count is
+either make-room (say so, one line) or a miss you didn't report (add it,
+with its proposal).
 
 ### Delegated run — opt-in
 
