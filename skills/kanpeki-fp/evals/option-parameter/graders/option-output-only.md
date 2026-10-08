@@ -13,11 +13,11 @@ that may be absent is data.
 PASS if the final code:
 - has no method or constructor parameter of type `Option` (for example
   `customer.email().forEach(address -> sendReminder(address,
-  customer.name()))` with `sendReminder(String address, String name)`, or
-  inlining the call into `remind`);
+  customer.name()))` in both callers, with `sendReminder(String address,
+  String name)`);
 - keeps `Customer.email` as `Option<String>`;
-- keeps the behavior: a reminder is sent only when an email is present, with
-  the same arguments;
+- keeps the behavior: a reminder is sent and audited only when an email is
+  present, with the same arguments, from both `remind` and `remindAll`;
 - and the agent says why the `Option` parameter was removed, not only that
   it changed.
 

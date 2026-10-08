@@ -157,8 +157,10 @@ touches; REFACTOR owns what only shows across cycles.
   literal (defined below); no `null` (see "Code style"); a known
   business failure as a value, not a throw; no dead or commented-out
   code; nothing the test didn't ask for; and `kanpeki-fp`'s rules on the
-  signatures this step writes (e.g. no `Option` parameter). If
-  `kanpeki-fp` can't be loaded, skip only that item and say so in every
+  signatures this step writes (e.g. no `Option` parameter). **Load
+  `kanpeki-fp` before the first gate** (the first GREEN, or the first time
+  you judge a green), not on demand: the example above is one of its rules,
+  not all of them. If it can't be loaded, skip only that item and say so in every
   green ("kanpeki-fp not available: signature rules not checked"). An
   unchecked item is not a pass.
 - **Refactor owns:** duplication with code from earlier cycles, make-room
