@@ -154,13 +154,27 @@ touches; REFACTOR owns what only shows across cycles.
 
 - **Green owns:** names that say what they mean; guard clauses and no
   `else` after `return`; no mutated locals or accumulators; no magic
-  literal; no `null` (see "Code style"); a known business failure as a
-  value, not a throw; no dead or commented-out code; nothing the test
-  didn't ask for.
+  literal (defined below); no `null` (see "Code style"); a known
+  business failure as a value, not a throw; no dead or commented-out
+  code; nothing the test didn't ask for.
 - **Refactor owns:** duplication with code from earlier cycles, make-room
   moves, `@ParameterizedTest` merges, advanced-refinement triggers,
   `kanpeki-fp` clarity patterns on a method grown over cycles, and the
   `kaizen-refactor` mechanical list.
+
+**Magic literal, defined.** A literal is magic when it encodes a rule of
+the domain, such as rolls per frame, a delimiter, a threshold or a
+divisor in a leap-year rule. Name it as a constant, even when it "reads as
+itself" (`year % 4`, `take(2)`). Two cases are not magic:
+- **The value the test expects back.** Rule 5's hardcoded return
+  (`return 0;`, `return "I";`) is the answer, not a rule.
+- **A symbol table that is the domain's data** (`"I"`, `"V"`, `"X"`), as
+  long as it's declared once, as a constant or a table. Inlined in logic
+  (`"I".repeat(number)`), it's magic again.
+
+`0` and `1` as plain arithmetic (a start value, `+ 1`, a first index) are
+not domain rules. When one of them is a rule (a minimum length of 1), it
+counts.
 
 **Super-green gate — before the `green N` commit.** Read your own green
 diff against the "green owns" list. Any hit → fix it now, re-run the
