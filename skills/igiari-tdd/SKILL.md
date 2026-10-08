@@ -156,7 +156,11 @@ touches; REFACTOR owns what only shows across cycles.
   `else` after `return`; no mutated locals or accumulators; no magic
   literal (defined below); no `null` (see "Code style"); a known
   business failure as a value, not a throw; no dead or commented-out
-  code; nothing the test didn't ask for.
+  code; nothing the test didn't ask for; and `kanpeki-fp`'s rules on the
+  signatures this step writes (e.g. no `Option` parameter). If
+  `kanpeki-fp` can't be loaded, skip only that item and say so in every
+  green ("kanpeki-fp not available: signature rules not checked"). An
+  unchecked item is not a pass.
 - **Refactor owns:** duplication with code from earlier cycles, make-room
   moves, `@ParameterizedTest` merges, advanced-refinement triggers,
   `kanpeki-fp` clarity patterns on a method grown over cycles, and the
@@ -693,8 +697,10 @@ non-negotiable regardless.
   flow, and mutable Java collections, where they fit the problem.
 - **No `null`, ever, in code the author writes.** `Option` is the default
   representation for a value that may be absent — not `null`, and not
-  `java.util.Optional`. A `null` appearing in implementation code is a
-  refactor candidate on sight, not something to wait on a trigger for.
+  `java.util.Optional`. That means a returned value, a field or a record
+  component, never a parameter: `kanpeki-fp` owns that rule ("Option is an
+  output, never a parameter"). A `null` appearing in implementation code
+  is a refactor candidate on sight, not something to wait on a trigger for.
 - **`flatMap` for dependent steps, `Applicative` for independent ones.**
   Chain with `flatMap` when a later computation genuinely needs the result
   of an earlier one (sequential/monadic composition). When two or more

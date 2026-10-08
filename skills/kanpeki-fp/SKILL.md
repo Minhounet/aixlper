@@ -141,6 +141,19 @@ delete that helper; each caller states its own default (`.getOrElse("")`,
 `.filter(s -> !s.isBlank())`, `.getOrElse(() -> buildIt())`). Worked
 before/after: `references/option-reader.md`.
 
+### Option is an output, never a parameter
+
+`Option` belongs in return types, fields and record components: a value
+that may be absent. It never goes in a parameter of a method or a
+constructor you write. `void notify(Option<Email> email)` forces the method
+to handle absence it can't do anything useful with, and lets a caller pass
+`Option.none()` when it meant "don't call this". It also hides what the
+method actually needs. The caller resolves the `Option` instead
+(`email.forEach(this::notify)`, `.map(...)`, `.getOrElse(...)`) and passes
+the plain value. When absence is a genuinely different operation, write
+two methods. A record's canonical constructor is exempt: its parameters are
+the components.
+
 ### Option stops at a boundary you don't own
 
 Do not push `Option` into a type whose shape is dictated by something else — a

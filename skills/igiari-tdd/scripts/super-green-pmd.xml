@@ -10,7 +10,10 @@
   <description>Green owns: names, guard clauses, no mutation, no magic literal, no null, no dead code.</description>
 
   <!-- Names that say what they mean -->
-  <rule ref="category/java/codestyle.xml/ShortVariable"/>
+  <rule ref="category/java/codestyle.xml/ShortVariable">
+    <!-- 2, not PMD's default 3: "id" is a fine name, "p" and "r" are not. -->
+    <properties><property name="minimum" value="2"/></properties>
+  </rule>
   <rule ref="category/java/codestyle.xml/ShortMethodName"/>
 
   <!-- Dead code, and needless ceremony -->
@@ -74,6 +77,17 @@
     <priority>3</priority>
     <properties><property name="xpath"><value><![CDATA[
 //MethodDeclaration//StringLiteral[@Empty = false()][not(parent::ReturnStatement)]
+]]></value></property></properties>
+  </rule>
+
+  <rule name="OptionParameter" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="Option as a parameter: let the caller resolve it (kanpeki-fp)">
+    <description>kanpeki-fp: Option is an output, never a parameter of a method or constructor you write. Record components and lambdas are not checked.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+(//MethodDeclaration | //ConstructorDeclaration)/FormalParameters/FormalParameter
+  [ClassType[@SimpleName = 'Option']]
 ]]></value></property></properties>
   </rule>
 

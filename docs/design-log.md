@@ -2232,10 +2232,30 @@ everywhere, parameters included. `kanpeki-fp` uses `Option` only as a
 record component (`Ticket.assignee`), a different case: a value that may be
 absent is data, not an input contract.
 
-**Planned (to apply once the running eval batch is done, so it doesn't mix
-into its measurement):** a "Code style" rule in `igiari-tdd`: `Option` is
-for values and return types, never for a method or constructor parameter
-the author writes. Record components are exempt. Also a matching PMD rule
-(`OptionParameter`) in `super-green-pmd.xml`, so the kata audit counts it.
-Whether `kanpeki-fp` should own it instead is an open question for the
-author.
+**Applied** (after the eval batch, so it didn't mix into its measurement),
+with the author's choice: the rule lives in `kanpeki-fp`, and `igiari-tdd`
+points to it.
+- `kanpeki-fp`, "Option is an output, never a parameter": `Option` in return
+  types, fields and record components, never in a method or constructor
+  parameter you write. The caller resolves it, or there are two methods when
+  absence is a different operation. A record's canonical constructor is exempt.
+- `igiari-tdd`: "Code style" now says `Option` is for a returned value, a
+  field or a record component, and points to `kanpeki-fp` for the rule. The
+  "green owns" list includes `kanpeki-fp`'s signature rules. When
+  `kanpeki-fp` can't be loaded, that item is skipped *and said* in every
+  green ("signature rules not checked"), the same fallback as the
+  `kaizen-refactor` mechanical list. An unchecked item is not a pass.
+- **The measurement doesn't depend on what the agent loaded.** The PMD rule
+  `OptionParameter` lives in `igiari-tdd`'s audit rules, so the per-green
+  audit catches an `Option` parameter whether or not `kanpeki-fp` was
+  loaded. Checked: it flags a method and a constructor parameter, and leaves
+  a record component, a return type and a lambda alone.
+- `ShortVariable` in the same rule set now uses a minimum of 2 (it flagged
+  the record component `id`).
+
+**Gate evals also got a `loaded-igiari-tdd` indicator** (`tool_used: Skill`,
+with-only). In the second batch, the two with-skill failures (`literal`,
+`nesting`) both answered "commit, clean up in refactor", the no-skill
+answer word for word. Without traces it can't be told whether the skill
+fired; the indicator separates "skill not loaded" from "skill loaded and
+wrong" from now on.
