@@ -54,15 +54,26 @@
 ]]></value></property></properties>
   </rule>
 
-  <rule name="MagicLiteral" language="java"
+  <!-- A literal returned as the whole result is allowed: rule 5's
+       hardcoded/degenerate return ("return 0;", "return \"I\";"). -->
+  <rule name="MagicNumber" language="java"
         class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
-        message="literal in logic: name it as a constant">
-    <description>Green owns no magic literal: a non-empty string or a number other than 0 or 1 inside a method.</description>
+        message="number in logic: name it as a constant">
+    <description>Green owns no magic literal: a number other than 0 or 1 inside a method, unless it is the returned value itself or an array index.</description>
     <priority>3</priority>
     <properties><property name="xpath"><value><![CDATA[
-//MethodDeclaration//StringLiteral[@Empty = false()]
-|
-//MethodDeclaration//NumericLiteral[not(@Image = ('0', '1'))][not(parent::ArrayAccess)]
+//MethodDeclaration//NumericLiteral[not(@Image = ('0', '1'))]
+  [not(parent::ArrayAccess)][not(parent::ReturnStatement)]
+]]></value></property></properties>
+  </rule>
+
+  <rule name="MagicString" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="string in logic: name it as a constant">
+    <description>Green owns no magic literal: a non-empty string inside a method, unless it is the returned value itself.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//MethodDeclaration//StringLiteral[@Empty = false()][not(parent::ReturnStatement)]
 ]]></value></property></properties>
   </rule>
 

@@ -6,14 +6,17 @@
 #
 # usage: kata_super_green.sh --kata <name> [--runs 1] [--model sonnet]
 #          [--budget-usd 2] [--max-turns 150] [--out <dir>] [--pmd <pmd bin>]
+#          [--baseline]
 #   --kata        a file name in katas/igiari-tdd/ without .md
 #   --budget-usd  per run, passed to claude --max-budget-usd
 #   --pmd         the PMD 7 launcher (default: pmd on PATH)
+#   --baseline    no skill loaded: plain TDD with the same commit format,
+#                 the comparison arm (run dirs are named <kata>-base-<n>)
 # Prints one summary line per run; details stay in <out>/<kata>-<n>/.
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
-kata= runs=1 model=sonnet budget=2 max_turns=150 out= pmd=${PMD:-pmd}
+kata= baseline= runs=1 model=sonnet budget=2 max_turns=150 out= pmd=${PMD:-pmd}
 while [ $# -gt 0 ]; do
   case $1 in
     --kata) kata=$2; shift 2;;
@@ -23,6 +26,7 @@ while [ $# -gt 0 ]; do
     --max-turns) max_turns=$2; shift 2;;
     --out) out=$2; shift 2;;
     --pmd) pmd=$2; shift 2;;
+    --baseline) baseline=1; shift;;
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
 done
@@ -77,10 +81,23 @@ EOF
 }
 
 for i in $(seq 1 "$runs"); do
-  dir="$out/$kata-$i"
+  dir="$out/$kata${baseline:+-base}-$i"
   rm -rf "$dir"; new_project "$dir/work"
   base=$(git -C "$dir/work" rev-parse HEAD)
-  prompt="Use the igiari-tdd skill to implement this kata in Java, in the Maven
+  if [ -n "$baseline" ]; then
+    prompt="Implement this kata in Java with test-driven development, in the
+Maven project in the current directory. JUnit 5 and Vavr are already in the pom.
+
+$(cat "$plan")
+
+Work one test at a time: red, then green, then refactor. Commit each step:
+subject \"red N: ...\" for the failing test, \"green N: ...\" for the code
+that makes it pass, and \"refactor N: ...\" only when you change something.
+Run every planned test straight through to the end without waiting for
+approval, then run mvn verify. There is no IDE attached; use Maven."
+    plugin_args=()
+  else
+    prompt="Use the igiari-tdd skill to implement this kata in Java, in the Maven
 project in the current directory. JUnit 5 and Vavr are already in the pom.
 
 $(cat "$plan")
@@ -89,8 +106,10 @@ The test plan above is approved as-is: do not wait for approval, run every
 cycle straight through to the end, then the final full build and the audit
 the skill describes (the task started at commit $base). Commit each step as
 the skill says. There is no IDE attached; use Maven."
+    plugin_args=(--plugin-dir "$plugin")
+  fi
   (cd "$dir/work" && git config user.email kata@example.com && git config user.name kata &&
-    claude -p "$prompt" --plugin-dir "$plugin" --model "$model" \
+    claude -p "$prompt" "${plugin_args[@]}" --model "$model" \
       --allowedTools "Bash Edit Write Read Glob Grep Skill" \
       --max-turns "$max_turns" --max-budget-usd "$budget" \
       --output-format json > "$dir/result.json" 2> "$dir/stderr.txt")
@@ -103,5 +122,5 @@ the skill says. There is no IDE attached; use Maven."
   greens=$(grep -cE '^green [0-9]+ +prod' "$dir/audit.txt")
   lint=$(grep '^lint total' "$dir/audit.txt" | sed 's/^lint total: //')
   blame=$(sed -n '/possible super-green misses/{n;p}' "$dir/audit.txt")
-  echo "$kata #$i  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  blame:$blame"
+  echo "$kata${baseline:+ (baseline)} #$i  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  blame:$blame"
 done
