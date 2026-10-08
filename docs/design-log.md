@@ -2320,3 +2320,19 @@ cases to say more than "the self-count isn't reliable on its own".
   possibly better).
 
 Spend for the whole calibration: about $19 of the $30 budget (Sonnet only).
+
+### Open points decided (author delegated: "do what seems right")
+
+- **Bowling offsets are magic.** `get(2)` (the bonus roll after a spare) is
+  a position with a domain meaning, so the definition now lists "an offset
+  with a domain meaning" next to rolls per frame. PMD already counted it.
+- **Fix forward, never reset.** A wrong red or broken green gets a new
+  commit, `<step> (fix): ...`, not a `reset`/`amend`/rebase, so the audit
+  sees the mistake. The audit script accepts these commits without breaking
+  the step order (a green fix still may not touch tests) and lists them to
+  read. Also stated: never fold one cycle's red or green into another's
+  commit. Both seen in the first kata batch.
+- **The kanpeki-fp load instruction moved into the `description`** too
+  ("load kanpeki-fp with it: the green gate checks kanpeki-fp's signature
+  rules"), since the description is read before the skill triggers. The body
+  instruction stays. Measured with `skill-chain-option-parameter` below.

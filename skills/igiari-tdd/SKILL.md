@@ -1,6 +1,6 @@
 ---
 name: igiari-tdd
-description: Enforces one-test-at-a-time Test-Driven Development for Java, non-negotiably — never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle, and test-scoped builds during the loop with a full project build only at the very end. Use whenever writing or changing Java production code.
+description: Enforces one-test-at-a-time Test-Driven Development for Java, non-negotiably — never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle, and test-scoped builds during the loop with a full project build only at the very end. Use whenever writing or changing Java production code, and load kanpeki-fp with it: the green gate checks kanpeki-fp's signature rules.
 ---
 
 # Java TDD — Baby Steps
@@ -169,9 +169,10 @@ touches; REFACTOR owns what only shows across cycles.
   `kaizen-refactor` mechanical list.
 
 **Magic literal, defined.** A literal is magic when it encodes a rule of
-the domain, such as rolls per frame, a delimiter, a threshold or a
-divisor in a leap-year rule. Name it as a constant, even when it "reads as
-itself" (`year % 4`, `take(2)`). Two cases are not magic:
+the domain, such as rolls per frame, a delimiter, a threshold, a
+divisor in a leap-year rule or an offset with a domain meaning (the bonus
+roll after a spare, `get(2)`). Name it as a constant, even when it "reads
+as itself" (`year % 4`, `take(2)`). Two cases are not magic:
 - **The value the test expects back.** Rule 5's hardcoded return
   (`return 0;`, `return "I";`) is the answer, not a rule.
 - **A symbol table that is the domain's data** (`"I"`, `"V"`, `"X"`), as
@@ -470,7 +471,13 @@ at a time, straight through to the end:
 convention needs. A red commit changes only tests (plus a rule-4 stub); a
 green commit never touches a test. Keep the step commits until the work is
 merged, and never rewrite them before the audit; squashing them at merge
-time is fine.
+time is fine. **A wrong step is fixed forward, never reset.** If a red
+failed for the wrong reason or a green is broken, add a new commit that
+corrects it (same N, e.g. `red 5 (fix): real newline in the input`) and say
+so in that cycle's summary. No `reset`, `amend` or rebase: the audit must
+see the mistake, not a history that hides it. Each cycle gets its own
+commits too: never fold one cycle's red or green into another cycle's
+commit.
 
 When there are no more behaviors left for the current task, run the full
 project build once as the final step, then print the "Deferred refinement

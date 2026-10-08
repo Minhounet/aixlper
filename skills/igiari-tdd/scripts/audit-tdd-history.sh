@@ -6,6 +6,7 @@
 # Checks, without touching the current checkout (uses a temporary worktree):
 #   - steps come in order: red N, green N, optional refactor N, then N+1
 #   - each red commit adds exactly one test and changes only test files
+#   - a "<step> (fix)" commit is a fix-forward of that step, listed to read
 #     (a stub in production code is allowed and flagged for reading)
 #   - no green commit touches a test file (rule 9)
 #   - re-run at each red commit, the scoped test fails, and not on a
@@ -78,7 +79,15 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
   step=$(printf '%s' "$subject" | grep -oE '(red|green|refactor) [0-9]+' | head -1)
   kind=${step% *} n=${step#* }
   verdict=ok
+  # A fix-forward commit ("red 5 (fix): ...") corrects its step in place:
+  # no order change, but a green fix still may not touch tests (rule 9).
+  if printf '%s' "$subject" | grep -qE "$step \(fix\)"; then
+    if [ "$kind" = green ] && [ "$tests" -gt 0 ]; then verdict="RULE 9: green fix touches tests"; flag
+    else verdict="ok; fix-forward of $step (read it)"; fi
+    kind=fix
+  fi
   case $kind in
+    fix) ;;
     red)
       added=$(git show --format= "$c" -- "$test_path" | grep -cE "^\+.*($marker)")
       problems=
