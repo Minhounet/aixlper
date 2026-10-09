@@ -20,6 +20,9 @@
 #   - with --ahead-cmd and --generalize-from N, flags every green before N
 #     that introduces a generalization construct (loop, stream, fold,
 #     recursion): building ahead of the tests, rule 5
+#   - with --sites-cmd, flags every refactor that raises the number of
+#     iterating methods: adding generality, not making room (rule 6). A loop
+#     turned into a stream in the same method doesn't change the count.
 # Rule 5 beyond that is a judgment: read the green diffs yourself.
 #
 # usage: audit-tdd-history.sh --base <rev> [--test-cmd "<scoped test cmd>"]
@@ -27,6 +30,7 @@
 #          [--main-path src/main/] [--test-marker '@Test|@ParameterizedTest']
 #          [--lint-cmd "<analyzer cmd>"]
 #          [--ahead-cmd "<analyzer cmd>" --generalize-from <N>]
+#          [--sites-cmd "<analyzer cmd>"]
 #   --base      the commit the task started from (its steps are base..HEAD)
 #   --test-cmd  run at each red commit; omit to skip the red re-run
 #   --full-cmd  run once at HEAD; omit to skip the final build
@@ -39,10 +43,12 @@
 #   --generalize-from  the first green the plan allows to generalize (the
 #               first test a single branch can't satisfy); greens before it
 #               that add a construct are violations
+#   --sites-cmd one line per iterating method
+#               (scripts/iterating-methods-pmd.xml is a ready rule set)
 # exit 0: clean; 1: a violation; 2: usage error
 
 set -u
-base= test_cmd= full_cmd= lint_cmd= ahead_cmd= gen_from= test_path=src/test/ main_path=src/main/
+base= test_cmd= full_cmd= lint_cmd= ahead_cmd= gen_from= sites_cmd= test_path=src/test/ main_path=src/main/
 marker='@Test|@ParameterizedTest'
 while [ $# -gt 0 ]; do
   case $1 in
@@ -52,6 +58,7 @@ while [ $# -gt 0 ]; do
     --lint-cmd) lint_cmd=$2; shift 2;;
     --ahead-cmd) ahead_cmd=$2; shift 2;;
     --generalize-from) gen_from=$2; shift 2;;
+    --sites-cmd) sites_cmd=$2; shift 2;;
     --test-path) test_path=$2; shift 2;;
     --main-path) main_path=$2; shift 2;;
     --test-marker) marker=$2; shift 2;;
@@ -133,7 +140,7 @@ done
 echo "--- possible super-green misses (read each: green owns it, or make-room?) ---"
 echo "${misses:- none}" | sed 's/,$//'
 
-if [ -n "$test_cmd" ] || [ -n "$full_cmd" ] || [ -n "$lint_cmd" ] || [ -n "$ahead_cmd" ]; then
+if [ -n "$test_cmd" ] || [ -n "$full_cmd" ] || [ -n "$lint_cmd" ] || [ -n "$ahead_cmd" ] || [ -n "$sites_cmd" ]; then
   wt=$(mktemp -d) || exit 2
   trap 'git worktree remove --force "$wt" >/dev/null 2>&1; rm -rf "$wt"' EXIT
   git worktree add -q --detach "$wt" "$head" || exit 2
@@ -213,6 +220,25 @@ if [ -n "$ahead_cmd" ] && [ -n "$gen_from" ]; then
     fi
   done
   echo "ahead total: $ahead green(s) built ahead"
+fi
+
+if [ -n "$sites_cmd" ]; then
+  echo "--- refactors that add generality (make room, never add) ---"
+  adds=0
+  for c in $(git rev-list --reverse "$base..HEAD"); do
+    subject=$(git log -1 --format=%s "$c")
+    step=$(printf '%s' "$subject" | grep -oE 'refactor [0-9]+' | head -1)
+    [ -n "$step" ] || continue
+    before=$(lint_at "$c^" "$sites_cmd" | grep -c .)
+    after=$(lint_at "$c" "$sites_cmd" | grep -c .)
+    if [ "$after" -gt "$before" ]; then
+      echo "$step: ADDS GENERALITY ($before -> $after iterating methods, rule 6)"; flag
+      adds=$((adds + 1))
+    else
+      echo "$step: ok ($before -> $after iterating methods)"
+    fi
+  done
+  echo "sites total: $adds refactor(s) added generality"
 fi
 
 if [ -n "$full_cmd" ]; then

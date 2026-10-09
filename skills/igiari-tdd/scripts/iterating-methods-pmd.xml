@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!-- PMD 7 rule reporting each method that iterates (loop, stream or fold,
+     or recursion), once per method. Used by the audit's sites-cmd option:
+     a refactor that raises this count adds generality, while a refactor
+     that turns a loop into a stream inside the same method doesn't change
+     it. "Make room, never add" (rule 6). -->
+<ruleset name="igiari-iterating-methods"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+  <description>One finding per iterating method.</description>
+  <rule name="IteratingMethod" language="java"
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule"
+        message="method iterates">
+    <description>A method containing a loop, a stream or fold, or a call to itself.</description>
+    <priority>3</priority>
+    <properties><property name="xpath"><value><![CDATA[
+//MethodDeclaration[
+  .//ForStatement or .//ForeachStatement or .//WhileStatement or .//DoStatement
+  or .//MethodCall[@MethodName = ('stream', 'foldLeft', 'foldRight', 'fold', 'reduce',
+                                  'sum', 'iterate', 'range', 'rangeClosed')]
+  or .//MethodCall[not(*[1][self::VariableAccess or self::FieldAccess])]
+                  [@MethodName = ancestor::MethodDeclaration[1]/@Name]
+]
+]]></value></property></properties>
+  </rule>
+</ruleset>

@@ -125,11 +125,13 @@ the skill says. There is no IDE attached; use Maven."
   (cd "$dir/work" && bash "$repo/skills/igiari-tdd/scripts/audit-tdd-history.sh" --base "$base" \
     --test-cmd "mvn -o -B -q --no-transfer-progress test" \
     --lint-cmd "$pmd check -d src/main -R $repo/skills/igiari-tdd/scripts/super-green-pmd.xml -f text --no-progress --no-cache" \
+    --sites-cmd "$pmd check -d src/main -R $repo/skills/igiari-tdd/scripts/iterating-methods-pmd.xml -f text --no-progress --no-cache" \
     "${ahead_args[@]}") > "$dir/audit.txt" 2>&1
   audit=$?
   greens=$(grep -cE '^green [0-9]+ +prod' "$dir/audit.txt")
   lint=$(grep '^lint total' "$dir/audit.txt" | sed 's/^lint total: //')
   blame=$(sed -n '/possible super-green misses/{n;p}' "$dir/audit.txt")
   ahead=$(grep '^ahead total' "$dir/audit.txt" | sed 's/^ahead total: //')
-  echo "$kata${baseline:+ (baseline)} #$i  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  ahead: ${ahead:-n/a}  blame:$blame"
+  sites=$(grep '^sites total' "$dir/audit.txt" | sed 's/^sites total: //')
+  echo "$kata${baseline:+ (baseline)} #$i  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  ahead: ${ahead:-n/a}  refactor-adds: ${sites:-n/a}  blame:$blame"
 done

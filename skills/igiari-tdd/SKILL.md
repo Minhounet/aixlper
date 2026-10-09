@@ -529,7 +529,11 @@ ones its refactor fixed (misses) and which ones are still there at the end. When
 (the first one a fixed number of branches can't satisfy), also pass
 `--generalize-from <that test's N>` with `--ahead-cmd` (PMD with
 `scripts/generalization-pmd.xml`): any earlier green that adds a loop, a
-stream, a fold or a recursion is a rule-5 violation.
+stream, a fold or a recursion is a rule-5 violation. `--sites-cmd` (PMD with
+`scripts/iterating-methods-pmd.xml`) checks the refactors the same way: a
+refactor that raises the number of iterating methods added generality
+instead of making room (rule 6). Turning a loop into a stream in the same
+method doesn't count.
 
 ### Delegated run — opt-in
 

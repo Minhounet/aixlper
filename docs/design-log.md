@@ -2419,3 +2419,37 @@ tests). Bowling (N=2) caught nothing on either side: summing twenty rolls
 already needs a loop, so the check can't see a premature loop over
 *frames*. No threshold for Roman numerals and the password validator, where
 rule 5 itself leaves the point open.
+
+### Refinement: measured, and mostly not where the risk was expected
+
+The author asked what "refinement" means for an AI. The hypothesis: with
+super green doing the cleanup, the refactor step's risks for an AI are
+(1) over-refining, reaching for a pattern before its trigger; (2) using
+"make room" as a back door to add generality; (3) rubber-stamping
+"refactor checklist: nothing applies" (68 of 112 cycles with the skill
+declared it).
+
+**Instruments added.**
+- `scripts/iterating-methods-pmd.xml` plus the audit's `--sites-cmd`: a
+  refactor that raises the number of iterating methods is flagged (rule 6).
+  It counts methods, not constructs, so loop → stream in one method is
+  neutral. Checked both ways: a "make room" refactor that adds a loop is
+  flagged (exit 1), and the baseline's loop → stream refactor is not. Wired
+  into the kata harness.
+- Evals `refactor-sees-duplication` (VAT formula repeated across cycles:
+  does the checklist find it?) and `refactor-no-premature-pattern`
+  (2 branches on a discriminant, third type announced for the next test:
+  is a Strategy applied early?).
+
+**Results.** Existing kata runs: no refactor added generality, with or
+without the skill. Both evals: 5/5 with **and** without the skill (Sonnet,
+$1.52). The no-skill answers were read, not trusted blindly, and they're
+genuinely good: the duplication is extracted with rounding order kept, and
+the two-branch `if` becomes an exhaustive `switch` with the pattern left for
+the third type.
+
+**Reading.** On Sonnet, at kata scale, refinement isn't where the agent goes
+wrong; the skill's refactor rules act as guards, not as a measured effect.
+The two cases stay as regression checks. Still unmeasured: whether the 68
+"nothing applies" were honest in the kata runs themselves, and refinement on
+a real codebase, where the pull toward patterns is probably stronger.

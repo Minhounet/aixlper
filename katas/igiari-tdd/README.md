@@ -23,6 +23,14 @@ frames). Not declared for `roman-numerals` or `password-validator`: rule 5
 doesn't give an unambiguous threshold there, and a guessed one would
 measure the guess.
 
+**Refactors that add instead of making room (rule 6).** Every run is also
+audited with `skills/igiari-tdd/scripts/iterating-methods-pmd.xml`: a
+refactor that raises the number of iterating methods is flagged. A loop
+turned into a stream inside the same method keeps the count, so a clarity
+refactor doesn't trip it. Re-measured on the existing runs: no refactor
+added generality, with or without the skill (one baseline refactor turned a
+loop into a stream, correctly not flagged).
+
 ## Results so far
 
 Sonnet, 2026-10-08, all runs re-measured with the final rule set
