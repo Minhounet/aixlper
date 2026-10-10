@@ -1,6 +1,6 @@
 ---
 name: objection-conception
-description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under .claude/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session, and when the user wants to check, clarify, trace or verify a ticket's acceptance criteria ("critères d'acceptation", "AC", "definition of done") at any point - before design, during it, or after implementation. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
+description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under .claude/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session, and when the user wants to check, clarify, trace or verify a ticket's acceptance criteria ("critères d'acceptation", "AC", "definition of done"), or to check whether the ticket's description is coherent, complete and consistent with its criteria and the design ("incohérence", "écart", "discrepancy", "is the Jira OK"), at any point - before design, during it, or after implementation. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
 ---
 
 # Objection Conception
@@ -160,11 +160,48 @@ the other two files.
 - Covered by: <decision(s) in conception.md>
 - Evidence: <test name and result / command and result / manual check, by whom>
 - Status: unclear | ready | designed | verified | failed | waived (<reason, decided by>)
+
+## Discrepancies
+### D1: <short name>
+- Kind: description-vs-AC | AC-vs-AC | ticket-vs-design | ticket-vs-built | stale-source
+- Side A: "<verbatim quote>" (<where: description, AC2, comment of <date>, conception.md decision>)
+- Side B: "<verbatim quote>" (<where>)
+- Impact: blocking | major | minor - <what differs in the code or the test if A wins vs B>
+- Owner: <who must decide: user, PO, other team>
+- Resolution: open | A wins | B wins | ticket amended (<by whom, when>)
 ```
 
-### 1. Before design: check the criteria themselves
+The `Discrepancies` section is the ledger of every place where two sources
+disagree. Each entry quotes **both sides verbatim with their location** -
+"the description and the AC seem inconsistent" is not a finding, two
+quotes are. Never settle one by picking a side silently: the owner decides,
+and the resolution is recorded.
 
-Extract every AC from the ticket material, numbered, with its **source
+### 1. Before design: check the ticket against itself, then the criteria
+
+**First, cross-read the description against the criteria** (and against any
+comments, linked tickets and attachments in the folder - a later comment
+often overrides the description without anyone editing it). Look for:
+
+- **Contradiction** - description and an AC (or two ACs) cannot both be
+  true. Different numbers, states, roles or orderings are the usual form.
+- **Uncovered requirement** - the description states a behavior no AC would
+  ever fail on.
+- **Unanchored AC** - an AC asks for something the description never
+  mentions: either the description is incomplete or the AC is scope creep.
+- **Vocabulary drift** - the same thing under two names, or one word
+  meaning two things (the cheapest source of "we built the wrong thing").
+- **Stale source** - a comment or linked ticket that supersedes or
+  contradicts what is written above it.
+- **Missing context** - a term, actor, system or precondition the
+  description leans on but never defines.
+
+Log each as a `Discrepancies` entry. Then say plainly whether the
+description is fit to design from: *ready*, *ready once D<n> is decided*,
+or *not ready*. A blocking discrepancy stops design work that depends on
+it, the same as an `unclear` AC.
+
+Then extract every AC from the ticket material, numbered, with its **source
 wording kept verbatim** - your reformulation goes in `Interpretation`,
 never in place of the original, so a later reader can tell what was asked
 from what was understood. Then check each one:
@@ -198,6 +235,10 @@ Before treating the design as complete, show the trace both ways:
 - an AC with no covering decision is a **hole** in the design;
 - a decision serving no AC is either necessary plumbing (say why) or
   **scope creep** - raise it, don't absorb it.
+
+Also read each decision against the ticket's **description**, not only its
+ACs: a decision that satisfies every AC yet contradicts the description is
+a `ticket-vs-design` discrepancy. Log it; don't decide it silently.
 
 ### With a TDD skill: tag the plan, update once at the end
 
@@ -245,6 +286,10 @@ nearby, easier property:
   have the user perform or confirm them - record who checked and what was
   observed. Don't mark a manual check verified on your own say-so.
 
+While checking, compare what the built code does with the description as
+well as the ACs; behavior the ACs allow but the description rules out is a
+`ticket-vs-built` discrepancy.
+
 Passing evidence → `verified`. Failing → `failed`, with what was observed;
 fix it or take it back to the design. A criterion that turned out wrong or
 impossible is a conversation with the user, not a quiet reinterpretation -
@@ -253,11 +298,14 @@ log it in `retro.md`.
 ### The done gate
 
 `conception.md` may move to `status: done` only when **every** AC is
-`verified` or `waived`. Waiving is the user's decision alone, with the
-reason and who decided recorded on the AC - never inferred from silence or
-from "good enough". If the user asks to close with anything still
-`unclear`, `ready`, `designed` or `failed`, list those ACs and their state
-and ask for each to be verified or explicitly waived first.
+`verified` or `waived` **and** no `Discrepancies` entry is still `open`
+(blocking or major; a minor one may stay open if the user says so). Waiving
+is the user's decision alone, with the reason and who decided recorded on
+the AC - never inferred from silence or from "good enough". If the user
+asks to close with anything still `unclear`, `ready`, `designed` or
+`failed`, or with an open discrepancy, list those ACs and discrepancies and
+their state and ask for each to be verified, resolved or explicitly waived
+first.
 
 ## Token self-audit
 

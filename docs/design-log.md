@@ -755,6 +755,34 @@ so the gap was visible to anyone reading. This is the same lesson as
 A discriminating version has to withhold the status table, for example ACs
 only as ticket prose. See `skills/objection-conception/evals/README.md`.
 
+### Discrepancy ledger: description vs ACs vs design vs code (2026-10-10)
+
+The author called this their favorite skill, used to think, to check that
+every acceptance criterion holds and that the Jira description is sound,
+and said it must **pinpoint discrepancies**. Reading the skill against
+that: it checked the ACs, but never the description itself, and a conflict
+between two sources could only live as free text in an AC's `Questions`.
+
+Added, without removing anything:
+
+- **Phase 1 cross-read** of description vs ACs (plus comments, linked
+  tickets, attachments): contradiction, uncovered requirement, unanchored
+  AC, vocabulary drift, stale source, missing context. Ends with an explicit
+  verdict on the description: ready / ready once D<n> is decided / not ready.
+- **`## Discrepancies` section in `acceptance.md`**: one entry per
+  disagreement, with both sides quoted verbatim and located, a kind, an
+  impact, an owner and a resolution. Rule: no finding without two quotes,
+  and no silently picking a side.
+- **Phases 2 and 3** also read decisions and built behavior against the
+  description, not only the ACs (`ticket-vs-design`, `ticket-vs-built`).
+- **Done gate** also requires no open blocking/major discrepancy.
+- Trigger description gains the discrepancy / "is the Jira OK" phrasings.
+
+Not dogfooded. The eval README's note applies: a prompt that states the
+conflict plainly won't discriminate, so a future case should hide the
+contradiction in prose (description says one thing, an AC or a later
+comment another) and see whether the agent quotes both sides.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**
