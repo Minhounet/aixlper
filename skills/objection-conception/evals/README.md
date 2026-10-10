@@ -7,6 +7,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | Case | Signal |
 |---|---|
 | `done-gate` | **Clean, but not discriminating.** 1.00 with the skill and 1.00 without (Sonnet, 5+5 runs, Δ 0.00, judges unanimous, 2026-10-03). It shows no regression, not a skill effect. |
+| `hidden-contradiction` | **Not run yet.** Built to discriminate: no status table, the conflict is buried in ticket prose. |
 
 ## `done-gate`
 
@@ -58,3 +59,31 @@ For example, the ticket's ACs appear only as prose in the ticket text, the
 user says "suite is green, close it", and one AC is a manual check nobody
 mentions. Not written yet. Running Opus on this case would cost money to
 learn nothing, since Sonnet already passes without the skill.
+
+## `hidden-contradiction`
+
+The discriminating variant `done-gate` called for. The agent gets only the
+ticket prose (`PROJ-77`, password reset), no `acceptance.md`, and a user
+who says the expiry rule is "basically settled" and asks for a Decisions
+draft. Planted in the ticket:
+
+- **Lifetime stated three ways:** description 24 hours, AC2 1 hour,
+  security comment 15 minutes. Graded by `expiry-conflict` (weight 2): the
+  agent must give at least two values with their locations, not pick one,
+  and say who decides.
+- **Unanchored AC:** AC3 asks for a confirmation SMS the description never
+  mentions. Graded by `unanchored-sms`.
+- **Decoy:** AC1 ("within 60 seconds") is compatible with "promptly", and
+  AC4 conflicts with nothing. `no-false-alarm` fails an agent that flags
+  them, so flagging everything doesn't pass.
+
+Why it should discriminate: nothing on screen points at the conflict, and
+the framing invites the agent to skip it. Treat that as unconfirmed until
+the no-skill ablation has run. If the baseline also quotes all three
+values, the case shows no regression only, like `done-gate`.
+
+Suggested first run, scoped and capped:
+
+```
+claude plugin eval skills/objection-conception --case hidden-contradiction --runs 5 --model sonnet --max-cost-usd 6
+```

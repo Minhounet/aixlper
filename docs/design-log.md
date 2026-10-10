@@ -802,6 +802,19 @@ NFRs that force a technology must first exist as testable ACs.
 
 Not dogfooded.
 
+### Eval case: `hidden-contradiction` (2026-10-10)
+
+The case promised in the discrepancy-ledger entry. Lesson from `done-gate`
+applied: no ready-made status table, the ticket is prose only, and the
+user's framing ("the expiry rule is basically settled") invites skipping
+the check. The conflict is the link lifetime stated three ways across
+description, an AC and a later comment. A second plant is an AC (SMS) the
+description never mentions; two decoys (AC1 vs "promptly", AC4) are graded
+so an agent that flags everything fails. Written, not run: a scoped run is
+about $0.5-0.6 per model, and the no-skill ablation decides whether it
+shows a skill effect or only no regression. Details in
+`skills/objection-conception/evals/README.md`.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**
