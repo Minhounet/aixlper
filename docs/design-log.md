@@ -783,6 +783,25 @@ conflict plainly won't discriminate, so a future case should hide the
 contradiction in prose (description says one thing, an AC or a later
 comment another) and see whether the agent quotes both sides.
 
+### Technology: judge the choice, don't make it (2026-10-10)
+
+The author asked whether the skill should analyze which technology to use
+or stay independent of it, given clean architecture. Decision: stay
+independent. Behavior comes first and technology is a detail decided late
+(the premise of `chottomatte-archi`); choosing frameworks here would pull
+the conversation toward "Kafka or REST?" before the criteria are settled.
+
+The skill still handles technology, in four ways: ticket-imposed
+technologies are recorded as verbatim `Constraints` (a conflict with the
+description or an AC goes to the discrepancy ledger); tech talk that runs
+ahead of `unclear` ACs is flagged; a tech choice is a normal decision with
+why, ruled-out options and reversibility, and counts as scope creep if it
+serves no AC or constraint; and when a clean-architecture skill is loaded
+it keeps ownership of structure while this one only checks traceability.
+NFRs that force a technology must first exist as testable ACs.
+
+Not dogfooded.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**

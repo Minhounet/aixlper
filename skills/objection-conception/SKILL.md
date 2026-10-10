@@ -75,6 +75,29 @@ whatever else is actually relevant (existing architecture rules, related
 code, prior tickets) instead of treating the ticket folder as the only
 input worth considering.
 
+## Technology: judge the choice, don't make it
+
+This skill decides *what* is being asked and whether the ticket is coherent;
+it does not pick frameworks, databases or brokers. Behavior comes first and
+technology is a detail decided late, so:
+
+- **Constraints are facts.** A technology the ticket imposes ("must use the
+  existing REST API") goes under `## Constraints`, quoted verbatim with its
+  location. A constraint that contradicts the description or an AC is a
+  `Discrepancies` entry.
+- **Don't let tech talk run ahead.** If the discussion jumps to a framework
+  or store while an AC the choice depends on is still `unclear`, say so and
+  go back to the behavior.
+- **A tech choice is a decision like any other,** recorded with why, what was
+  ruled out, and how reversible it is (behind an interface and swappable, or
+  leaking into the domain). One that serves no AC and no constraint is
+  scope creep - raise it. An NFR that really forces a technology ("works
+  offline", "10k concurrent users") must exist as a testable AC first; if
+  it doesn't, propose it as a gap.
+- **If a clean-architecture skill is loaded,** it owns structure and
+  boundaries; this one only checks that each technology decision traces to
+  an AC or a constraint, and does not re-derive the structure.
+
 ## Write conception.md incrementally
 
 `conception.md` lives at `.claude/ticket/<ticketId>/conception.md` and
@@ -107,8 +130,11 @@ status: in-progress
 ## Context
 <what the ticket is actually asking for, in your own words>
 
+## Constraints
+- "<technology or platform the ticket imposes, verbatim>" (<where>)
+
 ## Decisions
-- <decision>: <why>
+- <decision>: <why> [tech choice: reversibility - behind a port / leaks into the domain]
 
 ## Open questions
 - <question still unresolved>
