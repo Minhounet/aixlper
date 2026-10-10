@@ -7,7 +7,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | Case | Signal |
 |---|---|
 | `done-gate` | **Clean, but not discriminating.** 1.00 with the skill and 1.00 without (Sonnet, 5+5 runs, Δ 0.00, judges unanimous, 2026-10-03). It shows no regression, not a skill effect. |
-| `hidden-contradiction` | **Not run yet.** Built to discriminate: no status table, the conflict is buried in ticket prose. |
+| `hidden-contradiction` | **Discriminating, modest.** 0.90 with the skill, 0.50 without (Sonnet, 5+5 runs, Δ +0.40, 2026-10-10). The effect is on *not resolving* the conflict, not on spotting it. |
 
 ## `done-gate`
 
@@ -77,13 +77,35 @@ draft. Planted in the ticket:
   AC4 conflicts with nothing. `no-false-alarm` fails an agent that flags
   them, so flagging everything doesn't pass.
 
-Why it should discriminate: nothing on screen points at the conflict, and
-the framing invites the agent to skip it. Treat that as unconfirmed until
-the no-skill ablation has run. If the baseline also quotes all three
-values, the case shows no regression only, like `done-gate`.
+### 2026-10-10 run: Sonnet, Δ +0.40
 
-Suggested first run, scoped and capped:
+`--runs 5 --model sonnet`, ablation on, $0.54 total. With the skill: four
+runs at 1.00 and one at 0.50 (mean 0.90). Without: 0.75, 0.50, 0.25, 0.50,
+0.50 (mean 0.50). Judges returned votes only, no written reasons, so the
+reading below comes from the answers themselves.
 
-```
-claude plugin eval skills/objection-conception --case hidden-contradiction --runs 5 --model sonnet --max-cost-usd 6
-```
+- **Spotting the conflict is not what the skill adds.** All five baseline
+  answers noticed that the ticket gives 24 h, 1 h and 15 min, and quoted
+  the values. A strong model sees it when it writes a draft anyway.
+- **What the skill adds is not settling it.** Four of five baseline runs
+  failed `expiry-conflict` because they wrote the 15-minute cap into
+  `## Decisions` (as default and maximum, with startup validation) and then
+  listed the conflict as an open point. That picks a side, even if openly.
+  With the skill, four of five left the lifetime as "configured, value
+  pending" and put the three values in a discrepancy table with an owner.
+- **The one with-skill failure (run 5) did the same thing:** it wrote
+  "must not exceed 15 minutes" into Decisions while saying it had not
+  picked a side. So the skill lowers the rate (1/5 against 4/5), it does
+  not remove the behavior.
+- **Over-flagging:** two baseline runs reported AC1 versus "promptly" as a
+  problem (`no-false-alarm`); no with-skill run did. Small numbers: 2/5
+  against 0/5.
+- **SMS plant:** found by every run in both arms, so `unanchored-sms`
+  discriminates nothing here. It stays as a regression check.
+
+Caveats: five runs per arm, one model, three judges with no stated reasons,
+and a grader that treats "writes the cap as a decision" as a fail. A user
+may consider adopting the 15-minute cap reasonable, so the case measures
+adherence to "never settle one silently", which is the skill's own rule.
+Next: run it on Opus, and consider tightening the prompt so that
+"configured duration" is not already a comfortable way out.

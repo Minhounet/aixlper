@@ -810,10 +810,19 @@ user's framing ("the expiry rule is basically settled") invites skipping
 the check. The conflict is the link lifetime stated three ways across
 description, an AC and a later comment. A second plant is an AC (SMS) the
 description never mentions; two decoys (AC1 vs "promptly", AC4) are graded
-so an agent that flags everything fails. Written, not run: a scoped run is
-about $0.5-0.6 per model, and the no-skill ablation decides whether it
-shows a skill effect or only no regression. Details in
-`skills/objection-conception/evals/README.md`.
+so an agent that flags everything fails. Details in `skills/objection-conception/evals/README.md`.
+
+**First run (Sonnet, `--runs 5`, $0.54): 0.90 with the skill, 0.50
+without, Δ +0.40.** Unlike `done-gate`, this one discriminates, but not as
+predicted. The baseline also notices the three lifetimes; it fails because
+it resolves them itself (15 minutes written into Decisions as default and
+cap). The skill's effect is to leave the conflict open with an owner: 4/5
+runs against 1/5. One with-skill run still wrote the cap into Decisions.
+The SMS plant was found by everyone, so that grader only guards against
+regression. Lesson: the skill's measurable value is restraint, not
+detection. If this needs to be stronger, the lever is in the `SKILL.md`
+(say outright that a draft must not encode either side of an open
+discrepancy), not in the grader.
 
 ## Token cost: progressive disclosure and output discipline
 
