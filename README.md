@@ -1,5 +1,7 @@
 # aixlper
 
+![aixlper — agent skills for Claude Code, each one named after a courtroom cry](docs/assets/banner.webp)
+
 A repository of generic, reusable AI agent **skills** — written once, usable
 in multiple AI coding assistants (primarily [Claude Code](https://code.claude.com)
 and [Gemini CLI](https://github.com/google-gemini/gemini-cli)).
