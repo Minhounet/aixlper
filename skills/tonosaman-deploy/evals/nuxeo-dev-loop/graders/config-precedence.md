@@ -3,7 +3,7 @@ type: llm
 weight: 2
 ---
 
-Judge only the flag flip. Both parts must hold for PASS.
+Judge only `myapp.sync.enabled`, the key `NUXEOCONF` already sets. Both parts must hold for PASS.
 
 Background: in this stack the entrypoint appends the `conf.d` files first
 and then applies the `NUXEOCONF` JSON, so a key that `NUXEOCONF` also sets

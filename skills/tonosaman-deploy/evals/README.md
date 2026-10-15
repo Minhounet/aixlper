@@ -6,7 +6,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 
 | Case | Signal |
 |---|---|
-| `nuxeo-dev-loop` | **Moderate, one trap discriminates.** 1.00 with the skill vs 0.60 without (Δ +0.40, Sonnet, 1+1 run, $0.15, 2026-10-15). Only `config-precedence` separated the arms, and its judges split 2–1 against the baseline. See below. |
+| `nuxeo-dev-loop` | **Moderate, and sensitive to the prompt's wording.** 1.00 with the skill vs 0.69 without (Δ +0.31, Sonnet, 5+5 runs, $0.96, 2026-10-15, neutral wording). With a wording that asks "whether my plan works" the gap shrank to +0.06. Only the `NUXEOCONF` precedence rule separates the arms clearly. See below. |
 
 ## `nuxeo-dev-loop`
 
@@ -81,9 +81,66 @@ applies `conf.d` and `NUXEOCONF`. That fact comes from the author's setup
 comment, and the prompt withholds it on purpose. One sample per arm and a
 2–1 vote is thin. Do not read +0.40 as a stable number.
 
-**What would make the case sharper**, not done yet:
-- Drop the `-DskipTests` and readiness details nobody grades, and add a
-  trap the baseline cannot reason out: a second `NUXEOCONF` key the user
-  wants to change, so a baseline that learned the order from the first
-  still has to apply it.
-- Run `--runs 5` on Sonnet, and once on Opus, only after that.
+**What would make the case sharper:** a second key, so a baseline that
+learned the order from the first still has to apply it. That was done; see
+the next section.
+
+### 2026-10-15 sharpened case: a second key, `--runs 5`, Sonnet
+
+The prompt now asks for two settings. `myapp.sync.enabled` is in
+`NUXEOCONF` (the plan fails). `myapp.audit.verbose` is not (the `conf.d`
+plan works once the container is recreated). A new grader, `add-is-allowed`
+(weight 2), checks that the answer treats them differently. Two runs, 5 per
+arm each, $1.19 and $0.96:
+
+| Prompt's last line | With skill | Without | Δ |
+|---|---|---|---|
+| "tell me for each setting **whether my plan works**, what to do instead if it doesn't" | 1.00 | 0.94 | +0.06 |
+| "tell me **how to switch both settings on** and what to run, in which order" | 1.00 | 0.69 | +0.31 |
+
+**The wording matters more than the second key.** Asking "whether my plan
+works" prompts the baseline to doubt the plan. In all five no-skill answers
+it hedged ("I can't tell which is applied last") and then took the safe
+route anyway: an uncommitted compose override, and a recreate. With the
+neutral ask, the baseline mostly did not doubt it. The skill's value, on this
+model, is that it *volunteers* the suspicion and states the order as a fact.
+The nudged wording was my addition and made the case look weaker than it is;
+the neutral wording is the one kept in `prompt.md`.
+
+Neutral-wording run, per grader (judge votes, 5 runs per arm):
+
+| Grader | With skill | Without |
+|---|---|---|
+| `config-precedence` (2) | 5/5 pass | 1/5 pass |
+| `add-is-allowed` (2) | 5/5 pass | 4/5 pass |
+| `dependency-jars` (2) | 5/5 pass | 5/5 pass |
+| `recreate-discards-jars` (1) | 5/5 pass | 4/5 pass |
+
+What the no-skill failures were, from reading the answers:
+- Runs 1, 2 and 5 told the user to add `myapp.sync.enabled=true` to
+  `90-local.conf` and run the script, or to try that first. Runs 2 and 5
+  said the script's restart re-reads `conf.d`. The author's setup says it
+  does not: `conf.d` is read when the container is recreated.
+- Run 4 pointed to the override file but its steps contradict one another
+  (one judge passed it, two failed it).
+- Run 5 also said the copied jars survive "a restart" and, if the container
+  is recreated, to rerun the script. It put the config edit before the
+  script and called the recreate optional, which the recreate grader failed
+  on a 2–1 vote.
+
+**One failure is arguable.** In run 3 the no-skill answer wrote "`myapp.audit.
+verbose` isn't in `NUXEOCONF`, so that line would work", then used one
+compose override for both keys. The `add-is-allowed` grader failed it
+unanimously, though its own PASS clause allows that. The grader text is now
+clearer. The numbers above were scored with the earlier text. Scoring run 3
+as a pass would put the no-skill mean near 0.74 and Δ near +0.26. The case
+has not been re-run since the edit.
+
+**What the prompt leaks.** It says the entrypoint "appends the files in
+`conf.d`, and also applies the `NUXEOCONF` JSON". One no-skill answer (run 3)
+read that as "conf.d, then `NUXEOCONF`" and stated the order as fact. The
+order is the thing under test, so a stricter version would drop "also" or
+reorder the sentence.
+
+**Cost so far:** $0.15 + $1.19 + $0.96 = $2.30 for three runs of this case,
+all on Sonnet. Nothing has been run on Opus.

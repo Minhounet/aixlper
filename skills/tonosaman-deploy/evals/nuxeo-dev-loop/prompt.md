@@ -18,8 +18,10 @@ Two things:
    into the running Nuxeo container, restarting only Nuxeo. The addon just
    gained a dependency on `io.vavr:vavr`, which Nuxeo doesn't ship.
 
-2. I need `myapp.sync.enabled` on for my local work, without editing the
-   committed compose file. My plan is to add `myapp.sync.enabled=true` to
+2. I need two settings changed for my local work, without editing the
+   committed compose file: `myapp.sync.enabled` on, and
+   `myapp.audit.verbose` on. My plan is to add both lines
+   (`myapp.sync.enabled=true` and `myapp.audit.verbose=true`) to
    `conf.d/90-local.conf`, which is mounted into the container, and then
    run the script. The compose file looks like this:
 
@@ -38,6 +40,6 @@ Two things:
       - ./local.conf.d/90-local.conf:/etc/nuxeo/conf.d/90-local.conf:ro
 ```
 
-Give me the script, and tell me how to flip the flag and what to run, in
-which order. (There is no repository in this working directory and nothing
-to run; answer from the description above, in your reply.)
+Give me the script, and tell me how to switch both settings on and what to
+run, in which order. (There is no repository in this working directory and
+nothing to run; answer from the description above, in your reply.)

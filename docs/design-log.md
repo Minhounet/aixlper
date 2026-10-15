@@ -2182,6 +2182,20 @@ this model, for one fact, yes, and for the rest it matches what the model
 already does. Full table and a list of ways to sharpen the case are in the
 suite README.
 
+**Sharpened and rerun (Sonnet, 5+5 runs twice).** A second setting
+(`myapp.audit.verbose`, not in `NUXEOCONF`, so `conf.d` works for it) and a
+new grader, `add-is-allowed`. The first sharpened prompt asked "whether my
+plan works" and the gap fell to +0.06: that wording prompts every model to
+doubt the plan, so the baseline hedged and still picked the safe route.
+Switching to a neutral ask ("how to switch both settings on") gave 1.00 vs
+0.69 (Δ +0.31). The baseline's misses were the practical ones: trying the
+`conf.d` plan first, and saying a restart re-reads `conf.d`. So the Nuxeo
+reference helps on this model by *volunteering the doubt and the order*
+without being asked. One baseline failure is arguable (the grader text was
+clarified afterwards and the case not re-run), and the prompt leaks a hint
+by saying the entrypoint "also applies" `NUXEOCONF`. Both are recorded in
+the suite README.
+
 ## Measuring a cycle: `global/cycle-cost.py`
 
 **Origin.** The author wanted a measure of what one "implement" or "fix"
