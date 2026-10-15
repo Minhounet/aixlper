@@ -2139,6 +2139,24 @@ Left out on purpose: the author's personal names and user IDs in the setup
 guide, the proxy address, the internal hostnames and the Studio and Connect
 identifiers. This repo is public.
 
+**Third pass: the files themselves go into the skill.** The author asked for
+the uploaded files to be fed into the skill, not only summarized. They are
+now genericized copies in `references/nuxeo-podman/`: the compose stack,
+`manager.sh`, `build-local.sh`, `dev-deploy.sh`, `90-local.conf.example` and
+the setup guide, with a README that says what each is for. The `nuxeo.md`
+pointer says to read the README first and then only the file needed, so the
+large files cost nothing unless they are opened.
+
+The copies are mechanical (a sed table in the session, names only), then
+checked by hand. Two mistakes were caught in that check and fixed: a
+replacement had changed the Postgres user and database names in `NUXEOCONF`,
+and the database password had drifted from the Postgres container's. Passwords
+are now `change-me` throughout, and the setup guide's personal author block is
+removed. Known gaps the folder's README records: `build-local.sh` and
+`manager.sh` need files not in the folder (the Dockerfile, its config
+directory, `settings.xml`, `addons_artifacts.yml`), and `dev-deploy.sh` needs a
+log4j2 config from that directory.
+
 ## Measuring a cycle: `global/cycle-cost.py`
 
 **Origin.** The author wanted a measure of what one "implement" or "fix"

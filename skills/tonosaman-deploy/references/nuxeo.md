@@ -17,6 +17,11 @@ author's proven steps, and confirm them on the first run.
 `manager.sh` or `dev-deploy.sh`), follow it. The project's files win over
 this reference.
 
+**The concrete files** from that setup, genericized and unverified, are in
+`nuxeo-podman/`. Read its `README.md` first, then only the file you need:
+the compose stack, `manager.sh`, `build-local.sh`, `dev-deploy.sh`, the
+per-developer config, and the human setup guide.
+
 ## Container shape
 
 - **Compose provider:** `podman-compose -f ./docker-compose.yaml`, not

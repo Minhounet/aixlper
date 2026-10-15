@@ -1,0 +1,354 @@
+services:
+  myapp-network-anchor:
+    image: busybox
+    container_name: myapp-network-anchor
+    command: sleep infinity
+    restart: unless-stopped
+    ports:
+      - "28080:8080"  # Nuxeo HTTP
+      - "28787:8787"  # Nuxeo JDWP remote debug
+      - "28025:8025"  # Mailpit Web UI
+      - "21025:1025"  # Mailpit SMTP
+      - "29080:8090"  # Kafka UI
+      - "29001:9000"  # Kafdrop
+      - "28081:5050"  # PgAdmin
+      - "25432:5432"  # Postgres
+      - "29200:9200"  # OpenSearch node1 HTTP
+      - "29600:9600"  # OpenSearch node1 perf analyzer
+      - "25601:5601"  # OpenSearch Dashboards
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: myapp-mailpit
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    depends_on:
+      - myapp-network-anchor
+
+  web:
+    container_name: myapp-nuxeo
+    image: "myapp:local"
+    network_mode: "service:myapp-network-anchor"
+    command:
+      - bash
+      - -c
+      - |
+        echo "Waiting for OpenSearch node1 (9200)...";
+        until (echo > /dev/tcp/127.0.0.1/9200) >/dev/null 2>&1; do sleep 5; done;
+        echo "Waiting for OpenSearch node2 (9201)...";
+        until (echo > /dev/tcp/127.0.0.1/9201) >/dev/null 2>&1; do sleep 5; done;
+        echo "Waiting for Postgres (5432)...";
+        until (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1; do sleep 5; done;
+        echo "Waiting for Kafka (9092)...";
+        until (echo > /dev/tcp/127.0.0.1/9092) >/dev/null 2>&1; do sleep 5; done;
+        echo "All backends ready. Starting Nuxeo...";
+        nuxeoctl console;
+    environment:
+      JAVA_HOME: '/opt/java/openjdk21'
+      JAVA_OPTS: '-XX:InitialRAMPercentage=30 -XX:MaxRAMPercentage=75 -Dlog4j2.configurationFile=/opt/nuxeo/server/lib/log4j2.xml,/opt/nuxeo/server/lib/log4j2-myapp.xml -Dhttp.proxyHost=192.0.2.10 -Dhttp.proxyPort=3131 -Dhttps.proxyHost=192.0.2.10 -Dhttps.proxyPort=3131 -Dhttp.nonProxyHosts="localhost|127.0.0.1|*.example.com|nx.external.example.com|internal-host.example.com"'
+      NUXEOCONF: >-
+        {
+        	"org.nuxeo.ecm.product.name": "MYAPP LOCAL",
+        	"nuxeo.templates": "docker",
+        	"nuxeo.data.dir": "/var/lib/nuxeo",
+        	"nuxeo.log.dir": "/var/log/nuxeo",
+        	"nuxeo.url": "http://localhost:28080",
+        	"nuxeo.selection.selectAllEnabled": "true",
+        	"nuxeo.append.templates.postgresql": "postgresql",
+        	"nuxeo.db.driver": "org.postgresql.Driver",
+        	"nuxeo.db.host": "127.0.0.1",
+        	"nuxeo.db.port": "5432",
+        	"nuxeo.db.name": "nuxeo",
+        	"nuxeo.db.user": "nuxeo",
+        	"nuxeo.db.password": "change-me",
+        	"nuxeo.db.transactiontimeout": "480",
+        	"nuxeo.dbs.cache.maxSize": "2000",
+        	"nuxeo.vcs.blocking-timeout-millis": "200",
+        	"nuxeo.vcs.fulltext.disabled": "false",
+        	"nuxeo.vcs.max-pool-size": "100",
+        	"nuxeo.vcs.optimizations.acl.enabled": "true",
+        	"nuxeo.append.templates.opensearch": "opensearch1-audit,opensearch1-search-client",
+        	"nuxeo.opensearch1.client.server": "http://127.0.0.1:9200,http://127.0.0.1:9201",
+        	"nuxeo.audit.backend.default.opensearch1.settings.indexTranslogDurability": "async",
+        	"nuxeo.search.client.default.opensearch1.settings.indexTranslogDurability": "async",
+        	"nuxeo.search.client.green.opensearch1.index.name": "nuxeo",
+        	"nuxeo.search.pageproviders.override": "tree_children,default_search,default_document_suggestion,DEFAULT_DOCUMENT_SUGGESTION,advanced_document_content,domain_documents,expired_search,default_trash_search,REST_API_SEARCH_ADAPTER,all_collections,simple_search,document_content,section_content,document_trash_content,orderable_document_content,document_picker,GET_TASKS_FOR_ACTORS,GET_TASKS_FOR_ACTORS_OR_DELEGATED_ACTORS,GET_TASKS_FOR_PROCESS,GET_TASKS_FOR_PROCESS_AND_ACTORS,GET_TASKS_FOR_PROCESS_AND_NODE,GET_TASKS_FOR_TARGET_DOCUMENT,GET_TASKS_FOR_TARGET_DOCUMENTS,GET_TASKS_FOR_TARGET_DOCUMENTS_AND_ACTORS,GET_TASKS_FOR_TARGET_DOCUMENTS_AND_ACTORS_OR_DELEGATED_ACTORS",
+        	"nuxeo.uidsequencer.default.opensearch1.settings.indexTranslogDurability": "async",
+        	"nuxeo.pageprovider.default-max-page-size": "10000",
+        	"myapp.extsync.sync.enabled": "${EXTSYNC_SYNC_ENABLED:-false}",
+        	"myapp.extsync.sync.endpoint": "${EXTSYNC_SYNC_ENDPOINT:-https://ext-backend.example.com/services/SyncDocumentsImpl}",
+        	"myapp.extsync.sync.authMode": "${EXTSYNC_SYNC_AUTH_MODE:-USERNAME_TOKEN}",
+        	"myapp.extsync.sync.username": "${EXTSYNC_SYNC_USERNAME:-}",
+        	"myapp.extsync.sync.password": "${EXTSYNC_SYNC_PASSWORD:-}",
+        	"myapp.extsync.sync.timeout": "${EXTSYNC_SYNC_TIMEOUT:-60000}",
+        	"kafka.bootstrap.servers": "127.0.0.1:9092",
+        	"kafka.enabled": "true",
+        	"kafka.security.protocol": "PLAINTEXT",
+        	"mail.transport.host": "127.0.0.1",
+        	"mail.transport.port": "1025",
+        	"mail.transport.protocol": "smtp",
+        	"mail.transport.auth": "false",
+        	"mail.transport.usetls": "false",
+        	"mail.transport.user": "",
+        	"mail.transport.ssl.protocol": "TLSv1.2",
+        	"mail.transport.password": "",
+        	"mail.from": "no-reply@local.myapp",
+        	"nuxeo.notification.eMailSubjectPrefix": "[Nuxeo]",
+        	"myapp.export.document.types": "MyAppDocument,ModelMyAppDocument",
+        	"myapp.export.metadata.file": "/opt/nuxeo/server/nxserver/config/export_metadata.txt",
+        	"myapp.version.transition.from.draft.to.approved": "Major",
+        	"easyrender.connect.timeout": "60000",
+        	"easyrender.read.timeout": "90000",
+        	"easyrender.url": "https://easyrender.example.com:443",
+        	"easyrender.write.timeout": "90000",
+        	"auditListener.enabled": "true",
+        	"custom.version.links.documentTypes": "MyAppDocument",
+        	"custom.version.links.enabled": "true",
+        	"custom.version.links.workingcopy.linkable": "true",
+        	"myapp.enricher.publications.enabled": "true",
+        	"myapp.permissions.group.prefix": "grp_role",
+        	"myapp.user.administrator.password": "admin",
+        	"myapp.work.queue.export.threads": 8,
+        	"nuxeo.import.vocabularies.config.path": "/opt/nuxeo/server/nxserver/config/vocabularies_config.json",
+            "myapp.directory.multiparent.import.path": "/etc/nuxeo/vocabularies/joins",
+        	"nuxeo.lifecycle.config.path": "/opt/nuxeo/server/nxserver/config/myapp-lifecycle-config.json",
+        	"nuxeo.permission.config.path": "/opt/nuxeo/server/nxserver/config/myapp-permission-config.json",
+        	"nuxeo.work.queue.common.threads": 4,
+        	"org.nuxeo.ecm.product.name": "MyApp (INT)",
+        	"studio.project.name": "myapp",
+        	"studio.pkg.socle.id": "studio.extensions.example-socle",
+        	"studio.pkg.instance.id": "studio.extensions.myapp-example",
+        	"org.nuxeo.dev": "true",
+        	"nuxeo.http.proxy.host": "proxy.example.com",
+        	"nuxeo.http.proxy.port": "3131"
+        }
+    volumes:
+      - myapp_nuxeo_data:/var/lib/nuxeo
+      - myapp_nuxeo_log:/opt/nuxeo/server/log
+      - myapp_nuxeo_ui:/opt/nuxeo/server/nxserver/nuxeo.war
+      - ./local.conf.d/90-local.conf:/etc/nuxeo/conf.d/90-local.conf:ro
+    depends_on:
+      - kafka
+      - postgres
+      - opensearch-node1
+      - opensearch-node2
+
+  kafka-ui:
+    image: kafbat/kafka-ui:v1.5.0
+    container_name: myapp-kafka-ui
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: myapp-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 127.0.0.1:9092
+      SERVER_PORT: 8090
+
+  kafka:
+    image: bitnamilegacy/kafka:latest
+    container_name: myapp-kafka
+    hostname: localhost
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: >-
+        PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@127.0.0.1:9093
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_CFG_MIN_INSYNC_REPLICAS: 1
+    depends_on:
+      - myapp-network-anchor
+    volumes:
+      - myapp_kafka_data:/bitnami/kafka
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/bitnami/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: myapp-kafdrop
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    environment:
+      KAFKA_BROKERCONNECT: 127.0.0.1:9092
+      KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+    depends_on:
+      - kafka
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: myapp-pgadmin
+    hostname: localhost
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: change-me
+      PGADMIN_LISTEN_PORT: 5050
+    depends_on:
+      - myapp-network-anchor
+
+  postgres:
+    image: postgres:17.9
+    container_name: myapp-postgres
+    hostname: localhost
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    environment:
+      POSTGRES_USER: nuxeo
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: nuxeo
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+    depends_on:
+      - myapp-network-anchor
+    volumes:
+      - myapp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U nuxeo -d nuxeo" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  opensearch-node1:
+    image: opensearchproject/opensearch:1.3.14
+    container_name: myapp-opensearch-node1
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    environment:
+      cluster.name: myapp-opensearch
+      node.name: opensearch-node1
+      discovery.seed_hosts: "127.0.0.1:9300,127.0.0.1:9301"
+      cluster.initial_master_nodes: opensearch-node1,opensearch-node2
+      bootstrap.memory_lock: "false"
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
+      http.port: 9200
+      transport.port: 9300
+      network.host: 0.0.0.0
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+    depends_on:
+      - myapp-network-anchor
+    volumes:
+      - myapp_opensearch_data1:/usr/share/opensearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --silent --fail http://localhost:9200/_cluster/health || exit 1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 60
+      start_period: 120s
+
+  opensearch-node2:
+    image: opensearchproject/opensearch:1.3.14
+    container_name: myapp-opensearch-node2
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    environment:
+      cluster.name: myapp-opensearch
+      node.name: opensearch-node2
+      discovery.seed_hosts: "127.0.0.1:9300,127.0.0.1:9301"
+      cluster.initial_master_nodes: opensearch-node1,opensearch-node2
+      bootstrap.memory_lock: "false"
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g"
+      http.port: 9201
+      transport.port: 9301
+      network.host: 0.0.0.0
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+    depends_on:
+      - myapp-network-anchor
+    volumes:
+      - myapp_opensearch_data2:/usr/share/opensearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --silent --fail http://localhost:9201/_cluster/health || exit 1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 60
+      start_period: 120s
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:1.3.14
+    container_name: myapp-opensearch-dashboards
+    restart: unless-stopped
+    network_mode: "service:myapp-network-anchor"
+    environment:
+      OPENSEARCH_HOSTS: '["http://127.0.0.1:9200","http://127.0.0.1:9201"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+    depends_on:
+      - opensearch-node1
+      - opensearch-node2
+
+volumes:
+  myapp_nuxeo_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR}/nuxeo_data
+
+  myapp_nuxeo_log:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR}/nuxeo_log
+
+  myapp_nuxeo_ui:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR}/nuxeo_ui
+
+  myapp_kafka_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR}/kafka_data
+
+  myapp_postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR}/postgres_data
+
+  myapp_opensearch_data1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR}/opensearch_data1
+
+  myapp_opensearch_data2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${VOLUMES_DIR}/opensearch_data2
