@@ -6,7 +6,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 
 | Case | Signal |
 |---|---|
-| `nuxeo-dev-loop` | **Not run yet.** Written 2026-10-15 from the author's real Podman setup. No score, no baseline, no grader read against real answers. Do not read it as a signal until it has been run. |
+| `nuxeo-dev-loop` | **Moderate, one trap discriminates.** 1.00 with the skill vs 0.60 without (Δ +0.40, Sonnet, 1+1 run, $0.15, 2026-10-15). Only `config-precedence` separated the arms, and its judges split 2–1 against the baseline. See below. |
 
 ## `nuxeo-dev-loop`
 
@@ -47,3 +47,43 @@ claude plugin eval skills/tonosaman-deploy --case nuxeo-dev-loop --runs 1 --mode
 ```
 
 Then read every answer in full, grader by grader, before raising `--runs`.
+
+### 2026-10-15 first run: Sonnet, `--runs 1`, ablation on
+
+`claude plugin eval skills/tonosaman-deploy --case nuxeo-dev-loop --runs 1
+--model sonnet`, $0.15 total. The answers were read in full.
+
+| Grader | With skill | Without skill |
+|---|---|---|
+| `config-precedence` (2) | PASS PASS PASS | FAIL PASS FAIL |
+| `dependency-jars` (2) | PASS PASS PASS | PASS PASS PASS |
+| `recreate-discards-jars` (1) | PASS PASS PASS | PASS PASS PASS |
+
+- **With the skill** stated the `conf.d` then `NUXEOCONF` order as fact, made
+  the key a `${VAR:-false}` in `NUXEOCONF` with a gitignored `.env`, and
+  ordered the steps recreate, then script. It built an explicit
+  `vavr,vavr-match` list, bounded the readiness wait, and said none of it was
+  run.
+- **Without the skill** (it reported that no such skill exists, so the arm
+  really was bare) did not claim the `conf.d` plan would work. It said it
+  couldn't tell which of the two is applied last, proposed restating the
+  whole JSON in an uncommitted compose override, and said the change needs a
+  recreate. It also suggested trying the `conf.d` plan first because that
+  "only needs a restart". That last suggestion is what two judges failed.
+  The split vote is a fair reading of a hedged answer, not a clear miss.
+- **The other two traps did not discriminate.** The baseline filtered the
+  dependency copy to `io.vavr` (so `vavr-match` came along) and kept the
+  `lib/` and `bundles/` split. It also said a recreate loses the copied jars
+  and ran the script second. Both are regression checks on this model.
+
+So the measured skill effect is one fact: the order in which the image
+applies `conf.d` and `NUXEOCONF`. That fact comes from the author's setup
+comment, and the prompt withholds it on purpose. One sample per arm and a
+2–1 vote is thin. Do not read +0.40 as a stable number.
+
+**What would make the case sharper**, not done yet:
+- Drop the `-DskipTests` and readiness details nobody grades, and add a
+  trap the baseline cannot reason out: a second `NUXEOCONF` key the user
+  wants to change, so a baseline that learned the order from the first
+  still has to apply it.
+- Run `--runs 5` on Sonnet, and once on Opus, only after that.

@@ -2168,9 +2168,19 @@ so one case in `skills/tonosaman-deploy/evals/` tests three rules from
 file cannot override a `NUXEOCONF` key and the change needs a recreate, not
 the script's restart (weight 2), and a recreate discards jars copied earlier
 (weight 1). The prompt names the skill, as the `igiari-tdd` suite learned.
-No score and no baseline exist yet, and the suite README says so. The
-recreate rule is the least solid: it is read from the scripts and from how
-containers work, not observed on the real stack.
+The recreate rule is the least solid: it is read from the scripts and from
+how containers work, not observed on the real stack.
+
+**First run of `nuxeo-dev-loop` (Sonnet, 1+1 run, $0.15).** 1.00 with the
+skill, 0.60 without. Only the `conf.d`/`NUXEOCONF` precedence grader
+separated the arms, and its judges split 2–1 against a baseline that hedged
+("I can't tell which is applied last") and suggested trying the `conf.d`
+plan first. The dependency and recreate graders passed on both arms: the
+baseline filtered the copy to `io.vavr` and knew a recreate loses copied
+jars. So the answer to "does the Nuxeo reference improve the skill" is: on
+this model, for one fact, yes, and for the rest it matches what the model
+already does. Full table and a list of ways to sharpen the case are in the
+suite README.
 
 ## Measuring a cycle: `global/cycle-cost.py`
 
