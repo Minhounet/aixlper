@@ -311,13 +311,13 @@ Content-Type: application/json
 
 | Service                    | URL                                                                     | Credentials                       |
 |----------------------------|-------------------------------------------------------------------------|-----------------------------------|
-| **Nuxeo**                  | http://localhost:28080                                                  | `Administrator` / `Administrator` |
+| **Nuxeo**                  | http://localhost:28080                                                  | `Administrator` / `change-me` |
 | **Mailpit** (email viewer) | http://localhost:28025                                                  | —                                 |
-| **pgAdmin**                | http://localhost:28081                                                  | `admin@example.com` / `admin`     |
+| **pgAdmin**                | http://localhost:28081                                                  | `admin@example.com` / `change-me`     |
 | **OpenSearch Dashboards**  | http://localhost:25601                                                  | —                                 |
 | **Kafka UI**               | http://localhost:29080                                                  | —                                 |
 | **Kafdrop**                | http://localhost:29001                                                  | —                                 |
-| **PostgreSQL**             | `localhost:25432`                                                       | `nuxeo` / `nuxeo`                 |
+| **PostgreSQL**             | `localhost:25432`                                                       | `nuxeo` / `change-me`                 |
 | **OpenSearch**             | http://localhost:29200                                                  | —                                 |
 | **Nuxeo Debug**            | `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:28787` | —                                 |
 

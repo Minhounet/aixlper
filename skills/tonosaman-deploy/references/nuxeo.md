@@ -146,8 +146,8 @@ loop. This is from reading the scripts; it has not been observed here.
 - **`podman logs -f` fails with a journald error** unless the default log
   driver is file-based. Set it once in `~/.config/containers/containers.conf`
   under `[containers]` as `log_driver = "k8s-file"`, then restart the stack.
-  `SKILL.md` section 5 says never to stream logs with `-f` anyway. Use
-  `--tail`.
+  The Token self-audit in `SKILL.md` says never to stream logs with `-f`
+  anyway. Use `--tail`.
 - **`podman machine` on macOS and Windows** is not covered by this setup.
   Only the WSL2 rootless setup has been seen.
 
