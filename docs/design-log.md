@@ -2161,6 +2161,17 @@ removed. Known gaps the folder's README records: `build-local.sh` and
 directory, `settings.xml`, `addons_artifacts.yml`), and `dev-deploy.sh` needs a
 log4j2 config from that directory.
 
+**Eval case written, not run: `nuxeo-dev-loop`.** The question was whether the
+Nuxeo reference improves the skill. A reading of the diff can't answer that,
+so one case in `skills/tonosaman-deploy/evals/` tests three rules from
+`nuxeo.md`: dependency jars never go to `bundles/` (weight 2), a `conf.d`
+file cannot override a `NUXEOCONF` key and the change needs a recreate, not
+the script's restart (weight 2), and a recreate discards jars copied earlier
+(weight 1). The prompt names the skill, as the `igiari-tdd` suite learned.
+No score and no baseline exist yet, and the suite README says so. The
+recreate rule is the least solid: it is read from the scripts and from how
+containers work, not observed on the real stack.
+
 ## Measuring a cycle: `global/cycle-cost.py`
 
 **Origin.** The author wanted a measure of what one "implement" or "fix"
