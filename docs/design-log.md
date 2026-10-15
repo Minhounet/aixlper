@@ -2092,6 +2092,53 @@ image includes `curl` (so an in-container health check works), and the JVM's
 `podman compose` providers, whether `--wait` works there), Jib, and the
 `podman-docker-api.md` steps.
 
+**Second pass: `nuxeo.md` written from a real Podman setup.** The author
+uploaded a working local stack: a rootless Podman setup on WSL2 with
+`podman-compose`, a `manager.sh`, a `dev-deploy.sh`, the compose file, a
+setup guide and a `90-local.conf`. The placeholder's question list is now
+answered from those files, with names genericized (`myapp`, `com.example`).
+Nothing was run from this repo, and Podman is not installed here, so the
+new `nuxeo.md` is marked as written from one setup, not checked.
+
+What the files taught, and where it went:
+
+- **The Nuxeo loop is not the bind-mount rule.** The server loads bundles from
+  its own tree, so `dev-deploy.sh` copies the module's jars into the running
+  container and restarts only Nuxeo. `SKILL.md` section 4 now names this as
+  the one exception. The image is still never rebuilt for a jar change.
+- **Dependency jars must never be swept into `bundles/`.** The script stages
+  runtime dependencies separately and copies an explicit `lib/` list. A
+  duplicated server library breaks the classloader, and Tomcat then refuses
+  `/nuxeo`. Auto-detecting "already provided" was ruled out for the same
+  reason: the server ships unversioned jars that no heuristic matches.
+- **A `conf.d` file cannot override a `NUXEOCONF` key.** The entrypoint
+  applies `NUXEOCONF` last. The setup's own comment documents this, and the
+  reference now says so.
+- **`podman-compose` has no `service_healthy`.** `SKILL.md` section 1 now says
+  so. The setup uses a bash wait loop in the service command instead.
+- **A container recreate discards copied jars.** A `down` then `up` removes the
+  copied jars. This is read from the scripts and not yet observed.
+
+Findings against the skill's own rules, left as they are for the author to
+decide:
+
+- The project's `dev-deploy.sh` runs `mvn package -DskipTests`. `SKILL.md`
+  section 5 says not to add that flag on your own. The reference treats the
+  project's script as the project's choice, and says the agent's runs still
+  follow the rule.
+- The project's `manager.sh` waits for `nuxeo.war/WEB-INF` with no timeout,
+  and `destroy` deletes data with `sudo rm -rf`. The reference says to bound
+  the wait and to ask before any data is deleted.
+- The setup's compose file commits dev-only passwords, and the `90-local.conf`
+  mount uses the short syntax. The reference says real credentials belong in
+  `.env`. The short mount is not added to the reference, because the
+  project's `manager.sh` creates the file before `up`, which is the
+  guarantee `SKILL.md` section 4 asks for in another way.
+
+Left out on purpose: the author's personal names and user IDs in the setup
+guide, the proxy address, the internal hostnames and the Studio and Connect
+identifiers. This repo is public.
+
 ## Measuring a cycle: `global/cycle-cost.py`
 
 **Origin.** The author wanted a measure of what one "implement" or "fix"

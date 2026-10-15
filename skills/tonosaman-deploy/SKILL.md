@@ -23,7 +23,8 @@ it works with both: name the image file `Containerfile` (Docker reads it with
 Compose is `docker compose` or `podman compose`. `podman compose` is a wrapper
 that runs an external provider (`docker-compose` if installed, else
 `podman-compose`), and `podman-compose` does not support every compose
-feature. When a command behaves unexpectedly under Podman, check which
+feature (`depends_on: condition: service_healthy` among them, so wait for
+readiness in the service's own command or with a script). When a command behaves unexpectedly under Podman, check which
 provider ran before blaming the project.
 
 ## 2. Detect the runtime, then read its reference
@@ -73,6 +74,10 @@ rebuilt.
   missing file should be, and both the container and the next build then
   fail. Use the long syntax with `create_host_path: false` (each reference
   shows it), so a missing jar is an error that names the path.
+- **Exception: Nuxeo.** Nuxeo loads bundles from its own tree, so its
+  reference copies the module's jars into the running container and restarts
+  only Nuxeo. Follow the project's own dev-deploy step when one exists. The
+  image is still never rebuilt for a jar change.
 - Mount the artifact read-only. On a Podman host with SELinux enforcing
   (Fedora, RHEL), also relabel it (`:Z` in short syntax, `selinux: Z` in long
   syntax), or the container gets "permission denied" reading the file.
