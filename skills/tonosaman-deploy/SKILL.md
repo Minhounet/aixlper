@@ -9,8 +9,9 @@ The goal is a fast loop: **build the project, then run the new artifact in a
 container**, without rebuilding an image every time. This is for a local
 developer loop, not a production pipeline, a registry release, or Kubernetes.
 
-The rules below hold for every runtime. What changes per runtime (the base
-image, where the artifact goes, how to tell it is up) lives in `references/`.
+The rules below hold for every runtime, except where a reference says
+otherwise (Nuxeo, in section 4). What changes per runtime (the base image,
+where the artifact goes, how to tell it is up) lives in `references/`.
 
 ## 1. Pick the engine
 
@@ -24,8 +25,9 @@ Compose is `docker compose` or `podman compose`. `podman compose` is a wrapper
 that runs an external provider (`docker-compose` if installed, else
 `podman-compose`), and `podman-compose` does not support every compose
 feature (`depends_on: condition: service_healthy` among them, so wait for
-readiness in the service's own command or with a script). When a command behaves unexpectedly under Podman, check which
-provider ran before blaming the project.
+readiness in the service's own command or with a script). When a command
+behaves unexpectedly under Podman, check which provider ran before blaming the
+project.
 
 ## 2. Detect the runtime, then read its reference
 
@@ -74,13 +76,14 @@ rebuilt.
   missing file should be, and both the container and the next build then
   fail. Use the long syntax with `create_host_path: false` (each reference
   shows it), so a missing jar is an error that names the path.
-- **Exception: Nuxeo.** Nuxeo loads bundles from its own tree, so its
-  reference copies the module's jars into the running container and restarts
-  only Nuxeo. Follow the project's own dev-deploy step when one exists. The
-  image is still never rebuilt for a jar change.
 - Mount the artifact read-only. On a Podman host with SELinux enforcing
   (Fedora, RHEL), also relabel it (`:Z` in short syntax, `selinux: Z` in long
   syntax), or the container gets "permission denied" reading the file.
+
+**Exception: Nuxeo.** The author's Nuxeo setup does not bind-mount the
+artifact. It copies the module's jars into the running container and restarts
+only Nuxeo (see `references/nuxeo.md`). Follow the project's own dev-deploy
+step when one exists. The image is still not rebuilt for a jar change.
 
 ## 5. The loop
 

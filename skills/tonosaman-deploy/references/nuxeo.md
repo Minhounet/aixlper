@@ -66,10 +66,11 @@ container do nothing on their own.
 ## Getting the addon into the running server
 
 This is the one place where the main skill's "bind-mount the artifact"
-rule (`SKILL.md` section 4) does not apply. Nuxeo loads bundles from its own
-tree, `nxserver/bundles` and `nxserver/lib`, so the working loop copies the
-jars into the running container and restarts only Nuxeo. Kafka, Postgres and
-OpenSearch stay up.
+rule (`SKILL.md` section 4) does not apply. The author's working loop copies
+the jars into the server's `nxserver/bundles` and `nxserver/lib` in the
+running container and restarts only Nuxeo. Kafka, Postgres and OpenSearch
+stay up. The author has not said why this is copied rather than mounted, so
+treat it as the proven way, not the only way.
 
 1. **Build the module.** Maven is the default and the one used for release.
    A Gradle compile-only option is fine for dev speed. The project's script

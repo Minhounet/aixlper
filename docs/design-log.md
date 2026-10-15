@@ -2102,10 +2102,14 @@ new `nuxeo.md` is marked as written from one setup, not checked.
 
 What the files taught, and where it went:
 
-- **The Nuxeo loop is not the bind-mount rule.** The server loads bundles from
-  its own tree, so `dev-deploy.sh` copies the module's jars into the running
-  container and restarts only Nuxeo. `SKILL.md` section 4 now names this as
-  the one exception. The image is still never rebuilt for a jar change.
+- **The Nuxeo loop is not the bind-mount rule.** `dev-deploy.sh` copies the
+  module's jars into the running container and restarts only Nuxeo.
+  `SKILL.md` section 4 names this as the one exception, and the intro line
+  now says so ("hold for every runtime, except where a reference says
+  otherwise"). The first wording claimed the server "loads bundles from its
+  own tree" as the reason. That was my inference, not the author's, and was
+  removed: mounting the jars might work too, and the copy loses them on a
+  recreate. The image is still not rebuilt for a jar change.
 - **Dependency jars must never be swept into `bundles/`.** The script stages
   runtime dependencies separately and copies an explicit `lib/` list. A
   duplicated server library breaks the classloader, and Tomcat then refuses
