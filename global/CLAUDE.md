@@ -50,6 +50,13 @@ A command missing from its own help is effectively invisible to whoever reaches 
 `--help` instead of the source. If a command's behavior changes, update its help text in
 the same change too.
 
+## Keep READMEs in sync
+
+When a change adds, removes, or changes behavior that an existing README (or other
+project doc) already describes, update that doc in the same change — not as a follow-up.
+
+Stale documentation is worse than none: it actively misleads instead of just being silent.
+
 ---
 
 # Git workflow
