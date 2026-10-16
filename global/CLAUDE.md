@@ -40,6 +40,16 @@ a live DB connection) — say so rather than treating every finding as ground tr
 This is a personal preference, not something to assume applies to other contributors to a
 shared repo — never add it to a project's own `CLAUDE.md`.
 
+## CLI commands must self-document
+
+Every command or subcommand added to a CLI tool — a bash script's `case` dispatcher, an
+argparse/click subcommand, a Node CLI, etc. — gets a corresponding entry in that tool's own
+`--help`/usage output in the same change that adds it, not as a follow-up.
+
+A command missing from its own help is effectively invisible to whoever reaches for
+`--help` instead of the source. If a command's behavior changes, update its help text in
+the same change too.
+
 ---
 
 # Git workflow
