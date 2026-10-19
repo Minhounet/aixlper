@@ -43,6 +43,7 @@ folder (see "Run folder" below) and present it in one message:
 mode: shadow            # shadow | live, see section 2
 question: <the one thing this run must answer or deliver>
 success: <an observable check: a command and the output that proves it>
+reading: <how the input is read where it could be read two ways, e.g. "a cell `a;b` counts once for each author">
 skills: <the skills in play, e.g. chottomatte-archi, igiari-tdd, tonosaman-deploy>
 scope: <directories and files the run may touch>
 allowed: <decisions granted in advance, e.g. "may add H2 as a test dependency">
@@ -54,13 +55,22 @@ branch: <the local branch the run commits to>
 - **`success` must be checkable by running something.** "It works" is not a
   criterion; "`curl localhost:8080/docs/42` returns the document's title
   within 1s" is. If you can't write one, the question isn't clear yet: ask.
+- **Look at the real input before writing `success`.** Read a sample of
+  the values the question depends on, not just the header: separators
+  inside a field, case or whitespace variants of the same value, empty or
+  placeholder values, duplicates. Anything that gives the question two
+  answers goes in `reading:` as a choice for the author. A run that has to
+  guess what the question means will guess silently.
 - **`skills` is the author's choice.** For a PoC the author may pick a
   lighter set (say, no TDD). Never drop a skill or relax one of its rules on
   your own: a skill that is in play applies in full.
-- **Merge every plan pause into this same sitting.** If `chottomatte-archi`
-  is in play, its structural plan goes below the brief; if `igiari-tdd` is,
-  its test plan does (tagged with ACs when `objection-conception` is in
-  play). One approval covers all of them. After it, the run is unattended.
+- **Merge every pause of every skill in play into this same sitting.** If
+  `chottomatte-archi` is in play, its structural plan goes below the brief;
+  if `igiari-tdd` is, its test plan does (tagged with ACs when
+  `objection-conception` is in play); if `tonosaman-deploy` is, the build
+  and container files it will add. One approval covers all of them. After
+  it, the run is unattended. A pause the brief didn't cover, met during the
+  run, is an escalation: never "decided alone", never PoC debt.
 
 ## 2. Two modes: shadow first, then live
 
@@ -143,6 +153,10 @@ Two rules for every worker:
 
 1. **Brief.** Load it from the run folder, or draft it with the author
    (section 1). Check the branch exists and the working tree is clean.
+   Then read a sample of the real input yourself, as in section 1, even if
+   the brief was written without it. Anything there that `reading:` doesn't
+   settle and that would change the answer is an escalation (criterion 3),
+   raised before the implementer starts.
 2. **Implement.** Start the implementer. Handle each `DEVIATION:` it
    returns per section 3, then resume the same agent.
 3. **Check, yourself.** The full build. With `igiari-tdd` in play, its
@@ -153,7 +167,10 @@ Two rules for every worker:
    it.
 5. **Run it.** With `tonosaman-deploy` in play, deploy to the local
    container as that skill describes. Then run the `success` check and keep
-   its real output.
+   its real output. A cross-check only counts as independent if it doesn't
+   share the implementation's reading of the input: write it from the
+   brief's `question` and `reading:`, not from the code, and make it cover
+   the cases `reading:` is about.
 6. **Review.** Start the reviewer, verify its findings, fix or escalate.
 7. **Prove.** With `objection-conception` in play, prove each AC and apply
    its done gate. Shogun never sets `status: done` past that gate.

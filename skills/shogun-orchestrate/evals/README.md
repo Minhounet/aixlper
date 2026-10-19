@@ -7,6 +7,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | Case | What it pins |
 |---|---|
 | `brief-before-running` | "Autonomous mode, go" still gets a brief first: an observable success check, open points flagged, scope and budget, and a wait for approval. The baseline's expected failure: it starts writing the PoC. |
+| `read-the-input` | Added after the second headless trial missed it: an export with `a;b` multi-author cells. The reading changes the answer, so it must be escalated, not picked; and the cross-check must not share the code's reading. |
 | `escalate-or-decide` | The escalation policy on seven mid-run events in live mode: two to handle alone (private rename, mechanical cleanup), five to escalate (new dependency, a check failing after two fixes, a public signature change, a weakened success criterion, spend past 80%). |
 
 Both are text-only (read tools only), so they test the policy, not the
