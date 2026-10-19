@@ -22,6 +22,7 @@ tool — no per-client fork.
 | [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close. |
 | [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
+| [`shogun-orchestrate`](skills/shogun-orchestrate/SKILL.md) | Claude Code only. An autonomous mode: the author approves one brief (question, success check, scope, budget), then the other skills run unattended — implement, check, deploy, review — and only non-trivial decisions come back, as one compact escalation. Suited first to PoCs. |
 
 ## Installing
 

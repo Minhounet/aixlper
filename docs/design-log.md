@@ -2500,3 +2500,53 @@ wrong; the skill's refactor rules act as guards, not as a measured effect.
 The two cases stay as regression checks. Still unmeasured: whether the 68
 "nothing applies" were honest in the kata runs themselves, and refinement on
 a real codebase, where the pull toward patterns is probably stronger.
+
+## shogun-orchestrate: an autonomous mode over the other skills
+
+**Origin.** The author wanted to experiment with autonomy: a mode where they
+aren't needed for easy or trivial things. The first discussion settled
+three points before anything was written.
+
+**Shape: a recipe, but Claude-only.** The orchestrator is the "recipe" case
+from `CLAUDE.md`: instructions the main session follows, spawning subagents
+only for the steps that meet the criteria. The implementer is delegated for
+criterion 3 (its cycle noise stays out of the conductor's context); the
+reviewer for criteria 1 and 5 (read-only tools, and it never sees the
+implementer's report, so it judges the code rather than the story). Deploy,
+audit and acceptance checks stay inline. Because it spawns subagents, it is
+the first skill flagged Claude Code only in its description. And because a
+subagent cannot spawn subagents, it must run in the top-level session; the
+skill says to stop if loaded inside one.
+
+**The hard part is the escalation policy, not the orchestration.** "Not here
+for trivial things" needs something to decide what is trivial, and an agent
+judging its own decisions tends to rate them easy. So the policy defaults
+to escalate, and a decision is taken alone only when six objective criteria
+all hold (plan unchanged, inside scope, no new public surface, no criterion
+changes meaning, no new dependency unless granted, locally revertible,
+checks pass). A fixed list always escalates, including any skill's
+deviation and a check still failing after two fix attempts.
+
+**Shadow mode before live.** In the first runs every decision is escalated,
+tagged with the run's own verdict (`TRIVIAL - I would have chosen X` or
+`NEEDS YOU`). The author's agreement with those tags is the evidence for
+moving to live: measure first, then trust, the same discipline as the evals.
+
+**Where the author stays.** One brief, approved up front: the question, an
+*observable* success check, the skills in play, scope, grants, budget. Every
+other skill's plan pause (`chottomatte-archi`'s structure, `igiari-tdd`'s
+test plan) is merged into that same sitting. The skills in play are the
+author's choice; the run never drops one or relaxes its rules.
+`objection-conception`'s design discussion stays out of scope on purpose:
+that skill keeps design *with* the author.
+
+**PoCs first.** The author suggested PoCs as the fit, and they are the best
+first ground: one checkable question, throwaway by contract, no reviewers
+waiting, cheap mistakes. The one PoC-specific risk is PoC code surviving
+into production, so the report carries a "PoC debt" list of every shortcut
+taken, which makes keeping it a decision rather than an accident.
+
+**Not changed yet:** the driven skills have no "running unattended" clause
+of their own; shogun handles their pauses (merged into the brief sitting,
+deviations become escalations). Add one per skill only if a real run shows
+it's needed. Nothing dogfooded yet.
