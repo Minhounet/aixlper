@@ -2550,3 +2550,43 @@ taken, which makes keeping it a decision rather than an accident.
 of their own; shogun handles their pauses (merged into the brief sitting,
 deviations become escalations). Add one per skill only if a real run shows
 it's needed. Nothing dogfooded yet.
+
+### First evals and first headless trial
+
+**Evals.** Two text-only cases (`evals/README.md` has the details):
+`brief-before-running` ("autonomous mode, go" still gets a brief and a wait)
+and `escalate-or-decide` (seven mid-run events, two to handle alone, five to
+escalate). Sonnet, 1 run per arm, $0.22: both 1.00 with the skill, 0.60 and
+0.40 without. The baseline failures were read and are real: it announced it
+would just go ahead, and it kept "one more attempt" for itself after two
+failed fixes. One run per arm proves little; `--runs 5` is still to do.
+
+**Headless trial.** A throwaway PoC (can plain JDK 21 compute the top 10
+authors of a 100k-line CSV in under 1s, no CSV library), brief pre-approved
+in live mode, `claude -p` on Sonnet with `shogun-orchestrate` and
+`tonosaman-deploy` loaded, nobody answering. Result: yes, 70-113 ms in a
+Docker container, $0.56 of a $4 budget, one implementer and one read-only
+reviewer, three commits on the run branch, nothing pushed. Checked
+independently afterwards: the build passes, the container run prints the
+same top 10 with `elapsed_ms=90`, and the counts match Python's `csv` module
+(stricter than the run's own awk check). The report led with the answer,
+listed six items of honest PoC debt, and disproved one reviewer finding by
+running the code rather than arguing.
+
+Friction found, and what changed:
+
+1. **Writes under `.claude/` were refused as sensitive** in the headless run,
+   though the brief there was readable. The run put its log and report in a
+   temp path outside the project, where the author would never look. Fixed:
+   check the run folder is writable before starting, fall back to
+   `shogun-run/<slug>/` inside the working directory, committed on the run
+   branch, and say so on the report's first line.
+2. **`log.md` got one line** (the start) and every later decision went only
+   into the report. The rule ("written as it happens") was already there and
+   not followed. Not changed yet: in a 30-minute run with no interruption the
+   report covered it; it matters for resuming, which this trial didn't test.
+
+**Not exercised:** the escalation path. Nothing in this PoC triggered one.
+The next trial needs a planted trap (e.g. data that tempts a CSV library, or
+a success check that fails on first measurement) to see a headless run stop
+and write its open escalation into the report.

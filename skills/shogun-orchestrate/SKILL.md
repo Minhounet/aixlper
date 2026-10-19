@@ -188,6 +188,13 @@ on "the worker says it's done".
 `log.md` gets one line for every decision taken alone or escalated, written
 as it happens, so an interrupted run can be resumed from it.
 
+**Check the folder is writable before step 2.** A headless run may refuse
+writes under `.claude/` as a sensitive path even though it can read the
+brief there. If so, write the log and report to `shogun-run/<slug>/` at the
+root of the working directory instead, commit them on the run branch so
+they travel with the work, and say so on the report's first line. Never
+fall back to a path outside the working directory: the author won't find it.
+
 ## Token self-audit
 
 This file loads **in full** whenever the skill triggers and stays resident
