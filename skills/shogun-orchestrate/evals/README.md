@@ -64,3 +64,25 @@ policy. `escalate-or-decide` became `decide-without-the-author` (new
 graders), and `read-the-input`'s main grader now passes a flagged decision
 instead of an escalation. Scores below this line are the only ones that
 apply to the current rules.
+
+| Case (current rules, Sonnet, `--runs 5`) | With | Without | Note |
+|---|---|---|---|
+| `brief-before-running` | 1.00 (5/5) | 0.40 (0/5) | unchanged case, still discriminating |
+| `decide-without-the-author` | 1.00 (5/5) | 0.08 (0/5) | after two case defects were fixed, see below |
+| `read-the-input` | 1.00 (5/5) | 0.85 (4/5) | **no longer discriminating** |
+
+- `decide-without-the-author`, first runs 0.56 then 0.36. Read with a
+  judge asked for per-event reasons. Two defects in the *case*, one real gap
+  in the *skill*:
+  1. the skill had rules 5 (one more attempt) and 6 (budget past 80%: start
+     nothing new) colliding with no precedence; runs did both and
+     contradicted themselves. Fixed in `SKILL.md`: rule 6 overrides.
+  2. the budget came last, as event 7, so the agent met event 3 before
+     knowing spend was past 80%. Now stated up front as checkpoint state.
+  3. the grader still expected a hand-written parser for event 2, which is
+     new work past 80%. Fixed: not started, recorded as the alternative.
+- `read-the-input` stops discriminating once the prompt says "I won't
+  answer": the baseline then flags the reading openly too. The real failure
+  (never looking at the values) only shows in a headless run, where nobody
+  hands the agent a `head` of the file. Kept as a guard; the evidence for
+  this rule is the trap trials in `docs/design-log.md`.

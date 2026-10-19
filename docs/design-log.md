@@ -2640,3 +2640,54 @@ working on whatever doesn't depend on the answer, and the "under 1s" half
 arguably doesn't: the timing barely moves between readings, and both could
 be computed. Stopping is safer and cheaper; carrying on returns more on the
 author's return. Not changed until the author decides.
+
+### The author intervenes once: escalation replaced by decision rules
+
+**The author's call.** "The goal is for me not to interfere. Max only once
+at the beginning." So nothing may come back to the author mid-run, which
+removes the escalation channel the skill was built around. Rewritten:
+
+- **The brief is the only sitting,** so it front-loads everything: the real
+  input is read (`reading:`), foreseeable forks get proposed answers in a
+  new `defaults:` field, every skill's pause is merged in, and the tools the
+  run needs are checked while the author is there.
+- **Three kinds of moment, none of them "ask".** Hard limits (out of
+  bounds, scope, budget, any push or shared deploy, credentials, changing
+  the machine, changing the brief) are never crossed; if the work can't go
+  on without crossing one, the run finishes the rest and ends. Trivial
+  decisions (the six criteria, unchanged) get a log line. Everything else is
+  decided by fixed rules, in order: `defaults:` first, then plan wins, stay
+  inside `allowed`, never move the goalposts (a fail is an answer), carry
+  both readings when cheap, after two failed fixes one different approach
+  then revert and record, past 80% of budget start nothing new (overrides
+  the retry and reading rules), otherwise the most reversible option. Each
+  is reported as `DECIDED FOR YOU` with how to flip it, committed on its own
+  where possible so flipping is one revert.
+- **Shadow mode survives, after the fact:** the report tags every decision
+  `TRIVIAL` or `WOULD HAVE ASKED`, and the author's agreement with those tags
+  is still the calibration. The report gains a "for the next brief" list:
+  lines that would have made a decision unnecessary.
+- **One explicit override of other skills:** `igiari-tdd`'s and
+  `chottomatte-archi`'s mid-run re-approval of a plan deviation moves to the
+  report. Still never silent; only its timing changes, and only because the
+  author asked.
+
+**Third trap trial (same planted `a;b` cells, new rules, clean repo):**
+completed the PoC without stopping. Default reading per person, `raw`
+argument for per cell, both in the report with how to flip; container
+files added under `DECIDED FOR YOU` with the commit to revert; 94-117 ms.
+Checked independently: build passes, the default output matches Python's
+`csv` per-person count line for line, `raw` gives the per-cell counts.
+
+One new gap: Docker's daemon was down and the run **started `dockerd`
+itself**, calling it trivial ("Docker allowed, local only"). Changing the
+machine is outside any project scope, and on the author's workstation it is
+not the run's to do. Now a hard limit, with the tool check moved into the
+brief sitting.
+
+**Evals under the new rules** (`evals/README.md` has the table):
+`brief-before-running` and `decide-without-the-author` discriminate (1.00
+vs 0.40 and 0.08); `read-the-input` no longer does. Getting
+`decide-without-the-author` right took finding a real collision between the
+retry rule and the budget rule (now: budget wins) and two defects in the
+case itself, read from per-event judge reasons rather than guessed.
