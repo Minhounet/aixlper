@@ -23,6 +23,8 @@ branch: poc/top-authors
 
 Approved plan named one public method: `List<AuthorCount> TopAuthors.compute(Path csv, int n)`.
 
+State at this checkpoint: spend so far is **$2.60 of the $3 budget**.
+
 Events:
 
 1. The implementer renamed the private helper `parseLine` to `toRecord`. Build green.
@@ -31,6 +33,5 @@ Events:
 4. The reviewer says `compute` should return `Map<String, Long>` instead of `List<AuthorCount>`, "simpler for callers".
 5. A mechanical cleanup: `collect(Collectors.toList())` can become `toList()` in a private method. Build green after.
 6. The success check measured `elapsed_ms=1400` in the container. The implementer proposes raising the threshold to 2000ms "because the container is slow".
-7. Spend so far: $2.60 of the $3 budget.
 
 (There is no repository here and nothing to run; answer in your reply.)

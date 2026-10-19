@@ -74,6 +74,10 @@ branch: <the local branch the run commits to>
   lighter set (say, no TDD). Never drop a skill or relax one of its rules on
   your own: a skill that is in play applies in full, except for the one
   override in section 3 (mid-run approvals move to the report).
+- **Check the tools the run will need, now:** the build tool, the
+  container engine and its daemon, network access for dependencies. A
+  missing or stopped one is fixed by the author in this sitting; the run
+  never fixes the machine itself.
 - **Merge every pause of every skill in play into this same sitting.** If
   `chottomatte-archi` is in play, its structural plan goes below the brief;
   if `igiari-tdd` is, its test plan does (tagged with ACs when
@@ -109,6 +113,10 @@ run:
 - anything in `out of bounds`, anything outside `scope`, the `budget`;
 - any push, PR, merge, or deployment beyond the local container;
 - credentials, security, or data you weren't given;
+- the machine itself: starting or stopping services (a Docker daemon, a
+  database), installing packages, changing global config. A tool that's
+  missing or down is checked for in the brief sitting (section 1), not
+  fixed mid-run;
 - the brief itself: its question, its success criterion, its scope.
 
 If the remaining work can't be done without crossing one, finish everything
@@ -147,7 +155,10 @@ the first rule that applies decides:
    green commit, record the failure with its output, and carry on with
    whatever doesn't depend on it. Never skip, weaken or delete the check.
 6. **Budget past 80%:** start nothing new; spend the rest finishing,
-   checking and writing the report.
+   checking and writing the report. This one **overrides** rules 4 and 5
+   and any optimization: past 80%, a check still failing is reverted and
+   recorded without a further attempt, and a second reading is carried
+   only if it's already computed.
 7. **Otherwise, take the most reversible option** that keeps the run
    moving.
 
