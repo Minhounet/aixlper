@@ -34,3 +34,24 @@ both failing their main grader. The baseline answers were read:
   discriminating; `classification` is.
 
 One run per arm proves little; `--runs 5` before trusting the delta.
+
+### 2026-10-19 second run: Sonnet, `--runs 5`
+
+| Case | With | Without | Cost |
+|---|---|---|---|
+| `brief-before-running` | 1.00 (5/5) | 0.44 (0/5) | $1.07 for both cases |
+| `escalate-or-decide` (first grader) | 0.88 (4/5) | 0.32 (0/5) | |
+| `escalate-or-decide` (grader fixed) | 1.00 (5/5) | 0.16 (0/5) | $0.59 |
+| `read-the-input` | 1.00 (5/5) | 0.25 (0/5) | $0.61 |
+
+- **Grader defect fixed in `classification`.** The one with-skill failure
+  had the split exactly right (1 and 5 alone, the other five escalated);
+  two of three judges apparently held its *recommendation* of Commons CSV
+  against it. The grader now says it judges who decides, not what is
+  recommended.
+- **`read-the-input` baseline, read:** it does notice the `;` cells, then
+  decides "split per author" itself and hands that to the implementer.
+  That is exactly the failure the case targets.
+- `escalation-quality` and `check-not-shared` pass without the skill most
+  of the time; they are guards, not the signal. `--case` keeps only the
+  last value when repeated: run one case per invocation.

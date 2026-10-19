@@ -2590,3 +2590,53 @@ Friction found, and what changed:
 The next trial needs a planted trap (e.g. data that tempts a CSV library, or
 a success check that fails on first measurement) to see a headless run stop
 and write its open escalation into the report.
+
+### Trap trial: the run missed a meaning question, then caught it
+
+**The trap.** Same PoC, but the export is supplied, not generated, and 5,903
+of its 100k rows hold two authors in one cell (`author_0000;author_0017`).
+The brief doesn't say how to count them. Per cell or per person gives the
+same ten names but different counts (author_0000: 14,319 vs 15,181), so the
+choice changes whether the success check passes. It's the author's call.
+
+**First run: missed it, silently.** The run never looked at the values in
+the author column. It counted each `a;b` cell as one "author", and its
+"independent" awk check counted cells the same way, so the two agreed and
+proved nothing about the question. The report called the data "clean". Two
+smaller findings: `tonosaman-deploy` wants approval before adding a
+Containerfile; the run correctly didn't decide that alone, but filed it
+under "decided alone" and PoC debt instead of escalating it, and it ran an
+image left over from the previous trial instead of building one. The
+`shogun-run/` fallback worked.
+
+**What changed in `SKILL.md`:**
+
+1. **Read the real input before writing `success`,** a sample of the
+   values the question depends on (separators inside a field, case or
+   whitespace variants, empties, duplicates), and settle anything with two
+   readings in a new `reading:` brief field. At run start the run reads
+   the input again itself, even if the brief was written without it, and
+   escalates whatever `reading:` doesn't settle before the implementer
+   starts.
+2. **Every pause of every skill in play goes into the brief sitting**
+   (now naming `tonosaman-deploy`'s build and container files), and a pause
+   the brief didn't cover is an escalation, never "decided alone" or debt.
+3. **A cross-check counts as independent only if it doesn't share the
+   code's reading:** it's written from `question` and `reading:`, and it
+   covers the cases `reading:` is about.
+
+Pinned by a new eval, `read-the-input`: 1.00 with the skill, 0.25
+without, 5 runs each. The baseline notices the `;` cells and then decides
+the reading itself.
+
+**Second run, fixed skill, fresh clone, leftover image deleted:** caught
+it. It stopped before any code at $0.11, escalated both readings with real
+counts (checked: they match Python's `csv` module), recommended per-person
+without applying it, and committed the open question to the report. This
+time `.claude/` was writable, so whether headless runs refuse it varies.
+
+**Open, for the author:** the run stopped entirely. The skill says to keep
+working on whatever doesn't depend on the answer, and the "under 1s" half
+arguably doesn't: the timing barely moves between readings, and both could
+be computed. Stopping is safer and cheaper; carrying on returns more on the
+author's return. Not changed until the author decides.
