@@ -79,7 +79,7 @@ sections without the author asking.**
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
 | `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`.claude/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design, traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived and no blocking discrepancy is open. A discrepancy ledger in `acceptance.md` pinpoints conflicts between the Jira description, the ACs, the design and the built code, each quoted verbatim on both sides. |
 | `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not checked; `references/nuxeo.md` is a placeholder waiting for the author's real setup. |
-| `shogun-orchestrate` | New, not dogfooded | **Claude-only** (spawns subagents): the autonomous mode. One approved brief (question, observable success check, scope, budget), then the other skills run unattended; only non-trivial decisions escalate, by objective criteria, default escalate. Shadow mode first (every decision escalated with its own trivial/needs-you tag) to calibrate before live. PoCs first. |
+| `shogun-orchestrate` | New, two headless trials | **Claude-only** (spawns subagents): the autonomous mode. The author intervenes **once**, approving a brief (question, observable success check, input `reading:`, foreseen `defaults:`, scope, budget); nothing comes back to them mid-run. Hard limits are never crossed; trivial decisions by six objective criteria; everything else decided by fixed rules and reported as `DECIDED FOR YOU` with how to flip it. Shadow mode tags every decision in the report for after-the-fact calibration. PoCs first. |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
 by one with the author, evals checked against the no-skill baseline). The
@@ -115,8 +115,10 @@ implementation, shown and re-approved — never silent substitution.
   edit to the `SKILL.md` plus a log entry, same discipline as above.
 - **`kaizen-refactor`:** nothing decided yet beyond
   `make validate`.
-- **`shogun-orchestrate`:** dogfood on a real PoC in shadow mode; the
-  agreement rate between its tags and the author's answers is the measure.
+- **`shogun-orchestrate`:** headless trials (`claude -p`, brief
+  pre-approved, nobody answering) on throwaway PoCs with a planted trap, then
+  check the run's claims independently. On real PoCs, shadow mode: the
+  author's agreement with the report's tags is the measure.
 - **`tonosaman-deploy`:** dogfood with a throwaway project per runtime, run
   for real against the engine (Docker here; Podman still to do). The Nuxeo
   reference is written from the author's own work config, not from memory.

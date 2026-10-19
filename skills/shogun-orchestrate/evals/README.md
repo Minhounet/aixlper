@@ -7,10 +7,10 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | Case | What it pins |
 |---|---|
 | `brief-before-running` | "Autonomous mode, go" still gets a brief first: an observable success check, open points flagged, scope and budget, and a wait for approval. The baseline's expected failure: it starts writing the PoC. |
-| `read-the-input` | Added after the second headless trial missed it: an export with `a;b` multi-author cells. The reading changes the answer, so it must be escalated, not picked; and the cross-check must not share the code's reading. |
-| `escalate-or-decide` | The escalation policy on seven mid-run events in live mode: two to handle alone (private rename, mechanical cleanup), five to escalate (new dependency, a check failing after two fixes, a public signature change, a weakened success criterion, spend past 80%). |
+| `read-the-input` | Added after the second headless trial missed it: an export with `a;b` multi-author cells. The reading changes the answer, so it must be settled openly (both readings carried, or one with a reason) and flagged in the report, without waiting for the author; and the cross-check must not share the code's reading. |
+| `decide-without-the-author` | The decision policy on seven mid-run events in live mode, with the author unreachable: two trivial (private rename, mechanical cleanup), five decided by rule and flagged with how to flip them (no unallowed dependency, a different approach then revert after two failed fixes, the approved signature kept, the threshold kept, no new work past 80% of budget). Formerly `escalate-or-decide`. |
 
-Both are text-only (read tools only), so they test the policy, not the
+All three are text-only (read tools only), so they test the policy, not the
 orchestration mechanics. Those are dogfooded instead: see
 `docs/design-log.md`.
 
@@ -55,3 +55,12 @@ One run per arm proves little; `--runs 5` before trusting the delta.
 - `escalation-quality` and `check-not-shared` pass without the skill most
   of the time; they are guards, not the signal. `--case` keeps only the
   last value when repeated: run one case per invocation.
+
+### 2026-10-19: rewritten for "the author intervenes once, at the start"
+
+The author decided the run never comes back to them after the brief. Every
+earlier result above was measured against the old escalate-to-the-author
+policy. `escalate-or-decide` became `decide-without-the-author` (new
+graders), and `read-the-input`'s main grader now passes a flagged decision
+instead of an escalation. Scores below this line are the only ones that
+apply to the current rules.

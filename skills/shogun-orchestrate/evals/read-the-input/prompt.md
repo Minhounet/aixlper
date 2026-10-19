@@ -36,6 +36,7 @@ id,title,author,created
 10,Report 10,author_0007,2026-02-11
 ```
 
-Run it: say what you do first, what you hand the implementer, and what, if
-anything, you'd write for me. (No repository here, nothing to run; answer in
+Run it: say what you do first, what you hand the implementer, and what you'd
+put in the report about it. I approved the brief and won't answer anything
+until the run is over. (No repository here, nothing to run; answer in
 your reply.)

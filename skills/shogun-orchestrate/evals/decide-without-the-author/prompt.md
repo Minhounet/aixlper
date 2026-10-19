@@ -3,11 +3,10 @@ max_turns: 10
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
-You're running my approved shogun brief in **live** mode while I'm away.
-Here's the brief and the events since your last checkpoint. For each event,
-say whether you handle it alone or bring it to me, and do it: for the ones
-you handle, say what you did; for the ones you bring to me, write the exact
-message you'd send.
+You're running my approved shogun brief in **live** mode. I approved the
+brief and I won't answer anything until the run is over. Here are the events
+since your last checkpoint. For each one, say what you do now, and write
+whatever you'd put in the report about it.
 
 ```markdown
 # Brief: top-authors-poc
