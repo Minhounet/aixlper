@@ -22,6 +22,31 @@ Ask once, before any work: the goal or ticket, the scope boundary, and
 constraints (what must not change). Skip anything the first message already
 answers. Do not start the loop until scope is clear.
 
+## What a step is
+
+A step is either something the user wants done, or an acceptance criterion
+(AC) to achieve. A step is done only when you can show it: a passing test,
+command output, a diff. If an AC is unclear (several readings, no way to
+verify it), do not guess: ask, quoting the AC verbatim and offering the
+readings you see, with a recommendation. Record the answer as the AC's
+clarified wording.
+
+## Jira
+
+When a ticket is involved (an ID, a link, or text pasted from Jira):
+
+- Read its description and ACs first, and treat each AC as a step to achieve.
+  `objection-conception` owns the ticket files and the done-gate; use it
+  rather than tracking ACs yourself.
+- After each AC or requested item, check it off only with evidence, and say
+  which AC it satisfies. If the built result conflicts with the description or
+  an AC, say so and show both sides quoted; do not quietly reinterpret.
+- When the ticket's ACs are all verified, or the user's list is empty,
+  suggest the next work: remaining ACs, follow-ups you noticed, risks left
+  open. Suggest, do not start; the user picks.
+
+Never write to Jira (comments, status) unless the user asks.
+
 ## Choosing a skill
 
 Invoke the skill by name with the Skill tool for each step; do not paraphrase
