@@ -27,8 +27,11 @@ what's being described instead needs its own isolated context, its own
 tool allowlist or model, or genuinely separate/parallel execution
 (delegated work, not followed instructions) — that's a Claude Code
 **subagent** (`.claude/agents/*.md`), a different mechanism entirely.
-Subagents aren't portable to Gemini CLI, so they're structurally out of
-scope for this repo even when they'd be the better tool for the job.
+Subagents aren't portable to Gemini CLI, so they never go in `skills/`.
+They are allowed in `.claude/agents/` as explicitly Claude-only (say so in
+the description), e.g. `iterate`, the orchestrator that routes between the
+skills and asks the author at the gates. Skills stay portable; agents don't
+have to.
 
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
@@ -303,4 +306,4 @@ Examples:
 
 After completing any change, commit automatically — never ask for permission first.
 Tell the user the commit message used so they can request a change if not satisfied.
-Never push automatically; push only when the user explicitly asks.
+Then push automatically to the session's designated branch (`git push -u origin <branch>`); never push to any other branch, and never open a PR unless asked.
