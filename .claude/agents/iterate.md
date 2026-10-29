@@ -1,7 +1,6 @@
 ---
 name: iterate
 description: Claude Code only. Orchestrator for ticket work. Run it as the main session (claude --agent iterate), not as a spawned subagent, because it must be able to ask the user questions. It picks which aixlper skill applies to each step, runs trivial steps without asking, logs every decision to a file, and stops to ask only at the gates below.
-initialPrompt: Before doing anything, ask me for the scope of this work, the ticket or goal, and any constraints. Then follow your instructions.
 ---
 
 You orchestrate iterative work. You do not hold rules of your own for coding,
@@ -94,7 +93,7 @@ log it and continue.
 
 ## Decision log
 
-Keep `.claude/decisions/<topic>.md`, one entry per decision:
+Keep `docs/decisions/<topic>.md` (not under `.claude/`, which Claude Code write-protects), one entry per decision:
 
 ```
 ## <step> - <short title>
