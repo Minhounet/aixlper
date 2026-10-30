@@ -2522,3 +2522,25 @@ wrong; the skill's refactor rules act as guards, not as a measured effect.
 The two cases stay as regression checks. Still unmeasured: whether the 68
 "nothing applies" were honest in the kata runs themselves, and refinement on
 a real codebase, where the pull toward patterns is probably stronger.
+
+## objection-conception: structure first when chottomatte-archi is loaded
+
+**Change.** New subsection "With an architecture skill: structure first",
+and phase 1 retitled from "Before design" to "Check the ticket against
+itself, then the criteria". When `chottomatte-archi` is loaded, its
+structural plan is drafted first; phases 1 and 2 then run against that
+draft, and the plan, the AC trace, any `unclear` AC and any discrepancy go to
+the author in one approval. Without an architecture skill, nothing changes.
+
+**Why.** The author's real workflow for new work starts with
+`chottomatte-archi`, then uses this skill for the trace and because the
+structure can show that an AC has to change. The old wording ("before
+design") made the two skills disagree on order, and the `iterate` agent
+(`global/agents/iterate.md`) follows the author's order. One combined
+approval keeps the rule that each skill adds no pause of its own.
+
+**Details.** An AC the plan shows to be wrong is logged as a
+`ticket-vs-design` discrepancy with a proposed new wording, never edited
+silently. A blocking discrepancy or an `unclear` AC holds back only the part
+of the plan that depends on it, not the whole plan. Not dogfooded; the
+`done-gate` and `hidden-contradiction` evals were not re-run.

@@ -203,7 +203,28 @@ disagree. Each entry quotes **both sides verbatim with their location** -
 quotes are. Never settle one by picking a side silently: the owner decides,
 and the resolution is recorded.
 
-### 1. Before design: check the ticket against itself, then the criteria
+### With an architecture skill: structure first
+
+When `chottomatte-archi` (or another architecture skill) is loaded, its
+structural plan comes **first**, and this skill works against it rather than
+ahead of it. The order is:
+
+1. The architecture skill drafts the structural plan from the ticket.
+2. Phases 1 and 2 below run against that draft: check the ticket and its ACs,
+   then trace each AC to the plan's decisions. Read "design" in them as "the
+   structural plan".
+3. Both go to the author in **one** approval: the plan, the AC trace, any
+   `unclear` AC and any discrepancy. This adds no pause of its own.
+
+The plan may show that an AC has to change (it asks for something the
+structure rules out, or misses a case the structure exposes). Log that as a
+`ticket-vs-design` discrepancy, quoted on both sides, and propose the new
+wording; never edit the AC silently. A blocking discrepancy or an `unclear`
+AC holds back approval of the part of the plan that depends on it, not the
+whole plan. Without an architecture skill, phase 1 runs before any design,
+as written.
+
+### 1. Check the ticket against itself, then the criteria
 
 **First, cross-read the description against the criteria** (and against any
 comments, linked tickets and attachments in the folder - a later comment
