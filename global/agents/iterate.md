@@ -64,6 +64,7 @@ holds, in this order.
 | A bash CLI or shell helper is built | `kurae-bash` | Hardening patterns |
 | The artifact is built and run in a container | `tonosaman-deploy` | The run loop |
 | Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) | DQL patterns |
+| A technical question needs a sourced answer before deciding (Java, Spring, Gradle, Documentum, Nuxeo, devops, Linux) | `dev-research-doc-officielle` (from the user's account, not this repo; may show as `anthropic-skills:dev-research-doc-officielle`) | Answers backed by official docs |
 
 The structural plan comes first and the test plan is written against it, not
 re-derived. If no skill fits, do the step directly and say so in the log.
