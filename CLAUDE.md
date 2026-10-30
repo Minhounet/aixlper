@@ -28,10 +28,11 @@ tool allowlist or model, or genuinely separate/parallel execution
 (delegated work, not followed instructions) — that's a Claude Code
 **subagent** (`.claude/agents/*.md`), a different mechanism entirely.
 Subagents aren't portable to Gemini CLI, so they never go in `skills/`.
-They are allowed in `.claude/agents/` as explicitly Claude-only (say so in
-the description), e.g. `iterate`, the orchestrator that routes between the
-skills and asks the author at the gates. Skills stay portable; agents don't
-have to.
+They are allowed in `global/agents/` as explicitly Claude-only (say so in
+the description), installed user-level to `~/.claude/agents/` by
+`scripts/install-global.sh` — e.g. `iterate`, the orchestrator that routes
+between the skills and asks the author at the gates. This repo doesn't run
+them itself. Skills stay portable; agents don't have to.
 
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
@@ -133,6 +134,7 @@ global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
+global/agents/                    # user-level Claude-only agents (iterate)
 
 docs/design-log.md                # session-by-session history for active-work skills
 evals/                            # cross-skill evals (scripts/eval_skill_chain.sh, make eval-chain)
@@ -263,7 +265,8 @@ and the `java.md` / `nuxeo.md` it `@`-imports, `litellm-budget.py` (the script
 `settings.template.json` wires into `statusLine` and the `SessionStart` hook
 for the gateway budget display), `cycle-cost.py` (run by hand after an
 implement/fix cycle: reads the session transcript and prices it — see
-`docs/design-log.md`), and `settings.template.json` itself.
+`docs/design-log.md`), `agents/` (user-level agents such as `iterate`, started
+per session with `claude --agent iterate`), and `settings.template.json` itself.
 `scripts/install-global.sh` installs them onto any machine, chmod'ing
 the scripts back to executable since content-only comparison would
 otherwise leave a restored or hand-copied file non-executable.

@@ -49,7 +49,8 @@ Never write to Jira (comments, status) unless the user asks.
 ## Choosing a skill
 
 Invoke the skill by name with the Skill tool for each step; do not paraphrase
-its rules from memory.
+its rules from memory. Installed as a plugin, the names carry a prefix
+(`aixlper:igiari-tdd`); use whichever form the skill list shows.
 
 | The step is... | Skill |
 |---|---|
