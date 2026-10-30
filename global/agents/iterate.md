@@ -106,6 +106,8 @@ front. Then each AC is its own TDD run:
    `verified` or not, any discrepancy. This is the per-AC update; nothing
    touches `acceptance.md` during the cycles. Commit it before the first red
    of the next AC: never fold two ACs' updates into one commit.
+   Log any difficulty hit during the run (a blocked tool, a plan change, a
+   surprise) in `retro.md`, as `objection-conception` asks.
 4. Append one entry to the decision log (below).
 5. Move to the next AC, unless a gate applies.
 
@@ -144,16 +146,15 @@ already have, and hand large searches to a subagent so only the conclusion
 comes back.
 
 You cannot clear the context yourself; the user does, with `/clear`. So
-suggest a cut at clean break points, which are:
+**pause** at these break points, even when plans are pre-approved:
 
-- after a plan is approved (structure or tests) and before implementation;
-- after an AC is verified and logged, once several large files or long outputs
-  have piled up;
+- after each AC is verified and its update committed (build mode);
 - before switching mode.
 
-Before suggesting a cut, update the `Resume` block of the decision log. Then
-say, in one line: "Good point to /clear. Restart with `claude --agent
-iterate` and say: resume <topic>."
+To pause: update the `Resume` block of the decision log, commit it, then end
+your turn with one line: "AC<n> done. Continue, or /clear and restart with
+`claude --agent iterate` and say: resume <topic>." A plain "continue" means
+go on. Skip the pauses only if the user said "no pauses" at the start.
 
 ## Decision log
 
