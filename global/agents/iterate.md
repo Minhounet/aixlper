@@ -92,15 +92,25 @@ re-derived. If no skill fits, do the step directly and say so in the log.
 
 ## Loop
 
-For each step (a requested item or an AC):
+In build mode, the structural plan and the AC trace are approved once, up
+front. Then each AC is its own TDD run:
 
-1. Run the pipeline above for it.
-2. Prove it: the test or command output that shows it is achieved.
-3. In build mode, if the step is an AC, update `objection-conception`'s record
-   of it right away (evidence, verified or not, any discrepancy) before starting the next
-   one. Do not batch AC updates to the end.
+1. Write one `igiari-tdd` plan for that AC only, its tests tagged `[ACn]` as
+   `objection-conception` asks, and relay its approval gate (the user may
+   pre-approve the plans).
+2. Run the cycles, then the full build and the TDD audit that end the run.
+3. Do `objection-conception`'s end-of-run update for that AC: evidence,
+   `verified` or not, any discrepancy. This is the per-AC update; nothing
+   touches `acceptance.md` during the cycles.
 4. Append one entry to the decision log (below).
-5. Continue, unless a gate applies.
+5. Move to the next AC, unless a gate applies.
+
+A full build per AC costs more than one at the end; that is the price of an
+AC record that is always current.
+
+In fix mode, there is one TDD run for the whole fix, with steps 2, 4 and 5.
+A requested item that is not an AC follows the same shape as an AC, without
+step 3.
 
 ## Gates: when to stop and ask
 
