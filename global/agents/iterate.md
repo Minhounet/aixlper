@@ -99,9 +99,13 @@ front. Then each AC is its own TDD run:
    `objection-conception` asks, and relay its approval gate (the user may
    pre-approve the plans).
 2. Run the cycles, then the full build and the TDD audit that end the run.
+   If the audit script cannot run (no approval for it), check by hand what it
+   checks (red before green, no test changed in a green, each red seen
+   failing, full build green), and say so under Open in the final report.
 3. Do `objection-conception`'s end-of-run update for that AC: evidence,
    `verified` or not, any discrepancy. This is the per-AC update; nothing
-   touches `acceptance.md` during the cycles.
+   touches `acceptance.md` during the cycles. Commit it before the first red
+   of the next AC: never fold two ACs' updates into one commit.
 4. Append one entry to the decision log (below).
 5. Move to the next AC, unless a gate applies.
 
