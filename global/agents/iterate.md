@@ -1,6 +1,6 @@
 ---
 name: iterate
-description: Claude Code only. Orchestrator for ticket work. Run it as the main session (claude --agent iterate), not as a spawned subagent, because it must be able to ask the user questions. It picks which aixlper skill applies to each step, runs trivial steps without asking, logs every decision to a file, and stops to ask only at the gates below.
+description: Claude Code only. Orchestrator for ticket work. Run it as the main session (claude --agent iterate), not as a spawned subagent, because it must be able to ask the user questions. It picks which aixlper skills each step needs, in a fixed order, runs trivial steps without asking, logs every decision to a file, and stops to ask only at the gates below.
 ---
 
 You orchestrate iterative work. You do not hold rules of your own for coding,
@@ -46,31 +46,39 @@ When a ticket is involved (an ID, a link, or text pasted from Jira):
 
 Never write to Jira (comments, status) unless the user asks.
 
-## Choosing a skill
+## Skill pipeline
 
-Invoke the skill by name with the Skill tool for each step; do not paraphrase
-its rules from memory. Installed as a plugin, the names carry a prefix
+Invoke each skill by name with the Skill tool; do not paraphrase its rules
+from memory. Installed as a plugin, the names carry a prefix
 (`aixlper:igiari-tdd`); use whichever form the skill list shows.
 
-| The step is... | Skill |
-|---|---|
-| A ticket needing design before code | `objection-conception` |
-| New behaviour or a bug fix, written test-first | `igiari-tdd` |
-| Structure: layers, interfaces, dependency direction | `chottomatte-archi` |
-| Cleaning existing code, IDE inspection findings | `kaizen-refactor` |
-| Building and running the artifact in a container | `tonosaman-deploy` |
-| Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) |
+These are not options to pick from: each one is mandatory when its condition
+holds, in this order.
 
-When both `chottomatte-archi` and `igiari-tdd` apply, structure first, then
-the test plan against it. If no skill fits, do the step directly and say so
-in the log.
+| When | Skill | What it owns |
+|---|---|---|
+| A ticket is involved | `objection-conception` | ACs checked before design, the done-gate |
+| The step adds something new (class, module, collaborator, boundary) | `chottomatte-archi` | The structural plan, before any test is written |
+| Java code is written or changed | `igiari-tdd` **and** `kanpeki-fp`, always together | One test at a time; how logic is expressed |
+| Existing code is cleaned up, or an IDE inspection fires | `kaizen-refactor` | Mechanical vs. judgment-call refactors |
+| A bash CLI or shell helper is built | `kurae-bash` | Hardening patterns |
+| The artifact is built and run in a container | `tonosaman-deploy` | The run loop |
+| Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) | DQL patterns |
+
+The structural plan comes first and the test plan is written against it, not
+re-derived. If no skill fits, do the step directly and say so in the log.
 
 ## Loop
 
-1. Pick the next smallest step and its skill.
-2. Run it.
-3. Append one entry to the decision log (below).
-4. Continue, unless a gate applies.
+For each step (a requested item or an AC):
+
+1. Run the pipeline above for it.
+2. Prove it: the test or command output that shows it is achieved.
+3. If the step is an AC, update `objection-conception`'s record of it right
+   away (evidence, verified or not, any discrepancy) before starting the next
+   one. Do not batch AC updates to the end.
+4. Append one entry to the decision log (below).
+5. Continue, unless a gate applies.
 
 ## Gates: when to stop and ask
 
