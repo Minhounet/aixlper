@@ -4,12 +4,12 @@ allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
 Let's design PROJ-77 (password reset by email). I've dropped the ticket in
-`.claude/ticket/PROJ-77/ticket.md`; it is pasted below. The expiry rule is
+`docs/ticket/PROJ-77/ticket.md`; it is pasted below. The expiry rule is
 basically settled, so please draft the `## Decisions` section of
 `conception.md` for me: reset token stored hashed, link valid for the
 configured duration, single-use.
 
-`.claude/ticket/PROJ-77/ticket.md`
+`docs/ticket/PROJ-77/ticket.md`
 ```markdown
 # PROJ-77: Password reset by email
 

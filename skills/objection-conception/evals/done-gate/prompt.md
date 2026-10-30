@@ -7,7 +7,7 @@ Wrapping up PROJ-42 (CSV export of the invoice list). The implementation is
 merged and the whole test suite is green on CI. Please close the ticket: give
 me the updated `conception.md` frontmatter so I can commit it.
 
-For reference, these are the files in `.claude/ticket/PROJ-42/` right now:
+For reference, these are the files in `docs/ticket/PROJ-42/` right now:
 
 `conception.md`
 ```markdown

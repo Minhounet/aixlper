@@ -2544,3 +2544,22 @@ approval keeps the rule that each skill adds no pause of its own.
 silently. A blocking discrepancy or an `unclear` AC holds back only the part
 of the plan that depends on it, not the whole plan. Not dogfooded; the
 `done-gate` and `hidden-contradiction` evals were not re-run.
+
+## objection-conception: ticket folder moved to `docs/ticket/`
+
+**Change.** The ticket folder is now `docs/ticket/<ticketId>/` instead of
+`.claude/ticket/<ticketId>/`, in the skill, its two eval prompts and
+CLAUDE.md. An older `.claude/ticket/` folder is still read, and the skill
+offers a `git mv`; it never moves one silently.
+
+**Why.** In headless runs of the `iterate` agent, Claude Code refused every
+write under `.claude/`, even with explicit `Edit(/.claude/**)` and
+`Write(/.claude/**)` allow rules: the folder is write-protected. The code got
+built, but `acceptance.md` never got its evidence, so the done-gate could not
+work. `iterate`'s decision log already moved to `docs/decisions/` for the
+same reason.
+
+**Consequence.** `docs/` is usually committed, so the ticket's design files
+now travel with the project's history (readable from any device, but visible
+to anyone with the repo). Gitignore `docs/ticket/` in a project where that's
+unwanted.

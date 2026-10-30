@@ -1,6 +1,6 @@
 ---
 name: objection-conception
-description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under .claude/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session, and when the user wants to check, clarify, trace or verify a ticket's acceptance criteria ("critères d'acceptation", "AC", "definition of done"), or to check whether the ticket's description is coherent, complete and consistent with its criteria and the design ("incohérence", "écart", "discrepancy", "is the Jira OK"), at any point - before design, during it, or after implementation. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
+description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under docs/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session, and when the user wants to check, clarify, trace or verify a ticket's acceptance criteria ("critères d'acceptation", "AC", "definition of done"), or to check whether the ticket's description is coherent, complete and consistent with its criteria and the design ("incohérence", "écart", "discrepancy", "is the Jira OK"), at any point - before design, during it, or after implementation. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
 ---
 
 # Objection Conception
@@ -29,7 +29,12 @@ doing anything else.
 
 ## Read what's already there before saying anything
 
-Look in `.claude/ticket/<ticketId>/` before starting any design discussion:
+Look in `docs/ticket/<ticketId>/` before starting any design discussion. (The folder lives under `docs/`, not
+`.claude/`, because Claude Code write-protects `.claude/`. If an older
+`.claude/ticket/<ticketId>/` exists instead, read it, and offer to move it with
+`git mv`; never move it silently.)
+
+What to look for:
 
 - **Ticket context/requirements** the user has already dropped in that
   folder - read all of it; it's the source of truth for what's being asked.
@@ -100,7 +105,7 @@ technology is a detail decided late, so:
 
 ## Write conception.md incrementally
 
-`conception.md` lives at `.claude/ticket/<ticketId>/conception.md` and
+`conception.md` lives at `docs/ticket/<ticketId>/conception.md` and
 captures the design decisions actually reached - the shape being built,
 the approach chosen and why, open questions still unresolved, and
 approaches that were considered and ruled out (with the reason).
