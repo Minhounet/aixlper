@@ -2827,3 +2827,26 @@ LoginUseCase." It loaded only `iterate`, asked nothing, answered correctly
 the file before editing it, changed only `LoginUseCase.java`, wrote no
 decision log or `docs/`, no report shape, no commit, and said plainly it had
 not compiled or run tests. Nothing to fix. ui mode is the one left untested.
+
+## iterate UI mode and shoko-playwright: first run, on a local page
+
+Headless, Sonnet, $0.24, on a static document-list page served locally (no
+Nuxeo, no Podman): PROJ-20 with AC1 (search filters, already working) and
+AC2 ("No documents found", missing). It loaded `iterate`,
+`shoko-playwright`, `objection-conception` and no `igiari-tdd`. AC1's check
+passed on its first run - recorded as evidence, no code change; AC2's failed,
+drove the change, then passed. 3 checks, AC records, decision log, one
+commit.
+
+Two fixes:
+- **The reviewer was skipped on the agent's own judgment** ("very small
+  change"), because its default was stated for build mode only. Now: on by
+  default in build and UI modes, off in fix mode unless "with review", never
+  in think or direct; only the user turns it off.
+- **`shoko-playwright`:** its first "message hidden" check used a count of
+  zero, which a hidden element still fails. New rule, proposed by the run
+  itself: "not shown" means not visible, unless the AC says gone from the
+  page.
+
+Also seen: both ACs landed in one commit, not one per AC. Left as is for
+now. Not re-run; the real test needs the author's Nuxeo under Podman.

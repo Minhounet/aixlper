@@ -63,6 +63,9 @@ pass means the AC holds:
 - **No retries to get green.** A check that passes only on a retry is
   flaky; that is a finding to fix (usually a missing wait condition), not a
   pass.
+- **"Not shown" means not visible**, not absent: an element can stay in the
+  page while hidden. Assert it is hidden (not visible), unless the AC says
+  it must be gone from the page entirely.
 - **Assert the outcome the AC states, not a side detail.** If the AC says
   "the document appears in the list", check the list, not a toast that
   says "saved".

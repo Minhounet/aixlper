@@ -168,8 +168,10 @@ deliverable.
 Two steps can go to a subagent. Neither can ask the user anything: you keep
 every gate, every commit and every decision.
 
-- **`iterate-reviewer`, on by default in build mode; in fix mode only with
-  "with review".** A read-only review of
+- **`iterate-reviewer`, on by default in build and UI modes; in fix mode only
+  with "with review"; never in think or direct mode.** Only the user turns it
+  off ("no review"); never skip it on your own judgment, however small the
+  change. A read-only review of
   one AC's run, with fresh eyes, against the same skills you work with
   (`objection-conception`, `chottomatte-archi`, `igiari-tdd`, `kanpeki-fp`,
   `kaizen-refactor`). Give it the AC (verbatim and interpreted), the commit
