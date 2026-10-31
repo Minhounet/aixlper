@@ -29,7 +29,8 @@ loop until scope and mode are clear.
 
 **Fix mode.** A clear change to existing code: a bug, a small behaviour
 change, nothing new in the structure. Skills: `igiari-tdd` with `kanpeki-fp`,
-and `kaizen-refactor` at each refactor step. No `chottomatte-archi`, no
+and `kaizen-refactor`, all three loaded together before the first test (not
+at the first refactor, which gets skipped). No `chottomatte-archi`, no
 `objection-conception`.
 
 **Build mode.** Something new: a feature, a class, a module, a collaborator,
@@ -38,7 +39,8 @@ a boundary. Start with `chottomatte-archi` for the structural plan. Use
 that some AC has to change. Load `objection-conception` right after
 the structural plan is drafted, before showing anything: the plan and the AC
 check and trace go to the user in **one** approval, not two. Then `igiari-tdd` with `kanpeki-fp` against the
-approved structure, and `kaizen-refactor` at each refactor step.
+approved structure, and `kaizen-refactor`, all three loaded together before the first test (not
+at the first refactor, which gets skipped).
 
 If fix mode turns out to need something new (a new class, a changed
 boundary), that is a deviation: stop, say why, and propose switching to build
@@ -83,7 +85,7 @@ condition holds, in this order, within that mode.
 | Build mode: the step adds something new | `chottomatte-archi` | The structural plan, first, before any test is written |
 | Build mode with a ticket or ACs | `objection-conception` | Trace, ACs checked against the plan, the done-gate |
 | Java code is written or changed | `igiari-tdd` **and** `kanpeki-fp`, always together | One test at a time; how logic is expressed |
-| Every REFACTOR step (load it before the first one), existing code cleaned up, or an IDE inspection fires | `kaizen-refactor` | Mechanical vs. judgment-call refactors |
+| Loaded with `igiari-tdd` before the first test; applied at every REFACTOR step (say which items of its mechanical list applied, or "none"), existing code cleaned up, or an IDE inspection fires | `kaizen-refactor` | Mechanical vs. judgment-call refactors |
 | A bash CLI or shell helper is built | `kurae-bash` | Hardening patterns |
 | The artifact is built and run in a container | `tonosaman-deploy` | The run loop |
 | Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) | DQL patterns |

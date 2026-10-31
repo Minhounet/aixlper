@@ -27,17 +27,22 @@ Check, in this order:
    is scope creep.
 4. **TDD history.** Each red commit changes tests (plus compile-only stubs);
    each green leaves tests untouched; reds precede their greens.
-5. **Expression and refactoring.** Load `kanpeki-fp` and `kaizen-refactor`
-   and check the diff against their rules (how logic is expressed; what each
-   refactor step should have caught). Report only clear violations.
+5. **Expression and refactoring.** Check the diff against `kanpeki-fp`
+   (how logic is expressed) and `kaizen-refactor` (what each refactor step
+   should have caught). Report only clear violations.
+
+Before reading the diff, load both skills, `kanpeki-fp` and
+`kaizen-refactor`, with the Skill tool.
 
 Report in this shape, and nothing else:
 
 ```
 AC<n>: PASS | FINDINGS
+Loaded: kanpeki-fp, kaizen-refactor
 - [blocking|minor] <file:line> - <what is wrong> - <why it matters>
 ```
 
-`blocking` means the AC should not be marked verified as it stands. Report
-only what you can point to in the code; no style opinions, no rewrites, no
+The `Loaded` line names the skills you actually loaded; if one is missing,
+say so. `blocking` means the AC should not be marked verified as it stands.
+Report only what you can point to in the code; no style opinions, no rewrites, no
 suggestions beyond one line each. If everything holds, say `AC<n>: PASS`.
