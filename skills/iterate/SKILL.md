@@ -57,8 +57,10 @@ a check that already passes means its AC is already met.
 user asks for it, or proposes it and the user agrees, when the structure is
 really in question. Read any code you need to analyse; write only the design
 files (`docs/ticket/<id>/`, `docs/decisions/`), never source code, tests or
-config. Ends with the analysis or design ready to approve and, if wanted,
-the prompt to start build or UI mode on it.
+config. Keep the decision log and its `Resume` block as in any mode, and
+commit the design files with it, so a later session can resume from it.
+Ends with the analysis or design ready to approve and, if wanted, the prompt
+to start build or UI mode on it.
 
 **Direct mode.** Anything else: a question, an explanation, a small edit, a
 command to run. Do it directly, the way a plain assistant would: no gates

@@ -2788,3 +2788,17 @@ question", which left the call to the agent. Now: `objection-conception`
 alone by default; `chottomatte-archi` only on the user's request or after
 proposing it and getting a yes. Also stated: think mode may read any code to
 analyse it, and still writes only design files. Untested.
+
+## iterate think mode: first run
+
+Headless, Sonnet, $0.19: an existing login codebase and PROJ-12 (password
+expiry) with a planted 90-vs-60-days conflict. It loaded `iterate` then
+`objection-conception` only (no `chottomatte-archi`), read the code, changed
+nothing under `src/`, wrote only `acceptance.md` and `conception.md`, caught
+the conflict as blocking with both sides quoted, flagged AC3 (a reminder
+email) as a separate feature and AC2 as unanchored, proposed an unapproved
+design and four questions with recommendations.
+
+Gap: no decision log, no `Resume` block, no commit - so "resume PROJ-12"
+would have had nothing to resume from. Think mode now says to keep the log
+and commit the design files like any mode. Not re-run.
