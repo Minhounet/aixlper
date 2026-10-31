@@ -124,14 +124,26 @@ the work from anywhere, your phone included.
 ./scripts/install.sh          # the skills themselves
 ```
 
-To install only the agents: `cp global/agents/*.md ~/.claude/agents/`.
-Nothing changes in your projects until you ask for the agent.
+`install-global.sh` also adds the `ci` alias to `~/.bashrc`, in a block
+marked `# >>> aixlper >>>`. Re-running replaces that block, never duplicates
+it, and touches nothing else (`--no-shell` to skip it). Open a new terminal
+afterwards.
+
+To install only the agents: `cp global/agents/*.md ~/.claude/agents/` (then
+add the alias by hand). Nothing changes in your projects until you ask for
+the agent.
 
 ### 2. Start it
 
-```bash
-claude --agent iterate
-```
+From your project folder:
+
+| You want | You type |
+|---|---|
+| Agent mode (`iterate`) | `ci` |
+| The normal assistant | `claude` |
+
+`ci` is `claude --agent iterate --permission-mode acceptEdits`: it edits
+files without asking each time; commands and pushes still ask.
 
 It only applies to that session: plain `claude` stays the normal assistant,
 though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
@@ -242,14 +254,27 @@ téléphone.
 ./scripts/install.sh          # les skills eux-mêmes
 ```
 
-Pour n'installer que les agents : `cp global/agents/*.md ~/.claude/agents/`.
-Rien ne change dans tes projets tant que tu ne demandes pas l'agent.
+`install-global.sh` ajoute aussi l'alias `ci` à `~/.bashrc`, dans un bloc
+marqué `# >>> aixlper >>>`. Le relancer remplace ce bloc, ne le duplique
+jamais et ne touche à rien d'autre (`--no-shell` pour l'éviter). Ouvre un
+nouveau terminal ensuite.
+
+Pour n'installer que les agents : `cp global/agents/*.md ~/.claude/agents/`
+(puis ajoute l'alias à la main). Rien ne change dans tes projets tant que tu
+ne demandes pas l'agent.
 
 ### 2. Le lancer
 
-```bash
-claude --agent iterate
-```
+Depuis le dossier de ton projet :
+
+| Tu veux | Tu tapes |
+|---|---|
+| Le mode agent (`iterate`) | `ci` |
+| L'assistant normal | `claude` |
+
+`ci` vaut `claude --agent iterate --permission-mode acceptEdits` : il modifie
+les fichiers sans demander à chaque fois ; les commandes et les push
+demandent toujours.
 
 Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
 normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias

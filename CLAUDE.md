@@ -287,7 +287,10 @@ implement/fix cycle: reads the session transcript and prices it — see
 per session with `claude --agent iterate`), and `settings.template.json` itself.
 `scripts/install-global.sh` installs them onto any machine, chmod'ing
 the scripts back to executable since content-only comparison would
-otherwise leave a restored or hand-copied file non-executable.
+otherwise leave a restored or hand-copied file non-executable. It also
+manages the `ci` alias (`claude --agent iterate --permission-mode
+acceptEdits`) in a marked `# >>> aixlper >>>` block of `~/.bashrc`, replaced
+in place on every run so it is never duplicated; `--no-shell` skips it.
 
 `settings.template.json` also pins `model`. A re-install overwrites whatever
 model is currently configured (including a runtime downgrade some other
