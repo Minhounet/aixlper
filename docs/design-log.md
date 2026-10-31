@@ -2705,3 +2705,33 @@ field is ignored when the agent is the main session (the docs list it for
 subagents only). Removed again, to avoid a false sense of autonomy. The
 working way is the command line: `claude --agent iterate --permission-mode
 acceptEdits`, now the tutorial's alias. $0.30.
+
+## iterate: one agent for all work - ui, think and direct modes; shoko-playwright
+
+The author works in two ways - `iterate`, and plain prompts - and wants a
+single set of agents, never the default prompt. Two cases were missing: UI
+work on Nuxeo validated with Playwright (no `igiari-tdd`), and design-only
+sessions.
+
+- **New skill `shoko-playwright`** (*shōko*, evidence), portable: one browser
+  check per AC, run against the app running the current code, its result
+  kept as evidence. Not TDD, by the author's answer: the ACs exist up front
+  and "it can be already ok, or not" - a check that passes on arrival means
+  the AC is met; a failing one drives the change. Written from general
+  Playwright knowledge (web-first assertions, role/label locators, open
+  shadow roots for web components, no retries to green); Nuxeo specifics
+  (URL, login, test data) come from the project and are never guessed. Not
+  dogfooded.
+- **`iterate` modes:** ui (`shoko-playwright` + `tonosaman-deploy` on Podman
+  + `objection-conception`), think (design files only, never code, by the
+  author's choice), direct (anything else, no ceremony).
+- **Working rules section:** since the agent replaces the default prompt in
+  every mode, it restates only the agent's own conduct rules (read before
+  editing, ask before destructive actions, no force-push or unasked push, no
+  secrets, honest reporting) - none of them is a skill's rule.
+- **Reviewer:** loads the skills the caller names; for UI runs,
+  `objection-conception` and `shoko-playwright`.
+
+Untested: none of the three new modes has been run. `tonosaman-deploy`'s
+Nuxeo reference is still a placeholder waiting for the author's setup, so
+UI mode cannot deploy Nuxeo until it is filled in.

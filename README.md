@@ -22,6 +22,7 @@ tool — no per-client fork.
 | [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close. |
 | [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
+| [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright: one check per criterion, run against the app running the current code, its result kept as evidence. A check that already passes means the criterion is already met. |
 
 ## Installing
 
@@ -131,8 +132,8 @@ Nothing changes in your projects until you ask for the agent.
 claude --agent iterate
 ```
 
-It only applies to that session: plain `claude` stays the normal assistant
-for everything else (questions, quick edits). Tip: `alias ci='claude --agent
+It only applies to that session: plain `claude` stays the normal assistant,
+though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
 iterate --permission-mode acceptEdits'` lets it edit files without asking
 each time (commands and pushes still ask). The mode has to be on the command
 line: `permissionMode` in the agent file is ignored when the agent is the
@@ -150,6 +151,15 @@ Then describe the work in your first message. Two examples:
   *"Ticket PROJ-8: lock an account after three failed logins. AC1: ...
   AC2: ..."* It uses `chottomatte-archi` first, then `objection-conception`
   for the ticket and its acceptance criteria (ACs), then TDD.
+- **UI mode** (a web front end, for example Nuxeo): each AC gets a
+  Playwright check (`shoko-playwright`), run against the app redeployed
+  with Podman. Already passing: the AC is met. Failing: it changes the code
+  until it passes. No unit-test TDD here.
+- **Think mode** (design only): `objection-conception`, plus
+  `chottomatte-archi` if the structure matters. It writes only the design
+  files, never code.
+- **Direct mode** (anything else): a question, a small edit, a command. It
+  just does it, with no ceremony, so you never need plain `claude`.
 
 It proposes the mode; you confirm. Options you can add to that first
 message:
@@ -228,7 +238,7 @@ claude --agent iterate
 ```
 
 Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
-normal pour le reste (questions, petites modifs). Astuce : `alias
+normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias
 ci='claude --agent iterate --permission-mode acceptEdits'` le laisse
 modifier les fichiers sans demander à chaque fois (les commandes et les push
 demandent toujours). Le mode doit être sur la ligne de commande :
@@ -248,6 +258,16 @@ Puis décris le travail dans ton premier message. Deux exemples :
   CA1 : ... CA2 : ... »* Il passe d'abord par `chottomatte-archi`, puis
   `objection-conception` pour le ticket et ses critères d'acceptation (CA),
   puis le TDD.
+- **Mode ui** (un front web, par exemple Nuxeo) : chaque CA reçoit un
+  contrôle Playwright (`shoko-playwright`), lancé sur l'application
+  redéployée avec Podman. Déjà vert : la CA est remplie. En échec : il
+  modifie le code jusqu'à ce qu'il passe. Pas de TDD unitaire ici.
+- **Mode think** (conception seule) : `objection-conception`, plus
+  `chottomatte-archi` si la structure compte. Il n'écrit que les fichiers de
+  conception, jamais de code.
+- **Mode direct** (tout le reste) : une question, une petite modif, une
+  commande. Il le fait, sans cérémonie, donc plus besoin de `claude` tout
+  court.
 
 Il propose le mode, tu confirmes. Options à ajouter dans ce premier
 message :

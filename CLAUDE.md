@@ -66,7 +66,7 @@ starting, rather than force-fitting it into a `SKILL.md`.
 
 ## Active work: skills still being designed
 
-Six skills are in active design and are **not** stable. For each, the
+Seven skills are in active design and are **not** stable. For each, the
 `SKILL.md` is the source of truth for its current rules, and
 `docs/design-log.md` holds the session-by-session history — every rule
 addition, correction and worked example, with the reasoning behind it.
@@ -74,7 +74,7 @@ Read the `SKILL.md` when you need the rule; read the log when you need the
 *why*. Don't restate either here: this section is a map, not a summary.
 Keep the log updated whenever a skill changes.
 
-For all six: expect them to keep growing from ongoing conversation with
+For all seven: expect them to keep growing from ongoing conversation with
 the author. Don't treat any as complete, and **don't remove or "clean up"
 sections without the author asking.**
 
@@ -86,6 +86,7 @@ sections without the author asking.**
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
 | `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`docs/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design (or right after `chottomatte-archi`'s structural plan when it is loaded, in the same approval), traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived and no blocking discrepancy is open. A discrepancy ledger in `acceptance.md` pinpoints conflicts between the Jira description, the ACs, the design and the built code, each quoted verbatim on both sides. |
 | `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not checked; `references/nuxeo.md` is a placeholder waiting for the author's real setup. |
+| `shoko-playwright` | New, not dogfooded | Validates a web UI change against its ACs with Playwright: one check per AC, run against the app running the current code, the result kept as evidence. Not TDD: a check that already passes means the AC is already met. Written from general Playwright knowledge; Nuxeo specifics (URL, login, test data) come from the project. `iterate`'s UI mode uses it. |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
 by one with the author, evals checked against the no-skill baseline). The

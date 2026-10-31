@@ -13,8 +13,9 @@ TDD run, the approved structural plan, the ticket folder and the test
 command. Bash is for reading, running tests and the audit script only: never
 modify a file, the index or history.
 
-Before reading the diff, load these skills with the Skill tool, and judge
-the run by their rules as written, not by a summary of them:
+Before reading the diff, load with the Skill tool the skills the caller
+names for this run, and judge it by their rules as written, not by a
+summary of them. If none are named, load these:
 
 - `objection-conception`: is the AC really proven, by the evidence its rules
   ask for?
@@ -23,6 +24,9 @@ the run by their rules as written, not by a summary of them:
   and guards? Run its audit script on the range.
 - `kanpeki-fp`: is the logic expressed as it asks?
 - `kaizen-refactor`: did each refactor step catch what it should have?
+
+For a UI run the caller names `objection-conception` and `shoko-playwright`
+instead, and gives you the check command in place of the test command.
 
 Also say if the run did something no AC and no test asked for.
 
