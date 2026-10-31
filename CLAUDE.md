@@ -32,7 +32,10 @@ They are allowed in `global/agents/` as explicitly Claude-only (say so in
 the description), installed user-level to `~/.claude/agents/` by
 `scripts/install-global.sh` — e.g. `iterate`, the orchestrator that routes
 between the skills and asks the author at the gates. This repo doesn't run
-them itself. Skills stay portable; agents don't have to.
+them itself. Skills stay portable; agents don't have to. An agent never
+restates a skill's rule in its own words: it loads the skill (or points to
+it) and works by the rule as written. Its own text is only what is truly its
+own: routing, gates, and what it must not know.
 
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
