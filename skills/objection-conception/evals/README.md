@@ -8,7 +8,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 |---|---|
 | `done-gate` | **Clean, but not discriminating.** 1.00 with the skill and 1.00 without (Sonnet, 5+5 runs, Δ 0.00, judges unanimous, 2026-10-03). It shows no regression, not a skill effect. |
 | `hidden-contradiction` | **Discriminating, modest.** 0.90 with the skill, 0.50 without (Sonnet, 5+5 runs, Δ +0.40, 2026-10-10). The effect is on *not resolving* the conflict, not on spotting it. |
-| `ac-test-red-first` | **Discriminating, modest.** 1.00 with the skill, 0.67 without (Sonnet, 3+3 runs, Δ +0.33, 2026-10-31). The no-skill arm put the AC-level test last once (it would pass on arrival) and mis-tagged a helper test once. The prompt states strict TDD, which helps the baseline; calibrate further before reading more into it. |
+| `ac-test-red-first` | **Not discriminating since the true-TDD rewording.** First grader: 1.00 with, 0.67 without (Sonnet, 3+3, 2026-10-31). After rewording the grader for true TDD (small steps through the use case, a big front-loaded test tolerated only if red): 1.00 with, 1.00 without (Sonnet, 2+2). It now shows no regression, not a skill effect. A sharper variant would plan a case where the natural order puts the use-case test last. |
 
 ## `done-gate`
 
