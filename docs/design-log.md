@@ -2817,3 +2817,13 @@ proposes a skill, a mode of `iterate`, or a helper agent with the criterion
 named. It never creates them. New `# Processes and agents` section in
 `global/CLAUDE.md`, placed after `# Session management` as the author
 approved. Untested.
+
+## iterate direct mode: first run
+
+Headless, Sonnet, $0.09: "direct: what does LoginUseCaseImpl return for a
+locked account when the password is right? Also add a one-line Javadoc on
+LoginUseCase." It loaded only `iterate`, asked nothing, answered correctly
+(`AccountLocked`, lock checked before the password, nothing saved), read
+the file before editing it, changed only `LoginUseCase.java`, wrote no
+decision log or `docs/`, no report shape, no commit, and said plainly it had
+not compiled or run tests. Nothing to fix. ui mode is the one left untested.
