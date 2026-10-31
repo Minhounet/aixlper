@@ -2801,4 +2801,6 @@ design and four questions with recommendations.
 
 Gap: no decision log, no `Resume` block, no commit - so "resume PROJ-12"
 would have had nothing to resume from. Think mode now says to keep the log
-and commit the design files like any mode. Not re-run.
+and commit the design files like any mode. Re-run ($0.20): decision log
+with a `Resume` block (mode think, next: the four decisions, then build on
+AC1/AC2), `retro.md`, one commit, still nothing under `src/`.
