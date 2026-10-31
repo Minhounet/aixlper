@@ -18,11 +18,19 @@
 # Env vars:
 #   AIXLPER_HOME_TARGET  Where to install. Defaults to ~/.claude.
 #   AIXLPER_REF          Branch/tag/commit to fetch when not run from a clone.
+#   AIXLPER_SHELL_RC     Shell rc file that gets the `ci` alias. Defaults to
+#                        ~/.bashrc.
 #   ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN, HTTP_PROXY, NO_PROXY
 #                        Override whatever aixlper.env provides.
 #
 # Flags:
 #   --dry-run   Report what would change and write nothing.
+#   --no-shell  Leave the shell rc file alone (no `ci` alias).
+#
+# The `ci` alias (claude --agent iterate --permission-mode acceptEdits) lives
+# in a block between "# >>> aixlper >>>" and "# <<< aixlper <<<": re-running
+# replaces that block in place, so it is never duplicated, and nothing else in
+# the file is touched.
 
 set -euo pipefail
 
@@ -30,6 +38,8 @@ REPO="Minhounet/aixlper"
 REF="${AIXLPER_REF:-main}"
 TARGET_DIR="${AIXLPER_HOME_TARGET:-$HOME/.claude}"
 ENV_FILE="$TARGET_DIR/aixlper.env"
+SHELL_RC="${AIXLPER_SHELL_RC:-$HOME/.bashrc}"
+NO_SHELL=0
 DRY_RUN=0
 
 # Files copied verbatim. java.md and nuxeo.md are no longer @-imported by
@@ -47,7 +57,8 @@ CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py agents/
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY_RUN=1 ;;
-    -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --no-shell) NO_SHELL=1 ;;
+    -h|--help) sed -n '2,/^set -euo pipefail/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "error: unknown argument: $1" >&2; exit 1 ;;
   esac
   shift
@@ -215,6 +226,39 @@ else
   fi
 fi
 
+# The ci alias: a marked block, replaced in place so re-runs never duplicate it.
+RC_BEGIN='# >>> aixlper >>>'
+RC_END='# <<< aixlper <<<'
+RC_BLOCK="$RC_BEGIN
+alias ci='claude --agent iterate --permission-mode acceptEdits'
+$RC_END"
+if [ "$NO_SHELL" -eq 0 ]; then
+  current=""
+  [ -f "$SHELL_RC" ] && current="$(cat "$SHELL_RC")"
+  new="" inside=0 placed=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ "$line" = "$RC_BEGIN" ]; then inside=1; continue; fi
+    if [ "$inside" -eq 1 ]; then
+      if [ "$line" = "$RC_END" ]; then
+        inside=0
+        [ "$placed" -eq 1 ] || { new+="$RC_BLOCK"$'\n'; placed=1; }
+      fi
+      continue
+    fi
+    new+="$line"$'\n'
+  done <<< "$current"
+  [ "$inside" -eq 0 ] || die "unterminated aixlper block in $SHELL_RC - fix it by hand"
+  [ "$placed" -eq 1 ] || new+=$'\n'"$RC_BLOCK"$'\n'
+  new="$(printf '%s' "$new" | sed -e '/./,$!d')"
+  if [ "$new" = "$current" ]; then
+    act "ci alias in $(basename "$SHELL_RC") unchanged"
+  else
+    backup_if_needed "$SHELL_RC"
+    act "write ci alias to $SHELL_RC"
+    [ "$DRY_RUN" -eq 1 ] || printf '%s\n' "$new" > "$SHELL_RC"
+  fi
+fi
+
 # ---------------------------------------------------------------------- report
 
 say ""
@@ -228,3 +272,4 @@ else
 fi
 say "Skills are installed separately: scripts/install.sh"
 say "Restart Claude Code (or start a new session) to pick this up."
+[ "$NO_SHELL" -eq 1 ] || say "Open a new terminal (or: source $SHELL_RC) to get the ci alias."

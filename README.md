@@ -22,6 +22,8 @@ tool — no per-client fork.
 | [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close. |
 | [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
+| [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright: one check per criterion, run against the app running the current code, its result kept as evidence. A check that already passes means the criterion is already met. |
+| [`iterate`](skills/iterate/SKILL.md) | **Claude Code only.** Runs a known development process for you: five modes (fix, build, ui, think, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `iterate` agent, or as `/iterate` in a plain session. |
 
 ## Installing
 
@@ -122,14 +124,35 @@ the work from anywhere, your phone included.
 ./scripts/install.sh          # the skills themselves
 ```
 
-To install only the agents: `cp global/agents/*.md ~/.claude/agents/`.
-Nothing changes in your projects until you ask for the agent.
+`install-global.sh` also adds the `ci` alias to `~/.bashrc`, in a block
+marked `# >>> aixlper >>>`. Re-running replaces that block, never duplicates
+it, and touches nothing else (`--no-shell` to skip it). Open a new terminal
+afterwards.
+
+To install only the agents: `cp global/agents/*.md ~/.claude/agents/` (then
+add the alias by hand). Nothing changes in your projects until you ask for
+the agent.
 
 ### 2. Start it
 
-```bash
-claude --agent iterate
-```
+From your project folder:
+
+| You want | You type |
+|---|---|
+| Agent mode (`iterate`) | `ci` |
+| The normal assistant | `claude` |
+
+`ci` is `claude --agent iterate --permission-mode acceptEdits`: it edits
+files without asking each time; commands and pushes still ask.
+
+It only applies to that session: plain `claude` stays the normal assistant,
+though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
+iterate --permission-mode acceptEdits'` lets it edit files without asking
+each time (commands and pushes still ask). The mode has to be on the command
+line: `permissionMode` in the agent file is ignored when the agent is the
+main session (checked). Avoid `"agent": "iterate"` in a settings file unless you want
+every session there to start as `iterate`, since it replaces the default
+system prompt.
 
 Then describe the work in your first message. Two examples:
 
@@ -141,6 +164,16 @@ Then describe the work in your first message. Two examples:
   *"Ticket PROJ-8: lock an account after three failed logins. AC1: ...
   AC2: ..."* It uses `chottomatte-archi` first, then `objection-conception`
   for the ticket and its acceptance criteria (ACs), then TDD.
+- **UI mode** (a web front end, for example Nuxeo): each AC gets a
+  Playwright check (`shoko-playwright`), run against the app redeployed
+  with Podman. Already passing: the AC is met. Failing: it changes the code
+  until it passes. No unit-test TDD here.
+- **Think mode** (thinking and analysis only): `objection-conception`
+  alone; `chottomatte-archi` only if you ask for it (or agree when it
+  proposes it). It reads the code it needs, writes only the design files,
+  never code.
+- **Direct mode** (anything else): a question, a small edit, a command. It
+  just does it, with no ceremony, so you never need plain `claude`.
 
 It proposes the mode; you confirm. Options you can add to that first
 message:
@@ -149,8 +182,22 @@ message:
 |---|---|
 | `pre-approve TDD plans` | No approval per AC plan. |
 | `no pauses` | No stop after each AC. |
-| `no review` | No `iterate-reviewer` after each AC. |
+| `no review` | No `iterate-reviewer` after each AC (build mode). |
+| `with review` | In fix mode, an `iterate-reviewer` pass on the fix (off by default; about $0.30). |
 | `with dev` | GREEN steps go to `iterate-dev`, which only sees the failing test (off by default). |
+
+### Agent or plain session?
+
+- **You know the process** (a ticket, a fix, a UI change, a design): start
+  straight with the agent, `ci`. It is autonomous from the first message.
+- **You don't yet** (exploring, a one-off): plain `claude`.
+- **You can't switch a session** between the two: the prompt is fixed when
+  the conversation starts and stays on resume (checked). Move between them
+  through files instead: a new `ci` session and *"resume PROJ-8"* picks up
+  from the decision log's `Resume` block.
+- **Already in a plain session** and the process turns out known? Type
+  `/iterate`: the same process loads as a skill, with the default assistant
+  around it. The agent and the skill share one text, so nothing drifts.
 
 ### 3. What happens
 
@@ -208,14 +255,37 @@ téléphone.
 ./scripts/install.sh          # les skills eux-mêmes
 ```
 
-Pour n'installer que les agents : `cp global/agents/*.md ~/.claude/agents/`.
-Rien ne change dans tes projets tant que tu ne demandes pas l'agent.
+`install-global.sh` ajoute aussi l'alias `ci` à `~/.bashrc`, dans un bloc
+marqué `# >>> aixlper >>>`. Le relancer remplace ce bloc, ne le duplique
+jamais et ne touche à rien d'autre (`--no-shell` pour l'éviter). Ouvre un
+nouveau terminal ensuite.
+
+Pour n'installer que les agents : `cp global/agents/*.md ~/.claude/agents/`
+(puis ajoute l'alias à la main). Rien ne change dans tes projets tant que tu
+ne demandes pas l'agent.
 
 ### 2. Le lancer
 
-```bash
-claude --agent iterate
-```
+Depuis le dossier de ton projet :
+
+| Tu veux | Tu tapes |
+|---|---|
+| Le mode agent (`iterate`) | `ci` |
+| L'assistant normal | `claude` |
+
+`ci` vaut `claude --agent iterate --permission-mode acceptEdits` : il modifie
+les fichiers sans demander à chaque fois ; les commandes et les push
+demandent toujours.
+
+Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
+normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias
+ci='claude --agent iterate --permission-mode acceptEdits'` le laisse
+modifier les fichiers sans demander à chaque fois (les commandes et les push
+demandent toujours). Le mode doit être sur la ligne de commande :
+`permissionMode` dans le fichier de l'agent est ignoré quand l'agent est la
+session principale (vérifié). Évite `"agent": "iterate"` dans un fichier de
+settings, sauf si tu veux que chaque session y démarre en `iterate`, car il
+remplace le prompt système par défaut.
 
 Puis décris le travail dans ton premier message. Deux exemples :
 
@@ -228,6 +298,17 @@ Puis décris le travail dans ton premier message. Deux exemples :
   CA1 : ... CA2 : ... »* Il passe d'abord par `chottomatte-archi`, puis
   `objection-conception` pour le ticket et ses critères d'acceptation (CA),
   puis le TDD.
+- **Mode ui** (un front web, par exemple Nuxeo) : chaque CA reçoit un
+  contrôle Playwright (`shoko-playwright`), lancé sur l'application
+  redéployée avec Podman. Déjà vert : la CA est remplie. En échec : il
+  modifie le code jusqu'à ce qu'il passe. Pas de TDD unitaire ici.
+- **Mode think** (réflexion et analyse seules) : `objection-conception`
+  seul ; `chottomatte-archi` seulement si tu le demandes (ou acceptes quand
+  il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers
+  de conception, jamais de code.
+- **Mode direct** (tout le reste) : une question, une petite modif, une
+  commande. Il le fait, sans cérémonie, donc plus besoin de `claude` tout
+  court.
 
 Il propose le mode, tu confirmes. Options à ajouter dans ce premier
 message :
@@ -236,8 +317,25 @@ message :
 |---|---|
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
 | `no pauses` | Pas d'arrêt après chaque CA. |
-| `no review` | Pas d'`iterate-reviewer` après chaque CA. |
+| `no review` | Pas d'`iterate-reviewer` après chaque CA (mode build). |
+| `with review` | En mode fix, une revue `iterate-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
 | `with dev` | Les étapes GREEN passent à `iterate-dev`, qui ne voit que le test en échec (désactivé par défaut). |
+
+### Agent ou session normale ?
+
+- **Tu connais le processus** (un ticket, un fix, une modif UI, une
+  conception) : démarre directement avec l'agent, `ci`. Il est autonome dès
+  le premier message.
+- **Pas encore** (exploration, cas isolé) : `claude` tout court.
+- **On ne peut pas basculer une session** entre les deux : le prompt est
+  fixé au démarrage de la conversation et le reste à la reprise (vérifié).
+  On passe de l'un à l'autre par les fichiers : une nouvelle session `ci` et
+  *« resume PROJ-8 »* reprend depuis le bloc `Resume` du journal de
+  décisions.
+- **Déjà dans une session normale** et le processus s'avère connu ? Tape
+  `/iterate` : le même processus se charge comme un skill, avec l'assistant
+  par défaut autour. L'agent et le skill partagent un seul texte, donc rien
+  ne diverge.
 
 ### 3. Ce qui se passe
 
