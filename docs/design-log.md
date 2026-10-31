@@ -2694,3 +2694,14 @@ the manual audit fallback listed the audit's checks. It now points to
 **Rule kept from this:** an agent never restates a skill's rule. It loads the
 skill, or points to it; the only text it owns is what is genuinely its own
 (routing, gates, what it must not know).
+
+## iterate: `permissionMode` in the agent file does not apply as main session
+
+The author wants `iterate` autonomous. Tried `permissionMode: acceptEdits` in
+its frontmatter, then a headless fix-mode run (`claude -p --agent iterate`)
+with no Edit/Write permission on the command line or in settings. The
+session started in `default` mode and its first edit was refused, so the
+field is ignored when the agent is the main session (the docs list it for
+subagents only). Removed again, to avoid a false sense of autonomy. The
+working way is the command line: `claude --agent iterate --permission-mode
+acceptEdits`, now the tutorial's alias. $0.30.

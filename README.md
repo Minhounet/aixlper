@@ -133,7 +133,10 @@ claude --agent iterate
 
 It only applies to that session: plain `claude` stays the normal assistant
 for everything else (questions, quick edits). Tip: `alias ci='claude --agent
-iterate'`. Avoid `"agent": "iterate"` in a settings file unless you want
+iterate --permission-mode acceptEdits'` lets it edit files without asking
+each time (commands and pushes still ask). The mode has to be on the command
+line: `permissionMode` in the agent file is ignored when the agent is the
+main session (checked). Avoid `"agent": "iterate"` in a settings file unless you want
 every session there to start as `iterate`, since it replaces the default
 system prompt.
 
@@ -226,7 +229,11 @@ claude --agent iterate
 
 Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
 normal pour le reste (questions, petites modifs). Astuce : `alias
-ci='claude --agent iterate'`. Évite `"agent": "iterate"` dans un fichier de
+ci='claude --agent iterate --permission-mode acceptEdits'` le laisse
+modifier les fichiers sans demander à chaque fois (les commandes et les push
+demandent toujours). Le mode doit être sur la ligne de commande :
+`permissionMode` dans le fichier de l'agent est ignoré quand l'agent est la
+session principale (vérifié). Évite `"agent": "iterate"` dans un fichier de
 settings, sauf si tu veux que chaque session y démarre en `iterate`, car il
 remplace le prompt système par défaut.
 
