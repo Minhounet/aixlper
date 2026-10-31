@@ -2584,3 +2584,18 @@ proven that way, it is flagged as a gap instead.
 reported OUT OF ORDER. New `--first-n <N>` option; `igiari-tdd` says to pass
 it when a task is split into runs. Checked on the run's real history: the
 false flag disappears, the rest of the audit is unchanged.
+
+## audit-tdd-history.sh: a red where no test ran is not a red
+
+**Found in** an `iterate` build run: the agent passed
+`-Dtest=LoginUseCaseTest+LoginConfigTest` (surefire wants a comma). At every
+red commit Maven failed with "No tests matching pattern ... were executed",
+the script counted that as a failing red and printed only "no failure line
+found". The agent's own diagnosis ("the regex misses surefire's format") was
+wrong: with a valid filter the same reds print their `expected/but was`
+lines.
+
+**Change.** A red re-run whose output says no test executed (or
+`Tests run: 0,`) is now reported as `NO TEST RAN, not a valid red (check
+--test-cmd)` and flagged, like a compile error. Checked on that run's
+history with both the bad and the corrected command.

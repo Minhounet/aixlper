@@ -10,7 +10,8 @@
 #     (a stub in production code is allowed and flagged for reading)
 #   - no green commit touches a test file (rule 9)
 #   - re-run at each red commit, the scoped test fails, and not on a
-#     compile error (rule 4); the first failure line is printed to judge
+#     compile error or because no test ran (rule 4); the first failure line
+#     is printed to judge
 #   - the final build passes at the last commit
 #   - lists each refactor that rewrites production lines its own green
 #     wrote: possible super-green misses, to read (not a violation)
@@ -160,6 +161,8 @@ if [ -n "$test_cmd" ]; then
       echo "$step: PASSED, not a red"; flag
     elif printf '%s' "$out" | grep -qiE 'COMPILATION ERROR|Compilation failed|cannot find symbol'; then
       echo "$step: COMPILE ERROR, not a valid red (rule 4)"; flag
+    elif printf '%s' "$out" | grep -qiE 'No tests (matching pattern .* were|were) executed|Tests run: 0,'; then
+      echo "$step: NO TEST RAN, not a valid red (check --test-cmd)"; flag
     else
       reason=$(printf '%s\n' "$out" | grep -m1 -oE 'expected:? ?<[^>]*> but was:? ?<[^>]*>')
       [ -n "$reason" ] || reason=$(printf '%s\n' "$out" |
