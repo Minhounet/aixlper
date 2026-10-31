@@ -278,6 +278,27 @@ criterion it serves, flag criteria with no test or only helper-level tests,
 and update that file once after the end-of-task audit — the exact rules
 live in `objection-conception`, not here.
 
+**Order the plan so every test can fail.** Before presenting it, walk the
+plan in order and ask of each test: would the minimal greens before it
+already make it pass? A test that passes the moment it is written was never
+red, so it drives nothing and proves nothing. Fix that in this order:
+
+1. **Reorder.** Move the test earlier, or the test that forces its behavior
+   later, until it fails when written. Minimal greens (rule 5) are what keep
+   later tests red; don't plan on the assumption of a fuller green.
+2. **Guard, only if it matters.** If no order lets it fail, and it pins an
+   edge a later change could break silently (a boundary such as "two
+   failures don't lock yet"), keep it as a **guard**: mark it `(guard)` in
+   the plan, prove it can fail with a mutation check (break the code
+   briefly, see the guard fail, revert), and commit it on its own as
+   `guard N: <name> (mutation: <what you broke>)` right after green N - not
+   in a refactor, which reshapes existing tests and never adds one. A guard
+   is never a red step and never evidence for an acceptance criterion.
+3. **Otherwise drop it**, and say so in the plan.
+
+Found only mid-run, a test that would pass on write is a plan deviation
+like any other: stop and show it, with the option you recommend.
+
 **Failures are shaped at plan time, not mid-cycle.** Write a planned
 failure case the "Code style" way below: a known business failure is
 returned as a value (`Either`/`Validation`), not thrown. Plan a "throws"
@@ -516,7 +537,9 @@ test command as `--test-cmd`, and the full-build command as `--full-cmd`.
 It checks step order, one test per red, every red failing at its own
 commit and not on a compile error, no green touching a test, and the final
 build. It prints about one line per commit and exits non-zero on a
-violation. Rule 5 stays your judgment: read the green diffs.
+violation. If the task is one of several runs that keep numbering steps
+(one run per acceptance criterion), also pass `--first-n <the run's first
+step number>`. Rule 5 stays your judgment: read the green diffs.
 
 The audit also lists every refactor that rewrites production lines its own
 green wrote. That list is evidence, not a verdict. Compare it with your

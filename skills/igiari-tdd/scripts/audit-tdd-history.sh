@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Audit a TDD task from its git history, per igiari-tdd's commit-per-step rule.
 #
-# Each step is one commit whose subject contains "red N", "green N" or
-# "refactor N" (any prefix the project's convention needs is fine).
+# Each step is one commit whose subject contains "red N", "green N",
+# "refactor N" or "guard N" (any prefix the project's convention needs is
+# fine). A guard is a test that could not be red, kept after green N with a
+# mutation check named in its subject.
 # Checks, without touching the current checkout (uses a temporary worktree):
 #   - steps come in order: red N, green N, optional refactor N, then N+1
 #   - each red commit adds exactly one test and changes only test files
@@ -10,7 +12,8 @@
 #     (a stub in production code is allowed and flagged for reading)
 #   - no green commit touches a test file (rule 9)
 #   - re-run at each red commit, the scoped test fails, and not on a
-#     compile error (rule 4); the first failure line is printed to judge
+#     compile error or because no test ran (rule 4); the first failure line
+#     is printed to judge
 #   - the final build passes at the last commit
 #   - lists each refactor that rewrites production lines its own green
 #     wrote: possible super-green misses, to read (not a violation)
@@ -30,7 +33,7 @@
 #          [--main-path src/main/] [--test-marker '@Test|@ParameterizedTest']
 #          [--lint-cmd "<analyzer cmd>"]
 #          [--ahead-cmd "<analyzer cmd>" --generalize-from <N>]
-#          [--sites-cmd "<analyzer cmd>"]
+#          [--sites-cmd "<analyzer cmd>"] [--first-n <N>]
 #   --base      the commit the task started from (its steps are base..HEAD)
 #   --test-cmd  run at each red commit; omit to skip the red re-run
 #   --full-cmd  run once at HEAD; omit to skip the final build
@@ -43,16 +46,19 @@
 #   --generalize-from  the first green the plan allows to generalize (the
 #               first test a single branch can't satisfy); greens before it
 #               that add a construct are violations
+#   --first-n   the step number the task's first red carries (default 1),
+#               for a task split into runs that keep numbering (one per AC)
 #   --sites-cmd one line per iterating method
 #               (scripts/iterating-methods-pmd.xml is a ready rule set)
 # exit 0: clean; 1: a violation; 2: usage error
 
 set -u
-base= test_cmd= full_cmd= lint_cmd= ahead_cmd= gen_from= sites_cmd= test_path=src/test/ main_path=src/main/
+base= first_n=1 test_cmd= full_cmd= lint_cmd= ahead_cmd= gen_from= sites_cmd= test_path=src/test/ main_path=src/main/
 marker='@Test|@ParameterizedTest'
 while [ $# -gt 0 ]; do
   case $1 in
     --base) base=$2; shift 2;;
+    --first-n) first_n=$2; shift 2;;
     --test-cmd) test_cmd=$2; shift 2;;
     --full-cmd) full_cmd=$2; shift 2;;
     --lint-cmd) lint_cmd=$2; shift 2;;
@@ -71,7 +77,7 @@ head=$(git rev-parse HEAD)
 
 fail=0
 flag() { fail=1; }
-expect_red=1 last_green=0 green_sha= misses=
+expect_red=$first_n last_green=0 green_sha= misses=
 
 # Production lines that refactor commit $1 removes or rewrites and that
 # green commit $2 wrote, counted with blame on the refactor's parent.
@@ -94,7 +100,7 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
   files=$(git diff-tree --no-commit-id --name-only -r "$c")
   tests=$(printf '%s\n' "$files" | grep -c "^$test_path")
   mains=$(printf '%s\n' "$files" | grep -c "^$main_path")
-  step=$(printf '%s' "$subject" | grep -oE '(red|green|refactor) [0-9]+' | head -1)
+  step=$(printf '%s' "$subject" | grep -oE '(red|green|refactor|guard) [0-9]+' | head -1)
   kind=${step% *} n=${step#* }
   verdict=ok
   # A fix-forward commit ("red 5 (fix): ...") corrects its step in place:
@@ -132,6 +138,14 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
         fi
       fi
       ;;
+    guard)
+      problems=
+      [ "$n" -eq "$last_green" ] || problems="OUT OF ORDER (guard $n after green $last_green); "
+      [ "$mains" -eq 0 ] || problems="${problems}GUARD TOUCHES PRODUCTION; "
+      printf '%s' "$subject" | grep -qi 'mutation' || problems="${problems}NO MUTATION CHECK NAMED; "
+      if [ -n "$problems" ]; then verdict=${problems%; }; flag
+      else verdict="ok; guard, not a red (read its mutation check)"; fi
+      ;;
     *) verdict="NOT A STEP COMMIT"; flag;;
   esac
   printf '%-14s prod:%-2s test:%-2s %s\n' "${step:-?}" "$mains" "$tests" "$verdict"
@@ -157,6 +171,8 @@ if [ -n "$test_cmd" ]; then
       echo "$step: PASSED, not a red"; flag
     elif printf '%s' "$out" | grep -qiE 'COMPILATION ERROR|Compilation failed|cannot find symbol'; then
       echo "$step: COMPILE ERROR, not a valid red (rule 4)"; flag
+    elif printf '%s' "$out" | grep -qiE 'No tests (matching pattern .* were|were) executed|Tests run: 0,'; then
+      echo "$step: NO TEST RAN, not a valid red (check --test-cmd)"; flag
     else
       reason=$(printf '%s\n' "$out" | grep -m1 -oE 'expected:? ?<[^>]*> but was:? ?<[^>]*>')
       [ -n "$reason" ] || reason=$(printf '%s\n' "$out" |

@@ -1,6 +1,6 @@
 ---
 name: objection-conception
-description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under .claude/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session, and when the user wants to check, clarify, trace or verify a ticket's acceptance criteria ("critères d'acceptation", "AC", "definition of done"), or to check whether the ticket's description is coherent, complete and consistent with its criteria and the design ("incohérence", "écart", "discrepancy", "is the Jira OK"), at any point - before design, during it, or after implementation. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
+description: Use whenever the user is working from a Jira ticket (or any ticket-based task) and wants to think through the design/conception together before or during implementation - phrases like "let's design TICKET-123", "resume the thinking on PROJ-42", "I have a new ticket, let's figure out the approach", or any mention of a ticket folder under docs/ticket/<ticketId>/. Also trigger when picking work back up on a ticket that was discussed in an earlier session, and when the user wants to check, clarify, trace or verify a ticket's acceptance criteria ("critères d'acceptation", "AC", "definition of done"), or to check whether the ticket's description is coherent, complete and consistent with its criteria and the design ("incohérence", "écart", "discrepancy", "is the Jira OK"), at any point - before design, during it, or after implementation. Persists the design conversation and the difficulties hit along the way to disk, inside the ticket's own folder, so that thinking survives past the current session instead of being lost when it ends.
 ---
 
 # Objection Conception
@@ -29,7 +29,12 @@ doing anything else.
 
 ## Read what's already there before saying anything
 
-Look in `.claude/ticket/<ticketId>/` before starting any design discussion:
+Look in `docs/ticket/<ticketId>/` before starting any design discussion. (The folder lives under `docs/`, not
+`.claude/`, because Claude Code write-protects `.claude/`. If an older
+`.claude/ticket/<ticketId>/` exists instead, read it, and offer to move it with
+`git mv`; never move it silently.)
+
+What to look for:
 
 - **Ticket context/requirements** the user has already dropped in that
   folder - read all of it; it's the source of truth for what's being asked.
@@ -100,7 +105,7 @@ technology is a detail decided late, so:
 
 ## Write conception.md incrementally
 
-`conception.md` lives at `.claude/ticket/<ticketId>/conception.md` and
+`conception.md` lives at `docs/ticket/<ticketId>/conception.md` and
 captures the design decisions actually reached - the shape being built,
 the approach chosen and why, open questions still unresolved, and
 approaches that were considered and ruled out (with the reason).
@@ -203,7 +208,28 @@ disagree. Each entry quotes **both sides verbatim with their location** -
 quotes are. Never settle one by picking a side silently: the owner decides,
 and the resolution is recorded.
 
-### 1. Before design: check the ticket against itself, then the criteria
+### With an architecture skill: structure first
+
+When `chottomatte-archi` (or another architecture skill) is loaded, its
+structural plan comes **first**, and this skill works against it rather than
+ahead of it. The order is:
+
+1. The architecture skill drafts the structural plan from the ticket.
+2. Phases 1 and 2 below run against that draft: check the ticket and its ACs,
+   then trace each AC to the plan's decisions. Read "design" in them as "the
+   structural plan".
+3. Both go to the author in **one** approval: the plan, the AC trace, any
+   `unclear` AC and any discrepancy. This adds no pause of its own.
+
+The plan may show that an AC has to change (it asks for something the
+structure rules out, or misses a case the structure exposes). Log that as a
+`ticket-vs-design` discrepancy, quoted on both sides, and propose the new
+wording; never edit the AC silently. A blocking discrepancy or an `unclear`
+AC holds back approval of the part of the plan that depends on it, not the
+whole plan. Without an architecture skill, phase 1 runs before any design,
+as written.
+
+### 1. Check the ticket against itself, then the criteria
 
 **First, cross-read the description against the criteria** (and against any
 comments, linked tickets and attachments in the folder - a later comment
@@ -282,6 +308,16 @@ ones the TDD skill already has.
     of its `Interpretation` (the use case or service, not a helper), so
     passing them won't prove it. It will need a higher-level test or other
     evidence.
+- **TDD wins on how an AC is proven.** This is true TDD, not test-first:
+  an `[ACn]` test is a TDD step like any other, written one at a time, seen
+  failing, then made to pass with the least code. Drive the AC through the
+  level of its `Interpretation` (the use case) from the first test, in small
+  steps; the tests that drove it are its evidence. Two shapes break this:
+  helper-level tests first with a use-case test added at the end (it passes
+  on arrival, never red), and one big use-case test written first that forces
+  the whole rule into a single green (no baby steps). Never count a test that
+  passed the moment it was written as evidence; if the AC can only be proven
+  that way, flag it as the gap above instead.
 - **During the cycles**, don't touch `acceptance.md`. A per-step update
   would add noise to every commit, and no scoped run is the evidence
   anyway.

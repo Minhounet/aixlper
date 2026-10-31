@@ -106,6 +106,186 @@ repo — the curl install above already covers "install easily" without
 that extra machinery, which mainly pays off if this ever needs versioned
 releases or install/update/uninstall commands for a wider audience.
 
+## Tutorial: the `iterate` agent
+
+*Version française plus bas : [Tutoriel](#tutoriel--lagent-iterate).*
+
+`iterate` is a **Claude Code agent** (not portable to Gemini CLI) that runs
+the skills above for you, in the right order, and stops only when a decision
+is really yours. It keeps a written trail of every decision, so you can follow
+the work from anywhere, your phone included.
+
+### 1. Install
+
+```bash
+./scripts/install-global.sh   # copies global/agents/*.md to ~/.claude/agents/
+./scripts/install.sh          # the skills themselves
+```
+
+To install only the agents: `cp global/agents/*.md ~/.claude/agents/`.
+Nothing changes in your projects until you ask for the agent.
+
+### 2. Start it
+
+```bash
+claude --agent iterate
+```
+
+Then describe the work in your first message. Two examples:
+
+- **Fix mode** (a clear change to existing code):
+  *"Bug: an account created as `alice` cannot log in as `Alice`. Usernames
+  must be case-insensitive."*
+  It uses `igiari-tdd` + `kanpeki-fp` (+ `kaizen-refactor`), nothing else.
+- **Build mode** (something new):
+  *"Ticket PROJ-8: lock an account after three failed logins. AC1: ...
+  AC2: ..."* It uses `chottomatte-archi` first, then `objection-conception`
+  for the ticket and its acceptance criteria (ACs), then TDD.
+
+It proposes the mode; you confirm. Options you can add to that first
+message:
+
+| Say | Effect |
+|---|---|
+| `pre-approve TDD plans` | No approval per AC plan. |
+| `no pauses` | No stop after each AC. |
+| `no review` | No `iterate-reviewer` after each AC. |
+| `with dev` | GREEN steps go to `iterate-dev`, which only sees the failing test (off by default). |
+
+### 3. What happens
+
+1. **One approval up front** (build mode): the structural plan, the AC check
+   and any contradiction in the ticket, quoted on both sides.
+2. **One TDD run per AC**, true TDD rather than test-first: one test at a
+   time, seen failing, then the least code that passes it, then a refactor;
+   never a batch of tests written ahead. The run ends with the full build
+   and an audit of the git history that proves each test was red first.
+3. **A review per AC** by `iterate-reviewer`, which can read but never edit:
+   is the AC really proven, does the structure hold, nothing extra?
+4. **The AC record is updated** in `docs/ticket/<id>/acceptance.md`, then
+   committed.
+5. **A pause**: *"AC1 done. Continue, or /clear and resume?"*
+
+It asks you only for hard-to-reverse actions, real forks, deviations from
+an approved plan, out-of-scope work, or an unclear AC. Everything else, it
+decides and writes down.
+
+### 4. Follow it and save money
+
+- `docs/decisions/<topic>.md`: every decision, why, and what was rejected.
+  Its `Resume` block always says where the work stands.
+- `docs/ticket/<id>/`: design, ACs with their evidence, difficulties met.
+- Context gets expensive as it grows. At a pause, type `/clear`, then
+  `claude --agent iterate` and *"resume PROJ-8"*: it continues from the
+  `Resume` block instead of re-reading everything.
+
+It commits locally, never pushes, and never writes to Jira unless asked.
+
+**Cost, measured** on a two-AC ticket: about $2.60 on Sonnet, $6.30 on
+Opus; `with dev` adds about half (about $4 on Sonnet). A small fix-mode bug:
+about $0.30.
+
+### 5. Improve it
+
+The final report always ends with **Improvements**: friction it hit and the
+exact wording it would change, in the agent or a skill. It never applies
+them itself. Edit `global/agents/iterate.md` (or the skill) and reinstall,
+or symlink `~/.claude/agents/iterate.md` to the repo file so edits apply at
+once.
+
+## Tutoriel : l'agent `iterate`
+
+`iterate` est un **agent Claude Code** (pas portable sur Gemini CLI) qui
+enchaîne les skills ci-dessus à ta place, dans le bon ordre, et ne s'arrête
+que quand une décision t'appartient vraiment. Il garde une trace écrite de
+chaque décision : tu peux suivre le travail de partout, y compris depuis ton
+téléphone.
+
+### 1. Installer
+
+```bash
+./scripts/install-global.sh   # copie global/agents/*.md dans ~/.claude/agents/
+./scripts/install.sh          # les skills eux-mêmes
+```
+
+Pour n'installer que les agents : `cp global/agents/*.md ~/.claude/agents/`.
+Rien ne change dans tes projets tant que tu ne demandes pas l'agent.
+
+### 2. Le lancer
+
+```bash
+claude --agent iterate
+```
+
+Puis décris le travail dans ton premier message. Deux exemples :
+
+- **Mode fix** (un changement clair sur du code existant) :
+  *« Bug : un compte créé en `alice` ne peut pas se connecter en `Alice`.
+  Les identifiants doivent être insensibles à la casse. »*
+  Il utilise `igiari-tdd` + `kanpeki-fp` (+ `kaizen-refactor`), rien d'autre.
+- **Mode build** (quelque chose de nouveau) :
+  *« Ticket PROJ-8 : bloquer un compte après trois échecs de connexion.
+  CA1 : ... CA2 : ... »* Il passe d'abord par `chottomatte-archi`, puis
+  `objection-conception` pour le ticket et ses critères d'acceptation (CA),
+  puis le TDD.
+
+Il propose le mode, tu confirmes. Options à ajouter dans ce premier
+message :
+
+| Dire | Effet |
+|---|---|
+| `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
+| `no pauses` | Pas d'arrêt après chaque CA. |
+| `no review` | Pas d'`iterate-reviewer` après chaque CA. |
+| `with dev` | Les étapes GREEN passent à `iterate-dev`, qui ne voit que le test en échec (désactivé par défaut). |
+
+### 3. Ce qui se passe
+
+1. **Une seule approbation au départ** (mode build) : le plan de structure,
+   la vérification des CA et toute contradiction du ticket, citée des deux
+   côtés.
+2. **Un cycle TDD par CA**, du vrai TDD et pas du « test first » : un test
+   à la fois, vu en échec, puis le minimum de code qui le fait passer, puis
+   un refactoring ; jamais une série de tests écrits à l'avance. Le cycle se
+   termine par le build complet et un audit de l'historique git qui prouve
+   que chaque test a d'abord été rouge.
+3. **Une revue par CA** par `iterate-reviewer`, qui lit mais ne modifie
+   jamais : la CA est-elle vraiment prouvée, la structure tient-elle, rien
+   de plus que demandé ?
+4. **Le suivi de la CA est mis à jour** dans
+   `docs/ticket/<id>/acceptance.md`, puis commité.
+5. **Une pause** : *« AC1 done. Continue, or /clear and resume? »*
+
+Il ne te demande ton avis que pour une action difficile à annuler, un vrai
+choix, un écart par rapport à un plan approuvé, du hors-périmètre ou une CA
+floue. Le reste, il le décide et l'écrit.
+
+### 4. Le suivre et économiser
+
+- `docs/decisions/<sujet>.md` : chaque décision, pourquoi, et ce qui a été
+  écarté. Son bloc `Resume` dit toujours où en est le travail.
+- `docs/ticket/<id>/` : conception, CA avec leurs preuves, difficultés
+  rencontrées.
+- Le contexte coûte de plus en plus cher en grossissant. À une pause, tape
+  `/clear`, puis `claude --agent iterate` et *« resume PROJ-8 »* : il
+  reprend depuis le bloc `Resume` au lieu de tout relire.
+
+Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
+qu'on le lui demande.
+
+**Coût mesuré** sur un ticket à deux CA : environ 2,60 $ avec Sonnet,
+6,30 $ avec Opus ; `with dev` ajoute environ la moitié (environ 4 $ avec
+Sonnet). Un petit bug en mode fix : environ 0,30 $.
+
+### 5. L'améliorer
+
+Le rapport final se termine toujours par **Improvements** : les frictions
+rencontrées et la formulation exacte qu'il changerait, dans l'agent ou un
+skill. Il ne les applique jamais lui-même. Modifie
+`global/agents/iterate.md` (ou le skill) et réinstalle, ou crée un lien
+symbolique de `~/.claude/agents/iterate.md` vers le fichier du repo pour que
+les modifications s'appliquent tout de suite.
+
 ## Repo layout
 
 ```
@@ -117,6 +297,7 @@ skills/<skill-name>/evals/        # claude plugin eval cases for the skill
 global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/settings.template.json     # public-safe; secrets injected at install
+global/agents/                    # iterate, iterate-reviewer, iterate-dev (Claude Code only)
 ```
 
 ## Contributing / testing

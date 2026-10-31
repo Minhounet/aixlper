@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Install the author's global Claude Code config (CLAUDE.md + its imports, and
-# a generated settings.json) onto any machine:
+# Install the author's global Claude Code config (CLAUDE.md + its imports, the
+# user-level agents in global/agents/, and a generated settings.json) onto any
+# machine:
 #
 #   ./scripts/install-global.sh                       # from a local clone
 #   curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install-global.sh | bash
@@ -39,7 +40,9 @@ DRY_RUN=0
 # cycle-cost.py is run by hand to price an implementation cycle. Both need
 # their executable bit preserved, which the copy loop below handles
 # for any file in this list, not just this one.
-CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py)
+# agents/*.md land in ~/.claude/agents/, which makes them available in
+# every project without being the default anywhere.
+CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py agents/iterate.md agents/iterate-reviewer.md agents/iterate-dev.md)
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -176,7 +179,7 @@ for f in "${CONFIG_FILES[@]}"; do
   else
     backup_if_needed "$dest"
     act "write $f"
-    [ "$DRY_RUN" -eq 1 ] || cp "$src" "$dest"
+    [ "$DRY_RUN" -eq 1 ] || { mkdir -p "$(dirname "$dest")"; cp "$src" "$dest"; }
   fi
   # cmp only checks content, so an unchanged file with the wrong mode (e.g.
   # restored from a backup, or copied by hand) would otherwise stay non-executable.

@@ -27,8 +27,12 @@ what's being described instead needs its own isolated context, its own
 tool allowlist or model, or genuinely separate/parallel execution
 (delegated work, not followed instructions) — that's a Claude Code
 **subagent** (`.claude/agents/*.md`), a different mechanism entirely.
-Subagents aren't portable to Gemini CLI, so they're structurally out of
-scope for this repo even when they'd be the better tool for the job.
+Subagents aren't portable to Gemini CLI, so they never go in `skills/`.
+They are allowed in `global/agents/` as explicitly Claude-only (say so in
+the description), installed user-level to `~/.claude/agents/` by
+`scripts/install-global.sh` — e.g. `iterate`, the orchestrator that routes
+between the skills and asks the author at the gates. This repo doesn't run
+them itself. Skills stay portable; agents don't have to.
 
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
@@ -77,7 +81,7 @@ sections without the author asking.**
 | `chottomatte-archi` | Co-designed across many sessions | Dependency inversion via interfaces; everything else follows from it. |
 | `mujitsu-documentum` | **Unverified** | Written from general DQL/API knowledge, never run against a real docbase. Treat every pattern as a draft; don't cite it as settled. Known-weak spot: pattern 4's `get_type_attr_count` is a named placeholder, not confirmed DQL. |
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
-| `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`.claude/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design, traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived and no blocking discrepancy is open. A discrepancy ledger in `acceptance.md` pinpoints conflicts between the Jira description, the ACs, the design and the built code, each quoted verbatim on both sides. |
+| `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`docs/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design (or right after `chottomatte-archi`'s structural plan when it is loaded, in the same approval), traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived and no blocking discrepancy is open. A discrepancy ledger in `acceptance.md` pinpoints conflicts between the Jira description, the ACs, the design and the built code, each quoted verbatim on both sides. |
 | `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not checked; `references/nuxeo.md` is a placeholder waiting for the author's real setup. |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
@@ -130,6 +134,7 @@ global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
+global/agents/                    # user-level Claude-only agents (iterate, iterate-reviewer, iterate-dev)
 
 docs/design-log.md                # session-by-session history for active-work skills
 evals/                            # cross-skill evals (scripts/eval_skill_chain.sh, make eval-chain)
@@ -260,7 +265,8 @@ and the `java.md` / `nuxeo.md` it `@`-imports, `litellm-budget.py` (the script
 `settings.template.json` wires into `statusLine` and the `SessionStart` hook
 for the gateway budget display), `cycle-cost.py` (run by hand after an
 implement/fix cycle: reads the session transcript and prices it — see
-`docs/design-log.md`), and `settings.template.json` itself.
+`docs/design-log.md`), `agents/` (user-level agents such as `iterate`, started
+per session with `claude --agent iterate`), and `settings.template.json` itself.
 `scripts/install-global.sh` installs them onto any machine, chmod'ing
 the scripts back to executable since content-only comparison would
 otherwise leave a restored or hand-copied file non-executable.
@@ -303,4 +309,4 @@ Examples:
 
 After completing any change, commit automatically — never ask for permission first.
 Tell the user the commit message used so they can request a change if not satisfied.
-Never push automatically; push only when the user explicitly asks.
+Then push automatically to the session's designated branch (`git push -u origin <branch>`); never push to any other branch, and never open a PR unless asked.

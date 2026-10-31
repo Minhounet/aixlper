@@ -8,6 +8,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 |---|---|
 | `done-gate` | **Clean, but not discriminating.** 1.00 with the skill and 1.00 without (Sonnet, 5+5 runs, Δ 0.00, judges unanimous, 2026-10-03). It shows no regression, not a skill effect. |
 | `hidden-contradiction` | **Discriminating, modest.** 0.90 with the skill, 0.50 without (Sonnet, 5+5 runs, Δ +0.40, 2026-10-10). The effect is on *not resolving* the conflict, not on spotting it. |
+| `ac-test-red-first` | **Not discriminating since the true-TDD rewording.** First grader: 1.00 with, 0.67 without (Sonnet, 3+3, 2026-10-31). After rewording the grader for true TDD (small steps through the use case, a big front-loaded test tolerated only if red): 1.00 with, 1.00 without (Sonnet, 2+2). It now shows no regression, not a skill effect. A sharper variant would plan a case where the natural order puts the use-case test last. |
 
 ## `done-gate`
 
@@ -109,3 +110,16 @@ may consider adopting the 15-minute cap reasonable, so the case measures
 adherence to "never settle one silently", which is the skill's own rule.
 Next: run it on Opus, and consider tightening the prompt so that
 "configured duration" is not already a comfortable way out.
+
+## `ac-test-red-first`
+
+Pins the rule decided after the first full `iterate` run: **TDD wins on how
+an AC is proven**. The agent gets an approved structure and a `designed` AC1
+(lock after three failures) and is asked for the ordered TDD test plan for
+AC1 only, tagged per AC. The natural plan unit-tests `UserAccount` first and
+adds the use-case test last, where it would already pass when written - the
+exact case the full run hit twice.
+
+- `proof-test-red-first` (weight 2): a use-case-level `[AC1]` test placed
+  where it fails when written (or the problem explicitly flagged and fixed).
+- `tags` (weight 1): every test tagged, helper tests as `supports`.

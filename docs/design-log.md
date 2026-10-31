@@ -2522,3 +2522,133 @@ wrong; the skill's refactor rules act as guards, not as a measured effect.
 The two cases stay as regression checks. Still unmeasured: whether the 68
 "nothing applies" were honest in the kata runs themselves, and refinement on
 a real codebase, where the pull toward patterns is probably stronger.
+
+## objection-conception: structure first when chottomatte-archi is loaded
+
+**Change.** New subsection "With an architecture skill: structure first",
+and phase 1 retitled from "Before design" to "Check the ticket against
+itself, then the criteria". When `chottomatte-archi` is loaded, its
+structural plan is drafted first; phases 1 and 2 then run against that
+draft, and the plan, the AC trace, any `unclear` AC and any discrepancy go to
+the author in one approval. Without an architecture skill, nothing changes.
+
+**Why.** The author's real workflow for new work starts with
+`chottomatte-archi`, then uses this skill for the trace and because the
+structure can show that an AC has to change. The old wording ("before
+design") made the two skills disagree on order, and the `iterate` agent
+(`global/agents/iterate.md`) follows the author's order. One combined
+approval keeps the rule that each skill adds no pause of its own.
+
+**Details.** An AC the plan shows to be wrong is logged as a
+`ticket-vs-design` discrepancy with a proposed new wording, never edited
+silently. A blocking discrepancy or an `unclear` AC holds back only the part
+of the plan that depends on it, not the whole plan. Not dogfooded; the
+`done-gate` and `hidden-contradiction` evals were not re-run.
+
+## objection-conception: ticket folder moved to `docs/ticket/`
+
+**Change.** The ticket folder is now `docs/ticket/<ticketId>/` instead of
+`.claude/ticket/<ticketId>/`, in the skill, its two eval prompts and
+CLAUDE.md. An older `.claude/ticket/` folder is still read, and the skill
+offers a `git mv`; it never moves one silently.
+
+**Why.** In headless runs of the `iterate` agent, Claude Code refused every
+write under `.claude/`, even with explicit `Edit(/.claude/**)` and
+`Write(/.claude/**)` allow rules: the folder is write-protected. The code got
+built, but `acceptance.md` never got its evidence, so the done-gate could not
+work. `iterate`'s decision log already moved to `docs/decisions/` for the
+same reason.
+
+**Consequence.** `docs/` is usually committed, so the ticket's design files
+now travel with the project's history (readable from any device, but visible
+to anyone with the repo). Gitignore `docs/ticket/` in a project where that's
+unwanted.
+
+## TDD wins on how an AC is proven; audit `--first-n`
+
+**Found in** a full `iterate` run (two ACs, one TDD run per AC, reviewer on).
+Twice the agent proved an AC by adding a use-case-level test in a refactor
+step; it passed the moment it was written, because the earlier unit-level
+tests had already forced the behavior. `objection-conception` wants proof at
+the level of the AC's `Interpretation`; `igiari-tdd` wants every test seen
+red. Both can't hold for that test.
+
+**Decided by the author: TDD is the truth.** `objection-conception` now says
+an `[ACn]` test must be seen failing like any other, so it is planned where
+it will fail - usually first in that AC's plan, at use-case level - and a
+test that passes on arrival never counts as evidence. If an AC can only be
+proven that way, it is flagged as a gap instead.
+
+**Audit numbering.** With one run per AC, AC2's steps continue from AC1's
+(red 7...), and `audit-tdd-history.sh` expected red 1, so every second run
+reported OUT OF ORDER. New `--first-n <N>` option; `igiari-tdd` says to pass
+it when a task is split into runs. Checked on the run's real history: the
+false flag disappears, the rest of the audit is unchanged.
+
+## audit-tdd-history.sh: a red where no test ran is not a red
+
+**Found in** an `iterate` build run: the agent passed
+`-Dtest=LoginUseCaseTest+LoginConfigTest` (surefire wants a comma). At every
+red commit Maven failed with "No tests matching pattern ... were executed",
+the script counted that as a failing red and printed only "no failure line
+found". The agent's own diagnosis ("the regex misses surefire's format") was
+wrong: with a valid filter the same reds print their `expected/but was`
+lines.
+
+**Change.** A red re-run whose output says no test executed (or
+`Tests run: 0,`) is now reported as `NO TEST RAN, not a valid red (check
+--test-cmd)` and flagged, like a compile error. Checked on that run's
+history with both the bad and the corrected command.
+
+## igiari-tdd: order the plan so every test can fail; guards
+
+**Found in** four `iterate` runs after "TDD wins on how an AC is proven".
+Once the AC-level test is written first and made green, some edge tests
+planned after it pass the moment they are written. The runs handled it three
+ways: Opus reordered the plan so every test was red and logged the rest as
+gaps; Sonnet with `iterate-dev` kept them as guards with a mutation check
+(and stopped mid-run to ask); Sonnet alone swapped two tests.
+
+**Decided with the author.** New paragraph in "Plan the tests before the
+first cycle": walk the plan before presenting it; reorder first (minimal
+greens are what keep later tests red); keep a test that can't fail as a
+`(guard)` only if it pins an edge that matters, proven by a mutation check
+and committed in the cycle's refactor step, never counted as a red or as AC
+evidence; otherwise drop it. Found mid-run, it stays a plan deviation.
+Not yet re-run.
+
+## objection-conception: true TDD, not test-first
+
+The author asked to make sure the AC rule reads as true TDD. The earlier
+wording ("plan the AC test usually first in that AC's plan") pushed toward
+one big use-case test written first, which forces a whole rule into a single
+green - exactly what the `with dev` run showed (one green did counting, lock
+and lock check). Rewritten: an `[ACn]` test is a TDD step like any other;
+drive the AC through the use case from the first test, in small steps, and
+let the tests that drove it be its evidence. Both failure shapes are named:
+helpers first plus a late end-to-end test (never red), and one big test
+first (no baby steps). The eval grader and the README tutorial say the same.
+
+## Do the other skills still hold? Guards get their own step; kanpeki in subagents
+
+The author asked whether `chottomatte-archi`, `kanpeki-fp` and the refactor
+rules are still respected after the TDD changes. Checked against the four
+`iterate` runs and the texts:
+
+- **`chottomatte-archi`:** loaded first in every build run; the reviewer
+  checks the approved structure. Holds.
+- **`kanpeki-fp`:** loaded with `igiari-tdd` in every main session, but
+  `iterate-dev` had no Skill tool, so its greens were written without it
+  (only hints in the caller's prompt). Fixed: the dev loads `kanpeki-fp`
+  before writing code; the reviewer loads `kanpeki-fp` and
+  `kaizen-refactor` and checks the diff against them.
+- **`kaizen-refactor`:** loaded in only one of four runs (Opus). The
+  `iterate` fix from the same day (load it before the first refactor) is
+  not yet re-run.
+- **Guards vs the refactor step:** the guard rule said to commit a guard in
+  the cycle's refactor step, but a refactor reshapes existing tests and
+  never adds one (`igiari-tdd`'s tracing rule, `kaizen-refactor`'s scope).
+  Guards now get their own commit, `guard N: <name> (mutation: <what was
+  broken>)`, after green N; the audit accepts that step, and flags a guard
+  that touches production or names no mutation check. Checked on a
+  synthetic history.
