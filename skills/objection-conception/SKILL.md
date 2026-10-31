@@ -308,13 +308,16 @@ ones the TDD skill already has.
     of its `Interpretation` (the use case or service, not a helper), so
     passing them won't prove it. It will need a higher-level test or other
     evidence.
-- **TDD wins on how an AC is proven.** An `[ACn]` test is a TDD test like
-  any other: it must be seen failing before it passes. Plan it where it
-  will fail when written - usually first in that AC's plan, at the level of
-  its `Interpretation` - not at the end, where the earlier tests have
-  already forced its behavior. Never add an AC test that passes the moment
-  it is written and count it as evidence; if the AC can only be proven that
-  way, flag it as the gap above instead.
+- **TDD wins on how an AC is proven.** This is true TDD, not test-first:
+  an `[ACn]` test is a TDD step like any other, written one at a time, seen
+  failing, then made to pass with the least code. Drive the AC through the
+  level of its `Interpretation` (the use case) from the first test, in small
+  steps; the tests that drove it are its evidence. Two shapes break this:
+  helper-level tests first with a use-case test added at the end (it passes
+  on arrival, never red), and one big use-case test written first that forces
+  the whole rule into a single green (no baby steps). Never count a test that
+  passed the moment it was written as evidence; if the AC can only be proven
+  that way, flag it as the gap above instead.
 - **During the cycles**, don't touch `acceptance.md`. A per-step update
   would add noise to every commit, and no scoped run is the evidence
   anyway.

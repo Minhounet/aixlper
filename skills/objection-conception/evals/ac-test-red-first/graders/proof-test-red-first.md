@@ -18,11 +18,12 @@ PASS requires all of:
 
 - The plan contains at least one test tagged as proving AC1 (`[AC1]` or
   equivalent) that exercises the use case, not only `UserAccount`.
-- That test is placed where it will fail when written: before the tests
-  that would force all of its behavior (typically first in the plan, or
-  early enough that the lock behavior is still missing). Alternatively, the
-  plan explicitly notes the problem and resolves it (for example by flagging
-  that a late use-case test would pass on arrival and moving it earlier).
+- Every test tagged `[AC1]` is placed where it will fail when written:
+  either the plan drives AC1 through the use case from its first test in
+  small steps, or it explicitly notes that a late use-case test would pass on
+  arrival and resolves it. A plan that front-loads one use-case test forcing
+  the whole lock rule into a single green is acceptable here only if it is
+  still red when written.
 
 FAIL if the only use-case-level AC1 test comes last, after unit tests that
 already force the lock and the lock check, with no remark that it would pass

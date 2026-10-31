@@ -156,8 +156,10 @@ message:
 
 1. **One approval up front** (build mode): the structural plan, the AC check
    and any contradiction in the ticket, quoted on both sides.
-2. **One TDD run per AC**: one failing test at a time, then the full build
-   and an audit of the git history.
+2. **One TDD run per AC**, true TDD rather than test-first: one test at a
+   time, seen failing, then the least code that passes it, then a refactor;
+   never a batch of tests written ahead. The run ends with the full build
+   and an audit of the git history that proves each test was red first.
 3. **A review per AC** by `iterate-reviewer`, which can read but never edit:
    is the AC really proven, does the structure hold, nothing extra?
 4. **The AC record is updated** in `docs/ticket/<id>/acceptance.md`, then
@@ -242,8 +244,11 @@ message :
 1. **Une seule approbation au départ** (mode build) : le plan de structure,
    la vérification des CA et toute contradiction du ticket, citée des deux
    côtés.
-2. **Un cycle TDD par CA** : un test en échec à la fois, puis le build
-   complet et un audit de l'historique git.
+2. **Un cycle TDD par CA**, du vrai TDD et pas du « test first » : un test
+   à la fois, vu en échec, puis le minimum de code qui le fait passer, puis
+   un refactoring ; jamais une série de tests écrits à l'avance. Le cycle se
+   termine par le build complet et un audit de l'historique git qui prouve
+   que chaque test a d'abord été rouge.
 3. **Une revue par CA** par `iterate-reviewer`, qui lit mais ne modifie
    jamais : la CA est-elle vraiment prouvée, la structure tient-elle, rien
    de plus que demandé ?

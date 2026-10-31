@@ -2616,3 +2616,15 @@ greens are what keep later tests red); keep a test that can't fail as a
 and committed in the cycle's refactor step, never counted as a red or as AC
 evidence; otherwise drop it. Found mid-run, it stays a plan deviation.
 Not yet re-run.
+
+## objection-conception: true TDD, not test-first
+
+The author asked to make sure the AC rule reads as true TDD. The earlier
+wording ("plan the AC test usually first in that AC's plan") pushed toward
+one big use-case test written first, which forces a whole rule into a single
+green - exactly what the `with dev` run showed (one green did counting, lock
+and lock check). Rewritten: an `[ACn]` test is a TDD step like any other;
+drive the AC through the use case from the first test, in small steps, and
+let the tests that drove it be its evidence. Both failure shapes are named:
+helpers first plus a late end-to-end test (never red), and one big test
+first (no baby steps). The eval grader and the README tutorial say the same.
