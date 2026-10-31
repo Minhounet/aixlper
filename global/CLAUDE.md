@@ -156,6 +156,34 @@ judgment is the point (designing a structure, debugging something unfamiliar).
 
 ---
 
+# Processes and agents
+
+## Spot a process worth packaging
+
+In a plain session (not when running as the `iterate` agent, which proposes
+its own changes), notice when the work you are doing by hand is a process:
+the same kind of work, done with the same steps, that could run on its own.
+
+When you see one, append one line to `~/.claude/process-notes.md` (create it
+if missing): the date, the kind of work in a few words, and the steps you
+followed. Never put a ticket ID, a hostname or a secret in it. Say in one
+line that you noted it; do not interrupt the work for it.
+
+When the same kind of work already appears at least twice in that file,
+propose, at the end of the task, what it should become, and why:
+
+- **a skill**, for the rules of how to do it;
+- **a mode of `iterate`**, if the whole process is known and repeatable, so
+  the agent can run it for me;
+- **a helper agent**, only if one step needs a narrower tool list, a
+  different model, to run in the background, to be addressable on its own,
+  or to not know something; name which.
+
+Never create any of them yourself: I decide, and they are written in my
+aixlper repo.
+
+---
+
 # Language- and platform-specific rules — read on demand
 
 These are **not** `@`-imported, deliberately: an unconditional import loads

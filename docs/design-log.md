@@ -2652,3 +2652,201 @@ rules are still respected after the TDD changes. Checked against the four
   broken>)`, after green N; the audit accepts that step, and flags a guard
   that touches production or names no mutation check. Checked on a
   synthetic history.
+
+## iterate-dev: same skills as iterate, only a fresh context
+
+The author: `iterate-dev` and `iterate` should be identical, except that the
+GREEN step is done by a dedicated agent. The dev had only `kanpeki-fp` plus
+green rules copied by hand into its prompt, so it never saw `igiari-tdd`'s
+Super Green calibration, and the copy could drift from the skill.
+
+Now the dev loads `igiari-tdd` (applying only its GREEN step and rules),
+`kanpeki-fp` and `chottomatte-archi`, and gets the approved structural plan.
+The only difference from `iterate` is the fresh context: no test plan,
+ticket or ACs, and no `objection-conception` (criterion 5, must not know).
+`iterate` checks the dev's green exactly as its own. Checked on the dev
+fixture: it loaded all three skills, read only what it was given, wrote a
+minimal green with a named constant (Super Green), touched no test, did not
+commit ($0.23).
+
+## iterate-reviewer: the same mistake, worse - rules restated instead of loaded
+
+The author asked to check the reviewer for the problem just fixed in
+`iterate-dev`. It had it, worse: it restated in its own words the rules of
+`objection-conception` (AC proof), `chottomatte-archi` (structure) and
+`igiari-tdd` (TDD history), and loaded only `kanpeki-fp` and
+`kaizen-refactor`. It was judging against partial summaries that knew
+nothing of Super Green, guards, `--first-n` or the true-TDD rule. A reviewer
+has no "must not know" constraint, so this was a plain mistake.
+
+Now it loads all five skills (`objection-conception`, `chottomatte-archi`,
+`igiari-tdd`, `kanpeki-fp`, `kaizen-refactor`), judges by their rules as
+written, runs `igiari-tdd`'s audit script itself, and names the skill each
+finding breaks. `iterate` passes it the ticket folder too. Re-run on the
+same AC1 work: all five loaded, audit run, three findings each tied to a
+skill, including one the old version could not see (the evidence said "audit
+not run" though it runs and passes). $0.30.
+
+Same check on `iterate` itself: it routes and points, apart from one copy -
+the manual audit fallback listed the audit's checks. It now points to
+`igiari-tdd`'s audit section.
+
+**Rule kept from this:** an agent never restates a skill's rule. It loads the
+skill, or points to it; the only text it owns is what is genuinely its own
+(routing, gates, what it must not know).
+
+## iterate: `permissionMode` in the agent file does not apply as main session
+
+The author wants `iterate` autonomous. Tried `permissionMode: acceptEdits` in
+its frontmatter, then a headless fix-mode run (`claude -p --agent iterate`)
+with no Edit/Write permission on the command line or in settings. The
+session started in `default` mode and its first edit was refused, so the
+field is ignored when the agent is the main session (the docs list it for
+subagents only). Removed again, to avoid a false sense of autonomy. The
+working way is the command line: `claude --agent iterate --permission-mode
+acceptEdits`, now the tutorial's alias. $0.30.
+
+## iterate: one agent for all work - ui, think and direct modes; shoko-playwright
+
+The author works in two ways - `iterate`, and plain prompts - and wants a
+single set of agents, never the default prompt. Two cases were missing: UI
+work on Nuxeo validated with Playwright (no `igiari-tdd`), and design-only
+sessions.
+
+- **New skill `shoko-playwright`** (*shōko*, evidence), portable: one browser
+  check per AC, run against the app running the current code, its result
+  kept as evidence. Not TDD, by the author's answer: the ACs exist up front
+  and "it can be already ok, or not" - a check that passes on arrival means
+  the AC is met; a failing one drives the change. Written from general
+  Playwright knowledge (web-first assertions, role/label locators, open
+  shadow roots for web components, no retries to green); Nuxeo specifics
+  (URL, login, test data) come from the project and are never guessed. Not
+  dogfooded.
+- **`iterate` modes:** ui (`shoko-playwright` + `tonosaman-deploy` on Podman
+  + `objection-conception`), think (design files only, never code, by the
+  author's choice), direct (anything else, no ceremony).
+- **Working rules section:** since the agent replaces the default prompt in
+  every mode, it restates only the agent's own conduct rules (read before
+  editing, ask before destructive actions, no force-push or unasked push, no
+  secrets, honest reporting) - none of them is a skill's rule.
+- **Reviewer:** loads the skills the caller names; for UI runs,
+  `objection-conception` and `shoko-playwright`.
+
+Untested: none of the three new modes has been run. `tonosaman-deploy`'s
+Nuxeo reference is still a placeholder waiting for the author's setup, so
+UI mode cannot deploy Nuxeo until it is filled in.
+
+## iterate: proposes a new skill or agent when it is earned
+
+The author asked whether `iterate` can tell when something new has to be
+created. New code was already covered (a fix that needs something new is a
+deviation to build mode). New skills or agents were not: the only signals
+were a free-text "no skill fits" note and Improvements limited to existing
+skills, and the skill-vs-agent test lives in this repo's `CLAUDE.md`, which
+is not loaded in work projects.
+
+Now: a step with no skill is logged as `No skill: <kind of work>`, so it can
+be found again; the final report proposes a new skill when the same entry
+already exists in the project's earlier decision logs, and a new agent only
+when a step needed one of the five subagent criteria, named. It never
+creates either; the author decides, and they are written here. The five
+criteria are restated in the agent on purpose: they are a repo rule, not a
+skill's, and the agent runs where this `CLAUDE.md` is not loaded. Untested.
+
+## The author's definition: the agent replaces the author once the process is known
+
+The author: "an agent is almost replacing me when the process is known."
+Written into `CLAUDE.md` as two kinds of agent: the one that replaces the
+author (`iterate`, main session, one mode per way of working - a newly known
+process becomes a mode, with its rules in a skill) and helper agents spawned
+for one step under the five criteria. `iterate` now also proposes a new mode
+when the same kind of work keeps arriving in direct mode with the same
+steps. Untested.
+
+## iterate: the process becomes a skill, the agent a thin shell
+
+The author asked for an `iterate` skill too, worried it would repeat the
+agent. Done without a copy: the whole process (modes, pipeline, loop, gates,
+log, report) moved to `skills/iterate/SKILL.md`, Claude-only because it
+spawns `iterate-reviewer` and `iterate-dev`. `global/agents/iterate.md` is
+now a thin shell: load the `iterate` skill first, plus what is the agent's
+own - the subagent fallback and the working rules it needs because it
+replaces the default prompt. A plain session gets the same process with
+`/iterate`.
+
+Also checked and written into the tutorial: a session cannot switch between
+the agent and the default prompt. Headless probes (Haiku): a plain session
+resumed with `--agent iterate` still behaved as default, and an agent
+session resumed without `--agent` stayed the agent. The way across is files:
+a new session plus the decision log's `Resume` block.
+
+## iterate think mode: objection-conception alone by default
+
+The author sometimes works "with only objection, to think and analyse".
+Think mode said "plus `chottomatte-archi` when the structure is in
+question", which left the call to the agent. Now: `objection-conception`
+alone by default; `chottomatte-archi` only on the user's request or after
+proposing it and getting a yes. Also stated: think mode may read any code to
+analyse it, and still writes only design files. Untested.
+
+## iterate think mode: first run
+
+Headless, Sonnet, $0.19: an existing login codebase and PROJ-12 (password
+expiry) with a planted 90-vs-60-days conflict. It loaded `iterate` then
+`objection-conception` only (no `chottomatte-archi`), read the code, changed
+nothing under `src/`, wrote only `acceptance.md` and `conception.md`, caught
+the conflict as blocking with both sides quoted, flagged AC3 (a reminder
+email) as a separate feature and AC2 as unanchored, proposed an unapproved
+design and four questions with recommendations.
+
+Gap: no decision log, no `Resume` block, no commit - so "resume PROJ-12"
+would have had nothing to resume from. Think mode now says to keep the log
+and commit the design files like any mode. Re-run ($0.20): decision log
+with a `Resume` block (mode think, next: the four decisions, then build on
+AC1/AC2), `retro.md`, one commit, still nothing under `src/`.
+
+## Global CLAUDE.md: spot a process worth packaging, from plain sessions
+
+The author asked whether a plain session can tell that something should
+become an agent. A single session cannot see across sessions, so the rule
+uses a file: in a plain session (not as `iterate`, which has its own
+proposals), a process done by hand is noted as one line in
+`~/.claude/process-notes.md` (date, kind of work, steps; no ticket ID,
+hostname or secret); when the same kind already appears twice, the session
+proposes a skill, a mode of `iterate`, or a helper agent with the criterion
+named. It never creates them. New `# Processes and agents` section in
+`global/CLAUDE.md`, placed after `# Session management` as the author
+approved. Untested.
+
+## iterate direct mode: first run
+
+Headless, Sonnet, $0.09: "direct: what does LoginUseCaseImpl return for a
+locked account when the password is right? Also add a one-line Javadoc on
+LoginUseCase." It loaded only `iterate`, asked nothing, answered correctly
+(`AccountLocked`, lock checked before the password, nothing saved), read
+the file before editing it, changed only `LoginUseCase.java`, wrote no
+decision log or `docs/`, no report shape, no commit, and said plainly it had
+not compiled or run tests. Nothing to fix. ui mode is the one left untested.
+
+## iterate UI mode and shoko-playwright: first run, on a local page
+
+Headless, Sonnet, $0.24, on a static document-list page served locally (no
+Nuxeo, no Podman): PROJ-20 with AC1 (search filters, already working) and
+AC2 ("No documents found", missing). It loaded `iterate`,
+`shoko-playwright`, `objection-conception` and no `igiari-tdd`. AC1's check
+passed on its first run - recorded as evidence, no code change; AC2's failed,
+drove the change, then passed. 3 checks, AC records, decision log, one
+commit.
+
+Two fixes:
+- **The reviewer was skipped on the agent's own judgment** ("very small
+  change"), because its default was stated for build mode only. Now: on by
+  default in build and UI modes, off in fix mode unless "with review", never
+  in think or direct; only the user turns it off.
+- **`shoko-playwright`:** its first "message hidden" check used a count of
+  zero, which a hidden element still fails. New rule, proposed by the run
+  itself: "not shown" means not visible, unless the AC says gone from the
+  page.
+
+Also seen: both ACs landed in one commit, not one per AC. Left as is for
+now. Not re-run; the real test needs the author's Nuxeo under Podman.
