@@ -2804,3 +2804,16 @@ would have had nothing to resume from. Think mode now says to keep the log
 and commit the design files like any mode. Re-run ($0.20): decision log
 with a `Resume` block (mode think, next: the four decisions, then build on
 AC1/AC2), `retro.md`, one commit, still nothing under `src/`.
+
+## Global CLAUDE.md: spot a process worth packaging, from plain sessions
+
+The author asked whether a plain session can tell that something should
+become an agent. A single session cannot see across sessions, so the rule
+uses a file: in a plain session (not as `iterate`, which has its own
+proposals), a process done by hand is noted as one line in
+`~/.claude/process-notes.md` (date, kind of work, steps; no ticket ID,
+hostname or secret); when the same kind already appears twice, the session
+proposes a skill, a mode of `iterate`, or a helper agent with the criterion
+named. It never creates them. New `# Processes and agents` section in
+`global/CLAUDE.md`, placed after `# Session management` as the author
+approved. Untested.
