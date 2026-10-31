@@ -2599,3 +2599,20 @@ lines.
 `Tests run: 0,`) is now reported as `NO TEST RAN, not a valid red (check
 --test-cmd)` and flagged, like a compile error. Checked on that run's
 history with both the bad and the corrected command.
+
+## igiari-tdd: order the plan so every test can fail; guards
+
+**Found in** four `iterate` runs after "TDD wins on how an AC is proven".
+Once the AC-level test is written first and made green, some edge tests
+planned after it pass the moment they are written. The runs handled it three
+ways: Opus reordered the plan so every test was red and logged the rest as
+gaps; Sonnet with `iterate-dev` kept them as guards with a mutation check
+(and stopped mid-run to ask); Sonnet alone swapped two tests.
+
+**Decided with the author.** New paragraph in "Plan the tests before the
+first cycle": walk the plan before presenting it; reorder first (minimal
+greens are what keep later tests red); keep a test that can't fail as a
+`(guard)` only if it pins an edge that matters, proven by a mutation check
+and committed in the cycle's refactor step, never counted as a red or as AC
+evidence; otherwise drop it. Found mid-run, it stays a plan deviation.
+Not yet re-run.
