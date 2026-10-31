@@ -179,6 +179,10 @@ decides and writes down.
 
 It commits locally, never pushes, and never writes to Jira unless asked.
 
+**Cost, measured** on a two-AC ticket: about $2.60 on Sonnet, $6.30 on
+Opus; `with dev` adds about half (about $4 on Sonnet). A small fix-mode bug:
+about $0.30.
+
 ### 5. Improve it
 
 The final report always ends with **Improvements**: friction it hit and the
@@ -263,6 +267,10 @@ floue. Le reste, il le décide et l'écrit.
 
 Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
 qu'on le lui demande.
+
+**Coût mesuré** sur un ticket à deux CA : environ 2,60 $ avec Sonnet,
+6,30 $ avec Opus ; `with dev` ajoute environ la moitié (environ 4 $ avec
+Sonnet). Un petit bug en mode fix : environ 0,30 $.
 
 ### 5. L'améliorer
 

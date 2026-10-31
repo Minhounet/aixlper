@@ -83,7 +83,7 @@ condition holds, in this order, within that mode.
 | Build mode: the step adds something new | `chottomatte-archi` | The structural plan, first, before any test is written |
 | Build mode with a ticket or ACs | `objection-conception` | Trace, ACs checked against the plan, the done-gate |
 | Java code is written or changed | `igiari-tdd` **and** `kanpeki-fp`, always together | One test at a time; how logic is expressed |
-| Existing code is cleaned up, or an IDE inspection fires | `kaizen-refactor` | Mechanical vs. judgment-call refactors |
+| Every REFACTOR step (load it before the first one), existing code cleaned up, or an IDE inspection fires | `kaizen-refactor` | Mechanical vs. judgment-call refactors |
 | A bash CLI or shell helper is built | `kurae-bash` | Hardening patterns |
 | The artifact is built and run in a container | `tonosaman-deploy` | The run loop |
 | Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) | DQL patterns |
@@ -157,6 +157,10 @@ Ask only when the decision is one of:
 
 Everything else is yours to decide. Never ask about naming, formatting or
 other trivia.
+
+If the reply to a question you asked does not answer it (a bare "continue"),
+apply your stated recommendations only if the user said earlier to take
+them, and log that you did; otherwise ask again, shorter.
 
 To ask: use the question tool if you have one, otherwise write the question
 in plain text and end your turn. Give the options, say which you recommend

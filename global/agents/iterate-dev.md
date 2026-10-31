@@ -22,6 +22,7 @@ Rules:
   create a concrete adapter inside the core.
 - Run the test command. Then run the other tests in the same test class, so a
   green here does not break an earlier one.
+- Run one command per shell call: no `&&`, `;` or pipes, which may be refused.
 - Do not commit. The caller reviews and commits.
 
 Report in a few lines: the files you changed, the test result, and anything
