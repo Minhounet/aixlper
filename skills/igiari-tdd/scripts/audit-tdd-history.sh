@@ -30,7 +30,7 @@
 #          [--main-path src/main/] [--test-marker '@Test|@ParameterizedTest']
 #          [--lint-cmd "<analyzer cmd>"]
 #          [--ahead-cmd "<analyzer cmd>" --generalize-from <N>]
-#          [--sites-cmd "<analyzer cmd>"]
+#          [--sites-cmd "<analyzer cmd>"] [--first-n <N>]
 #   --base      the commit the task started from (its steps are base..HEAD)
 #   --test-cmd  run at each red commit; omit to skip the red re-run
 #   --full-cmd  run once at HEAD; omit to skip the final build
@@ -43,16 +43,19 @@
 #   --generalize-from  the first green the plan allows to generalize (the
 #               first test a single branch can't satisfy); greens before it
 #               that add a construct are violations
+#   --first-n   the step number the task's first red carries (default 1),
+#               for a task split into runs that keep numbering (one per AC)
 #   --sites-cmd one line per iterating method
 #               (scripts/iterating-methods-pmd.xml is a ready rule set)
 # exit 0: clean; 1: a violation; 2: usage error
 
 set -u
-base= test_cmd= full_cmd= lint_cmd= ahead_cmd= gen_from= sites_cmd= test_path=src/test/ main_path=src/main/
+base= first_n=1 test_cmd= full_cmd= lint_cmd= ahead_cmd= gen_from= sites_cmd= test_path=src/test/ main_path=src/main/
 marker='@Test|@ParameterizedTest'
 while [ $# -gt 0 ]; do
   case $1 in
     --base) base=$2; shift 2;;
+    --first-n) first_n=$2; shift 2;;
     --test-cmd) test_cmd=$2; shift 2;;
     --full-cmd) full_cmd=$2; shift 2;;
     --lint-cmd) lint_cmd=$2; shift 2;;
@@ -71,7 +74,7 @@ head=$(git rev-parse HEAD)
 
 fail=0
 flag() { fail=1; }
-expect_red=1 last_green=0 green_sha= misses=
+expect_red=$first_n last_green=0 green_sha= misses=
 
 # Production lines that refactor commit $1 removes or rewrites and that
 # green commit $2 wrote, counted with blame on the refactor's parent.

@@ -516,7 +516,9 @@ test command as `--test-cmd`, and the full-build command as `--full-cmd`.
 It checks step order, one test per red, every red failing at its own
 commit and not on a compile error, no green touching a test, and the final
 build. It prints about one line per commit and exits non-zero on a
-violation. Rule 5 stays your judgment: read the green diffs.
+violation. If the task is one of several runs that keep numbering steps
+(one run per acceptance criterion), also pass `--first-n <the run's first
+step number>`. Rule 5 stays your judgment: read the green diffs.
 
 The audit also lists every refactor that rewrites production lines its own
 green wrote. That list is evidence, not a verdict. Compare it with your

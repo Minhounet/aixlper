@@ -308,6 +308,13 @@ ones the TDD skill already has.
     of its `Interpretation` (the use case or service, not a helper), so
     passing them won't prove it. It will need a higher-level test or other
     evidence.
+- **TDD wins on how an AC is proven.** An `[ACn]` test is a TDD test like
+  any other: it must be seen failing before it passes. Plan it where it
+  will fail when written - usually first in that AC's plan, at the level of
+  its `Interpretation` - not at the end, where the earlier tests have
+  already forced its behavior. Never add an AC test that passes the moment
+  it is written and count it as evidence; if the AC can only be proven that
+  way, flag it as the gap above instead.
 - **During the cycles**, don't touch `acceptance.md`. A per-step update
   would add noise to every commit, and no scoped run is the evidence
   anyway.

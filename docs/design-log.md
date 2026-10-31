@@ -2563,3 +2563,24 @@ same reason.
 now travel with the project's history (readable from any device, but visible
 to anyone with the repo). Gitignore `docs/ticket/` in a project where that's
 unwanted.
+
+## TDD wins on how an AC is proven; audit `--first-n`
+
+**Found in** a full `iterate` run (two ACs, one TDD run per AC, reviewer on).
+Twice the agent proved an AC by adding a use-case-level test in a refactor
+step; it passed the moment it was written, because the earlier unit-level
+tests had already forced the behavior. `objection-conception` wants proof at
+the level of the AC's `Interpretation`; `igiari-tdd` wants every test seen
+red. Both can't hold for that test.
+
+**Decided by the author: TDD is the truth.** `objection-conception` now says
+an `[ACn]` test must be seen failing like any other, so it is planned where
+it will fail - usually first in that AC's plan, at use-case level - and a
+test that passes on arrival never counts as evidence. If an AC can only be
+proven that way, it is flagged as a gap instead.
+
+**Audit numbering.** With one run per AC, AC2's steps continue from AC1's
+(red 7...), and `audit-tdd-history.sh` expected red 1, so every second run
+reported OUT OF ORDER. New `--first-n <N>` option; `igiari-tdd` says to pass
+it when a task is split into runs. Checked on the run's real history: the
+false flag disappears, the rest of the audit is unchanged.
