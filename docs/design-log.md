@@ -2668,3 +2668,29 @@ ticket or ACs, and no `objection-conception` (criterion 5, must not know).
 fixture: it loaded all three skills, read only what it was given, wrote a
 minimal green with a named constant (Super Green), touched no test, did not
 commit ($0.23).
+
+## iterate-reviewer: the same mistake, worse - rules restated instead of loaded
+
+The author asked to check the reviewer for the problem just fixed in
+`iterate-dev`. It had it, worse: it restated in its own words the rules of
+`objection-conception` (AC proof), `chottomatte-archi` (structure) and
+`igiari-tdd` (TDD history), and loaded only `kanpeki-fp` and
+`kaizen-refactor`. It was judging against partial summaries that knew
+nothing of Super Green, guards, `--first-n` or the true-TDD rule. A reviewer
+has no "must not know" constraint, so this was a plain mistake.
+
+Now it loads all five skills (`objection-conception`, `chottomatte-archi`,
+`igiari-tdd`, `kanpeki-fp`, `kaizen-refactor`), judges by their rules as
+written, runs `igiari-tdd`'s audit script itself, and names the skill each
+finding breaks. `iterate` passes it the ticket folder too. Re-run on the
+same AC1 work: all five loaded, audit run, three findings each tied to a
+skill, including one the old version could not see (the evidence said "audit
+not run" though it runs and passes). $0.30.
+
+Same check on `iterate` itself: it routes and points, apart from one copy -
+the manual audit fallback listed the audit's checks. It now points to
+`igiari-tdd`'s audit section.
+
+**Rule kept from this:** an agent never restates a skill's rule. It loads the
+skill, or points to it; the only text it owns is what is genuinely its own
+(routing, gates, what it must not know).

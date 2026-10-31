@@ -103,9 +103,9 @@ front. Then each AC is its own TDD run:
    `objection-conception` asks, and relay its approval gate (the user may
    pre-approve the plans).
 2. Run the cycles, then the full build and the TDD audit that end the run.
-   If the audit script cannot run (no approval for it), check by hand what it
-   checks (red before green, no test changed in a green, each red seen
-   failing, full build green), and say so under Open in the final report.
+   If the audit script cannot run (no approval for it), do by hand the checks
+   `igiari-tdd`'s audit section lists, and say so under Open in the final
+   report.
 3. Spawn `iterate-reviewer` (below) on the AC's run. Fix each `blocking`
    finding with a new red/green cycle, or ask the user if it is a real fork;
    note `minor` ones in the decision log. Re-review after a fix.
@@ -131,9 +131,12 @@ Two steps can go to a subagent. Neither can ask the user anything: you keep
 every gate, every commit and every decision.
 
 - **`iterate-reviewer`, on by default in build mode.** A read-only review of
-  one AC's run, with fresh eyes. Give it the AC (verbatim and interpreted),
-  the commit range of its run, the approved structural plan and the test
-  command. It answers `PASS` or a list of findings. Skip it only if the user
+  one AC's run, with fresh eyes, against the same skills you work with
+  (`objection-conception`, `chottomatte-archi`, `igiari-tdd`, `kanpeki-fp`,
+  `kaizen-refactor`). Give it the AC (verbatim and interpreted), the commit
+  range of its run, the approved structural plan, the ticket folder and the
+  test command. It answers `PASS` or findings, each naming the skill rule it
+  breaks. Skip it only if the user
   said "no review".
 - **`iterate-dev`, off by default.** Turn it on only if the user asked for it
   ("with dev"). It does the GREEN exactly as you would, with the same skills
