@@ -134,7 +134,7 @@ global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # user-level Claude-only agents (iterate)
+global/agents/                    # user-level Claude-only agents (iterate, iterate-reviewer, iterate-dev)
 
 docs/design-log.md                # session-by-session history for active-work skills
 evals/                            # cross-skill evals (scripts/eval_skill_chain.sh, make eval-chain)

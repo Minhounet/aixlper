@@ -40,9 +40,9 @@ DRY_RUN=0
 # cycle-cost.py is run by hand to price an implementation cycle. Both need
 # their executable bit preserved, which the copy loop below handles
 # for any file in this list, not just this one.
-# agents/iterate.md lands in ~/.claude/agents/, which makes it available in
+# agents/*.md land in ~/.claude/agents/, which makes them available in
 # every project without being the default anywhere.
-CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py agents/iterate.md)
+CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py agents/iterate.md agents/iterate-reviewer.md agents/iterate-dev.md)
 
 while [ $# -gt 0 ]; do
   case "$1" in

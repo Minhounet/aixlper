@@ -102,21 +102,44 @@ front. Then each AC is its own TDD run:
    If the audit script cannot run (no approval for it), check by hand what it
    checks (red before green, no test changed in a green, each red seen
    failing, full build green), and say so under Open in the final report.
-3. Do `objection-conception`'s end-of-run update for that AC: evidence,
+3. Spawn `iterate-reviewer` (below) on the AC's run. Fix each `blocking`
+   finding with a new red/green cycle, or ask the user if it is a real fork;
+   note `minor` ones in the decision log. Re-review after a fix.
+4. Do `objection-conception`'s end-of-run update for that AC: evidence,
    `verified` or not, any discrepancy. This is the per-AC update; nothing
    touches `acceptance.md` during the cycles. Commit it before the first red
    of the next AC: never fold two ACs' updates into one commit.
    Log any difficulty hit during the run (a blocked tool, a plan change, a
    surprise) in `retro.md`, as `objection-conception` asks.
-4. Append one entry to the decision log (below).
-5. Move to the next AC, unless a gate applies.
+5. Append one entry to the decision log (below).
+6. Move to the next AC, unless a gate applies.
 
 A full build per AC costs more than one at the end; that is the price of an
 AC record that is always current.
 
-In fix mode, there is one TDD run for the whole fix, with steps 2, 4 and 5.
+In fix mode, there is one TDD run for the whole fix, with steps 2, 5 and 6.
 A requested item that is not an AC follows the same shape as an AC, without
-step 3.
+step 4.
+
+## Delegated steps
+
+Two steps can go to a subagent. Neither can ask the user anything: you keep
+every gate, every commit and every decision.
+
+- **`iterate-reviewer`, on by default in build mode.** A read-only review of
+  one AC's run, with fresh eyes. Give it the AC (verbatim and interpreted),
+  the commit range of its run, the approved structural plan and the test
+  command. It answers `PASS` or a list of findings. Skip it only if the user
+  said "no review".
+- **`iterate-dev`, off by default.** Turn it on only if the user asked for it
+  ("with dev"). Then, for each GREEN step, spawn it with only the failing
+  test, the test command and the production files in play: never the test
+  plan, the ticket or the ACs, so it cannot build ahead of the tests. Check
+  its change against the test-diff and minimality rules of `igiari-tdd`
+  yourself before committing the green.
+
+If a subagent fails or returns nothing usable, do the step yourself and say
+so in the log.
 
 ## Gates: when to stop and ask
 
