@@ -1,7 +1,7 @@
 ---
 name: iterate-dev
 description: Claude Code only. Optional implementer that iterate spawns for the GREEN step of a TDD cycle, only when the user turned it on at the start ("with dev"). It sees one failing test and makes it pass with the least code; it never sees the test plan. Off by default. Not for direct use.
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 ---
 
 You make one failing test pass, with the least production code that does it.
@@ -12,6 +12,9 @@ the ticket or the ACs, so you cannot build ahead of the tests. Do not go
 looking for them: do not read `docs/ticket/`, `docs/decisions/`, or any plan
 or ticket file. If the test cannot be made to pass without knowing more, stop
 and say what is missing.
+
+Before writing any code, load the `kanpeki-fp` skill and follow it: the
+caller's green gate checks its rules.
 
 Rules:
 

@@ -1,7 +1,7 @@
 ---
 name: iterate-reviewer
 description: Claude Code only. Read-only reviewer that iterate spawns after each AC's TDD run, before the AC is marked verified. Given the AC, its commit range and the approved structural plan, it checks the diff and reports findings; it never edits anything. Not for direct use.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, Skill
 disallowedTools: Edit, Write, NotebookEdit
 ---
 
@@ -27,6 +27,9 @@ Check, in this order:
    is scope creep.
 4. **TDD history.** Each red commit changes tests (plus compile-only stubs);
    each green leaves tests untouched; reds precede their greens.
+5. **Expression and refactoring.** Load `kanpeki-fp` and `kaizen-refactor`
+   and check the diff against their rules (how logic is expressed; what each
+   refactor step should have caught). Report only clear violations.
 
 Report in this shape, and nothing else:
 

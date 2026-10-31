@@ -290,9 +290,10 @@ red, so it drives nothing and proves nothing. Fix that in this order:
    edge a later change could break silently (a boundary such as "two
    failures don't lock yet"), keep it as a **guard**: mark it `(guard)` in
    the plan, prove it can fail with a mutation check (break the code
-   briefly, see the guard fail, revert), and commit it in that cycle's
-   refactor step with the mutation check named in the message. A guard is
-   never a red step and never evidence for an acceptance criterion.
+   briefly, see the guard fail, revert), and commit it on its own as
+   `guard N: <name> (mutation: <what you broke>)` right after green N - not
+   in a refactor, which reshapes existing tests and never adds one. A guard
+   is never a red step and never evidence for an acceptance criterion.
 3. **Otherwise drop it**, and say so in the plan.
 
 Found only mid-run, a test that would pass on write is a plan deviation

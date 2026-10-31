@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Audit a TDD task from its git history, per igiari-tdd's commit-per-step rule.
 #
-# Each step is one commit whose subject contains "red N", "green N" or
-# "refactor N" (any prefix the project's convention needs is fine).
+# Each step is one commit whose subject contains "red N", "green N",
+# "refactor N" or "guard N" (any prefix the project's convention needs is
+# fine). A guard is a test that could not be red, kept after green N with a
+# mutation check named in its subject.
 # Checks, without touching the current checkout (uses a temporary worktree):
 #   - steps come in order: red N, green N, optional refactor N, then N+1
 #   - each red commit adds exactly one test and changes only test files
@@ -98,7 +100,7 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
   files=$(git diff-tree --no-commit-id --name-only -r "$c")
   tests=$(printf '%s\n' "$files" | grep -c "^$test_path")
   mains=$(printf '%s\n' "$files" | grep -c "^$main_path")
-  step=$(printf '%s' "$subject" | grep -oE '(red|green|refactor) [0-9]+' | head -1)
+  step=$(printf '%s' "$subject" | grep -oE '(red|green|refactor|guard) [0-9]+' | head -1)
   kind=${step% *} n=${step#* }
   verdict=ok
   # A fix-forward commit ("red 5 (fix): ...") corrects its step in place:
@@ -135,6 +137,14 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
           misses="$misses refactor $n ($own),"
         fi
       fi
+      ;;
+    guard)
+      problems=
+      [ "$n" -eq "$last_green" ] || problems="OUT OF ORDER (guard $n after green $last_green); "
+      [ "$mains" -eq 0 ] || problems="${problems}GUARD TOUCHES PRODUCTION; "
+      printf '%s' "$subject" | grep -qi 'mutation' || problems="${problems}NO MUTATION CHECK NAMED; "
+      if [ -n "$problems" ]; then verdict=${problems%; }; flag
+      else verdict="ok; guard, not a red (read its mutation check)"; fi
       ;;
     *) verdict="NOT A STEP COMMIT"; flag;;
   esac

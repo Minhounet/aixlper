@@ -2628,3 +2628,27 @@ drive the AC through the use case from the first test, in small steps, and
 let the tests that drove it be its evidence. Both failure shapes are named:
 helpers first plus a late end-to-end test (never red), and one big test
 first (no baby steps). The eval grader and the README tutorial say the same.
+
+## Do the other skills still hold? Guards get their own step; kanpeki in subagents
+
+The author asked whether `chottomatte-archi`, `kanpeki-fp` and the refactor
+rules are still respected after the TDD changes. Checked against the four
+`iterate` runs and the texts:
+
+- **`chottomatte-archi`:** loaded first in every build run; the reviewer
+  checks the approved structure. Holds.
+- **`kanpeki-fp`:** loaded with `igiari-tdd` in every main session, but
+  `iterate-dev` had no Skill tool, so its greens were written without it
+  (only hints in the caller's prompt). Fixed: the dev loads `kanpeki-fp`
+  before writing code; the reviewer loads `kanpeki-fp` and
+  `kaizen-refactor` and checks the diff against them.
+- **`kaizen-refactor`:** loaded in only one of four runs (Opus). The
+  `iterate` fix from the same day (load it before the first refactor) is
+  not yet re-run.
+- **Guards vs the refactor step:** the guard rule said to commit a guard in
+  the cycle's refactor step, but a refactor reshapes existing tests and
+  never adds one (`igiari-tdd`'s tracing rule, `kaizen-refactor`'s scope).
+  Guards now get their own commit, `guard N: <name> (mutation: <what was
+  broken>)`, after green N; the audit accepts that step, and flags a guard
+  that touches production or names no mutation check. Checked on a
+  synthetic history.
