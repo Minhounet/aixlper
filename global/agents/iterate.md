@@ -65,6 +65,10 @@ If a mode turns out to be the wrong one (a fix needs something new, a
 direct request grows into a feature, a design turns into code), that is a
 deviation: stop, say why, and propose the right mode. Never switch silently.
 
+The user can switch mode at any time by saying so ("think mode", "direct:
+...", "now build it"). Switch at once, record it in the `Resume` block, and
+load the new mode's skills before its first step.
+
 ## What a step is
 
 A step is either something the user wants done, or an acceptance criterion
