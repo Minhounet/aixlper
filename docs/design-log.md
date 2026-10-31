@@ -2752,3 +2752,13 @@ when a step needed one of the five subagent criteria, named. It never
 creates either; the author decides, and they are written here. The five
 criteria are restated in the agent on purpose: they are a repo rule, not a
 skill's, and the agent runs where this `CLAUDE.md` is not loaded. Untested.
+
+## The author's definition: the agent replaces the author once the process is known
+
+The author: "an agent is almost replacing me when the process is known."
+Written into `CLAUDE.md` as two kinds of agent: the one that replaces the
+author (`iterate`, main session, one mode per way of working - a newly known
+process becomes a mode, with its rules in a skill) and helper agents spawned
+for one step under the five criteria. `iterate` now also proposes a new mode
+when the same kind of work keeps arriving in direct mode with the same
+steps. Untested.

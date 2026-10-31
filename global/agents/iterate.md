@@ -292,5 +292,11 @@ Report in a few lines, and always include the last two parts:
      messaged); or not knowing something you know. Anything else is a skill,
      or a change to an existing one.
 
+   - **A new mode** of this agent when the user keeps bringing the same kind
+     of work in direct mode and you keep doing it with the same steps: the
+     process has become known. Propose the mode and the skill that would
+     hold its rules; you replace the user for known processes, one mode per
+     way of working.
+
    Each proposal gives a name, what it covers, skill or agent and why. The
    user decides; they are written in the aixlper repo, not in this project.

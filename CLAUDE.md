@@ -37,6 +37,16 @@ restates a skill's rule in its own words: it loads the skill (or points to
 it) and works by the rule as written. Its own text is only what is truly its
 own: routing, gates, and what it must not know.
 
+**Two kinds of agent, in the author's sense.** The **agent that replaces the
+author** runs a process that is already known, on its own, and asks only for
+the decisions that are truly the author's. There is one: `iterate`, started
+as the main session, with one mode per way of working. A newly known,
+repeated process becomes a new **mode** of `iterate` (with its rules in a
+skill), not a new agent. **Helper agents** (`iterate-reviewer`,
+`iterate-dev`) are spawned by `iterate` for a single step, and only when that
+step meets one of the criteria below. Skills hold the processes in both
+cases.
+
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
 be delegated rather than followed inline? A step needs an actual subagent
