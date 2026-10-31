@@ -168,9 +168,10 @@ Then describe the work in your first message. Two examples:
   Playwright check (`shoko-playwright`), run against the app redeployed
   with Podman. Already passing: the AC is met. Failing: it changes the code
   until it passes. No unit-test TDD here.
-- **Think mode** (design only): `objection-conception`, plus
-  `chottomatte-archi` if the structure matters. It writes only the design
-  files, never code.
+- **Think mode** (thinking and analysis only): `objection-conception`
+  alone; `chottomatte-archi` only if you ask for it (or agree when it
+  proposes it). It reads the code it needs, writes only the design files,
+  never code.
 - **Direct mode** (anything else): a question, a small edit, a command. It
   just does it, with no ceremony, so you never need plain `claude`.
 
@@ -301,9 +302,10 @@ Puis décris le travail dans ton premier message. Deux exemples :
   contrôle Playwright (`shoko-playwright`), lancé sur l'application
   redéployée avec Podman. Déjà vert : la CA est remplie. En échec : il
   modifie le code jusqu'à ce qu'il passe. Pas de TDD unitaire ici.
-- **Mode think** (conception seule) : `objection-conception`, plus
-  `chottomatte-archi` si la structure compte. Il n'écrit que les fichiers de
-  conception, jamais de code.
+- **Mode think** (réflexion et analyse seules) : `objection-conception`
+  seul ; `chottomatte-archi` seulement si tu le demandes (ou acceptes quand
+  il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers
+  de conception, jamais de code.
 - **Mode direct** (tout le reste) : une question, une petite modif, une
   commande. Il le fait, sans cérémonie, donc plus besoin de `claude` tout
   court.

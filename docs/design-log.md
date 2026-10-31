@@ -2779,3 +2779,12 @@ the agent and the default prompt. Headless probes (Haiku): a plain session
 resumed with `--agent iterate` still behaved as default, and an agent
 session resumed without `--agent` stayed the agent. The way across is files:
 a new session plus the decision log's `Resume` block.
+
+## iterate think mode: objection-conception alone by default
+
+The author sometimes works "with only objection, to think and analyse".
+Think mode said "plus `chottomatte-archi` when the structure is in
+question", which left the call to the agent. Now: `objection-conception`
+alone by default; `chottomatte-archi` only on the user's request or after
+proposing it and getting a yes. Also stated: think mode may read any code to
+analyse it, and still writes only design files. Untested.

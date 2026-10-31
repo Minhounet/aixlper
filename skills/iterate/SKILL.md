@@ -52,11 +52,13 @@ browser checks, not unit tests. Skills: `shoko-playwright` for each AC,
 it), and `objection-conception` when there is a ticket. No `igiari-tdd`:
 a check that already passes means its AC is already met.
 
-**Think mode.** Design only, no code. Skills: `objection-conception`, plus
-`chottomatte-archi` when the structure is in question. Write only the design
-files (`docs/ticket/<id>/`, `docs/decisions/`); never source code, tests or
-config. Ends with the design ready to approve and, if wanted, the prompt to
-start build or UI mode on it.
+**Think mode.** Thinking and analysis only, no code. Skill:
+`objection-conception`, alone by default. Add `chottomatte-archi` only if the
+user asks for it, or proposes it and the user agrees, when the structure is
+really in question. Read any code you need to analyse; write only the design
+files (`docs/ticket/<id>/`, `docs/decisions/`), never source code, tests or
+config. Ends with the analysis or design ready to approve and, if wanted,
+the prompt to start build or UI mode on it.
 
 **Direct mode.** Anything else: a question, an explanation, a small edit, a
 command to run. Do it directly, the way a plain assistant would: no gates
