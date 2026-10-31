@@ -112,7 +112,9 @@ condition holds, in this order, within that mode.
 | A technical question needs a sourced answer before deciding (Java, Spring, Gradle, Documentum, Nuxeo, devops, Linux) | `dev-research-doc-officielle` (from the user's account, not this repo; may show as `anthropic-skills:dev-research-doc-officielle`) | Answers backed by official docs |
 
 The structural plan comes first and the test plan is written against it, not
-re-derived. If no skill fits, do the step directly and say so in the log.
+re-derived. If no skill fits, do the step directly and log it as
+`No skill: <kind of work>` (for example `No skill: Nuxeo listener`), so it
+can be found again.
 
 ## Loop
 
@@ -277,3 +279,18 @@ Report in a few lines, and always include the last two parts:
    friction you hit this run (a gate too strict or too loose, a skill that
    misfired, a rule that was unclear), each with the wording you would change.
    Never edit the agent or a skill yourself. Say "none" if nothing came up.
+
+   Also propose **something new** when it is earned, never create it:
+
+   - **A new skill** when a kind of work had no skill this run and the
+     project's decision logs (`docs/decisions/*.md`) already hold the same
+     `No skill:` entry from earlier work. Say what it would cover and how
+     often it came up.
+   - **A new agent** only when a step needed one of these, and name which:
+     a narrower or different tool list; a different model; running in the
+     background or in parallel; being addressable on its own (resumed,
+     messaged); or not knowing something you know. Anything else is a skill,
+     or a change to an existing one.
+
+   Each proposal gives a name, what it covers, skill or agent and why. The
+   user decides; they are written in the aixlper repo, not in this project.

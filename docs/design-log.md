@@ -2735,3 +2735,20 @@ sessions.
 Untested: none of the three new modes has been run. `tonosaman-deploy`'s
 Nuxeo reference is still a placeholder waiting for the author's setup, so
 UI mode cannot deploy Nuxeo until it is filled in.
+
+## iterate: proposes a new skill or agent when it is earned
+
+The author asked whether `iterate` can tell when something new has to be
+created. New code was already covered (a fix that needs something new is a
+deviation to build mode). New skills or agents were not: the only signals
+were a free-text "no skill fits" note and Improvements limited to existing
+skills, and the skill-vs-agent test lives in this repo's `CLAUDE.md`, which
+is not loaded in work projects.
+
+Now: a step with no skill is logged as `No skill: <kind of work>`, so it can
+be found again; the final report proposes a new skill when the same entry
+already exists in the project's earlier decision logs, and a new agent only
+when a step needed one of the five subagent criteria, named. It never
+creates either; the author decides, and they are written here. The five
+criteria are restated in the agent on purpose: they are a repo rule, not a
+skill's, and the agent runs where this `CLAUDE.md` is not loaded. Untested.
