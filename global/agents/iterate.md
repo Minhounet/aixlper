@@ -121,7 +121,8 @@ front. Then each AC is its own TDD run:
 A full build per AC costs more than one at the end; that is the price of an
 AC record that is always current.
 
-In fix mode, there is one TDD run for the whole fix, with steps 2, 5 and 6.
+In fix mode, there is one TDD run for the whole fix, with steps 2, 5 and 6,
+plus step 3 (the review, on the whole fix) only if the user said "with review".
 A requested item that is not an AC follows the same shape as an AC, without
 step 4.
 
@@ -130,14 +131,16 @@ step 4.
 Two steps can go to a subagent. Neither can ask the user anything: you keep
 every gate, every commit and every decision.
 
-- **`iterate-reviewer`, on by default in build mode.** A read-only review of
+- **`iterate-reviewer`, on by default in build mode; in fix mode only with
+  "with review".** A read-only review of
   one AC's run, with fresh eyes, against the same skills you work with
   (`objection-conception`, `chottomatte-archi`, `igiari-tdd`, `kanpeki-fp`,
   `kaizen-refactor`). Give it the AC (verbatim and interpreted), the commit
   range of its run, the approved structural plan, the ticket folder and the
   test command. It answers `PASS` or findings, each naming the skill rule it
   breaks. Skip it only if the user
-  said "no review".
+  said "no review". In fix mode, give it the fix request instead of an AC;
+  with no structural plan or ticket, those checks simply do not apply.
 - **`iterate-dev`, off by default.** Turn it on only if the user asked for it
   ("with dev"). It does the GREEN exactly as you would, with the same skills
   (`igiari-tdd`, `kanpeki-fp`, `chottomatte-archi`); the only difference is a

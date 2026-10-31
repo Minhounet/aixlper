@@ -131,6 +131,12 @@ Nothing changes in your projects until you ask for the agent.
 claude --agent iterate
 ```
 
+It only applies to that session: plain `claude` stays the normal assistant
+for everything else (questions, quick edits). Tip: `alias ci='claude --agent
+iterate'`. Avoid `"agent": "iterate"` in a settings file unless you want
+every session there to start as `iterate`, since it replaces the default
+system prompt.
+
 Then describe the work in your first message. Two examples:
 
 - **Fix mode** (a clear change to existing code):
@@ -149,7 +155,8 @@ message:
 |---|---|
 | `pre-approve TDD plans` | No approval per AC plan. |
 | `no pauses` | No stop after each AC. |
-| `no review` | No `iterate-reviewer` after each AC. |
+| `no review` | No `iterate-reviewer` after each AC (build mode). |
+| `with review` | In fix mode, an `iterate-reviewer` pass on the fix (off by default; about $0.30). |
 | `with dev` | GREEN steps go to `iterate-dev`, which only sees the failing test (off by default). |
 
 ### 3. What happens
@@ -217,6 +224,12 @@ Rien ne change dans tes projets tant que tu ne demandes pas l'agent.
 claude --agent iterate
 ```
 
+Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
+normal pour le reste (questions, petites modifs). Astuce : `alias
+ci='claude --agent iterate'`. Évite `"agent": "iterate"` dans un fichier de
+settings, sauf si tu veux que chaque session y démarre en `iterate`, car il
+remplace le prompt système par défaut.
+
 Puis décris le travail dans ton premier message. Deux exemples :
 
 - **Mode fix** (un changement clair sur du code existant) :
@@ -236,7 +249,8 @@ message :
 |---|---|
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
 | `no pauses` | Pas d'arrêt après chaque CA. |
-| `no review` | Pas d'`iterate-reviewer` après chaque CA. |
+| `no review` | Pas d'`iterate-reviewer` après chaque CA (mode build). |
+| `with review` | En mode fix, une revue `iterate-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
 | `with dev` | Les étapes GREEN passent à `iterate-dev`, qui ne voit que le test en échec (désactivé par défaut). |
 
 ### 3. Ce qui se passe
