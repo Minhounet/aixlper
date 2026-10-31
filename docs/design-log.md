@@ -2762,3 +2762,20 @@ process becomes a mode, with its rules in a skill) and helper agents spawned
 for one step under the five criteria. `iterate` now also proposes a new mode
 when the same kind of work keeps arriving in direct mode with the same
 steps. Untested.
+
+## iterate: the process becomes a skill, the agent a thin shell
+
+The author asked for an `iterate` skill too, worried it would repeat the
+agent. Done without a copy: the whole process (modes, pipeline, loop, gates,
+log, report) moved to `skills/iterate/SKILL.md`, Claude-only because it
+spawns `iterate-reviewer` and `iterate-dev`. `global/agents/iterate.md` is
+now a thin shell: load the `iterate` skill first, plus what is the agent's
+own - the subagent fallback and the working rules it needs because it
+replaces the default prompt. A plain session gets the same process with
+`/iterate`.
+
+Also checked and written into the tutorial: a session cannot switch between
+the agent and the default prompt. Headless probes (Haiku): a plain session
+resumed with `--agent iterate` still behaved as default, and an agent
+session resumed without `--agent` stayed the agent. The way across is files:
+a new session plus the decision log's `Resume` block.

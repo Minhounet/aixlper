@@ -23,6 +23,7 @@ tool — no per-client fork.
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close. |
 | [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
 | [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright: one check per criterion, run against the app running the current code, its result kept as evidence. A check that already passes means the criterion is already met. |
+| [`iterate`](skills/iterate/SKILL.md) | **Claude Code only.** Runs a known development process for you: five modes (fix, build, ui, think, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `iterate` agent, or as `/iterate` in a plain session. |
 
 ## Installing
 
@@ -172,6 +173,19 @@ message:
 | `with review` | In fix mode, an `iterate-reviewer` pass on the fix (off by default; about $0.30). |
 | `with dev` | GREEN steps go to `iterate-dev`, which only sees the failing test (off by default). |
 
+### Agent or plain session?
+
+- **You know the process** (a ticket, a fix, a UI change, a design): start
+  straight with the agent, `ci`. It is autonomous from the first message.
+- **You don't yet** (exploring, a one-off): plain `claude`.
+- **You can't switch a session** between the two: the prompt is fixed when
+  the conversation starts and stays on resume (checked). Move between them
+  through files instead: a new `ci` session and *"resume PROJ-8"* picks up
+  from the decision log's `Resume` block.
+- **Already in a plain session** and the process turns out known? Type
+  `/iterate`: the same process loads as a skill, with the default assistant
+  around it. The agent and the skill share one text, so nothing drifts.
+
 ### 3. What happens
 
 1. **One approval up front** (build mode): the structural plan, the AC check
@@ -279,6 +293,22 @@ message :
 | `no review` | Pas d'`iterate-reviewer` après chaque CA (mode build). |
 | `with review` | En mode fix, une revue `iterate-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
 | `with dev` | Les étapes GREEN passent à `iterate-dev`, qui ne voit que le test en échec (désactivé par défaut). |
+
+### Agent ou session normale ?
+
+- **Tu connais le processus** (un ticket, un fix, une modif UI, une
+  conception) : démarre directement avec l'agent, `ci`. Il est autonome dès
+  le premier message.
+- **Pas encore** (exploration, cas isolé) : `claude` tout court.
+- **On ne peut pas basculer une session** entre les deux : le prompt est
+  fixé au démarrage de la conversation et le reste à la reprise (vérifié).
+  On passe de l'un à l'autre par les fichiers : une nouvelle session `ci` et
+  *« resume PROJ-8 »* reprend depuis le bloc `Resume` du journal de
+  décisions.
+- **Déjà dans une session normale** et le processus s'avère connu ? Tape
+  `/iterate` : le même processus se charge comme un skill, avec l'assistant
+  par défaut autour. L'agent et le skill partagent un seul texte, donc rien
+  ne diverge.
 
 ### 3. Ce qui se passe
 

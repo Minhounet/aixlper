@@ -40,7 +40,10 @@ own: routing, gates, and what it must not know.
 **Two kinds of agent, in the author's sense.** The **agent that replaces the
 author** runs a process that is already known, on its own, and asks only for
 the decisions that are truly the author's. There is one: `iterate`, started
-as the main session, with one mode per way of working. A newly known,
+as the main session, with one mode per way of working. Its whole process
+lives in the `iterate` skill (Claude-only, since it spawns the helpers); the
+agent only loads that skill and adds its own working rules, so the same
+process also runs as `/iterate` inside a plain session, with no copy. A newly known,
 repeated process becomes a new **mode** of `iterate` (with its rules in a
 skill), not a new agent. **Helper agents** (`iterate-reviewer`,
 `iterate-dev`) are spawned by `iterate` for a single step, and only when that
@@ -76,7 +79,7 @@ starting, rather than force-fitting it into a `SKILL.md`.
 
 ## Active work: skills still being designed
 
-Seven skills are in active design and are **not** stable. For each, the
+Eight skills are in active design and are **not** stable. For each, the
 `SKILL.md` is the source of truth for its current rules, and
 `docs/design-log.md` holds the session-by-session history — every rule
 addition, correction and worked example, with the reasoning behind it.
@@ -84,7 +87,7 @@ Read the `SKILL.md` when you need the rule; read the log when you need the
 *why*. Don't restate either here: this section is a map, not a summary.
 Keep the log updated whenever a skill changes.
 
-For all seven: expect them to keep growing from ongoing conversation with
+For all eight: expect them to keep growing from ongoing conversation with
 the author. Don't treat any as complete, and **don't remove or "clean up"
 sections without the author asking.**
 
@@ -97,6 +100,7 @@ sections without the author asking.**
 | `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`docs/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design (or right after `chottomatte-archi`'s structural plan when it is loaded, in the same approval), traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived and no blocking discrepancy is open. A discrepancy ledger in `acceptance.md` pinpoints conflicts between the Jira description, the ACs, the design and the built code, each quoted verbatim on both sides. |
 | `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not checked; `references/nuxeo.md` is a placeholder waiting for the author's real setup. |
 | `shoko-playwright` | New, not dogfooded | Validates a web UI change against its ACs with Playwright: one check per AC, run against the app running the current code, the result kept as evidence. Not TDD: a check that already passes means the AC is already met. Written from general Playwright knowledge; Nuxeo specifics (URL, login, test data) come from the project. `iterate`'s UI mode uses it. |
+| `iterate` | New, partly dogfooded | **Claude-only.** The known-process runner: five modes (fix, build, ui, think, direct), a fixed skill pipeline per mode, gates, decision log with a `Resume` block, per-AC review by `iterate-reviewer`, optional `iterate-dev`. The `iterate` agent in `global/agents/` is a thin shell that loads it. Build and fix modes ran headless several times; ui, think and direct have not run. |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
 by one with the author, evals checked against the no-skill baseline). The
