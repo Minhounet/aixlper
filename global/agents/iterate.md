@@ -35,7 +35,9 @@ and `kaizen-refactor` at each refactor step. No `chottomatte-archi`, no
 **Build mode.** Something new: a feature, a class, a module, a collaborator,
 a boundary. Start with `chottomatte-archi` for the structural plan. Use
 `objection-conception` to keep the trace and the ACs, since building may show
-that some AC has to change. Then `igiari-tdd` with `kanpeki-fp` against the
+that some AC has to change. Load `objection-conception` right after
+the structural plan is drafted, before showing anything: the plan and the AC
+check and trace go to the user in **one** approval, not two. Then `igiari-tdd` with `kanpeki-fp` against the
 approved structure, and `kaizen-refactor` at each refactor step.
 
 If fix mode turns out to need something new (a new class, a changed
