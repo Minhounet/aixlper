@@ -2652,3 +2652,19 @@ rules are still respected after the TDD changes. Checked against the four
   broken>)`, after green N; the audit accepts that step, and flags a guard
   that touches production or names no mutation check. Checked on a
   synthetic history.
+
+## iterate-dev: same skills as iterate, only a fresh context
+
+The author: `iterate-dev` and `iterate` should be identical, except that the
+GREEN step is done by a dedicated agent. The dev had only `kanpeki-fp` plus
+green rules copied by hand into its prompt, so it never saw `igiari-tdd`'s
+Super Green calibration, and the copy could drift from the skill.
+
+Now the dev loads `igiari-tdd` (applying only its GREEN step and rules),
+`kanpeki-fp` and `chottomatte-archi`, and gets the approved structural plan.
+The only difference from `iterate` is the fresh context: no test plan,
+ticket or ACs, and no `objection-conception` (criterion 5, must not know).
+`iterate` checks the dev's green exactly as its own. Checked on the dev
+fixture: it loaded all three skills, read only what it was given, wrote a
+minimal green with a named constant (Super Green), touched no test, did not
+commit ($0.23).

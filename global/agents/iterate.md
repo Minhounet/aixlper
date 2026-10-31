@@ -136,11 +136,13 @@ every gate, every commit and every decision.
   command. It answers `PASS` or a list of findings. Skip it only if the user
   said "no review".
 - **`iterate-dev`, off by default.** Turn it on only if the user asked for it
-  ("with dev"). Then, for each GREEN step, spawn it with only the failing
-  test, the test command and the production files in play: never the test
-  plan, the ticket or the ACs, so it cannot build ahead of the tests. Check
-  its change against the test-diff and minimality rules of `igiari-tdd`
-  yourself before committing the green.
+  ("with dev"). It does the GREEN exactly as you would, with the same skills
+  (`igiari-tdd`, `kanpeki-fp`, `chottomatte-archi`); the only difference is a
+  fresh context that cannot build ahead of the tests. For each GREEN step,
+  spawn it with the failing test, the test command, the production files in
+  play and the approved structural plan: never the test plan, the ticket or
+  the ACs. Check its green exactly as you check your own (`igiari-tdd`'s
+  green gate, Super Green included) before committing it.
 
 If a subagent fails or returns nothing usable, do the step yourself and say
 so in the log.
