@@ -108,7 +108,7 @@ if there is none.
 
 | When | Read |
 |---|---|
-| The app under test is Nuxeo Web UI (URLs under `/nuxeo/ui/`, `nuxeo-*` elements in the page) | `references/nuxeo.md` (placeholder, not checked yet) |
+| The app under test is Nuxeo Web UI (URLs under `/nuxeo/ui/`, `nuxeo-*` elements in the page), above all a custom page the project adds | `references/nuxeo.md` (not checked against a real setup) |
 
 ## Running it
 

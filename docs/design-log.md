@@ -2897,3 +2897,14 @@ belongs:
 If rules on *building* the layout responsively (not proving it) grow past a
 page, they go in their own skill or `global/nuxeo.md`, and `iterate` gets one
 pipeline row for them. Not dogfooded.
+
+Correction, same session: the author can't provide a Nuxeo setup, and the
+real need was making the project's **custom Web UI pages** responsive. So
+`references/nuxeo.md` stops waiting for a setup that won't come: its
+questions are answered from the project being worked on each time (the
+custom element's source and styles, its config, its specs), never from
+general Nuxeo knowledge. It is scoped to custom pages: find the page and its
+entry point in the source, assert only on it (a broken stock Web UI is a
+finding, not the AC failing), read breakpoints from the page's own styles
+and ask when they disagree with the AC, and treat adding a test id or label
+to the project's own element as a valid change.
