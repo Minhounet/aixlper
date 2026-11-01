@@ -2870,3 +2870,41 @@ Two fixes:
 
 Also seen: both ACs landed in one commit, not one per AC. Left as is for
 now. Not re-run; the real test needs the author's Nuxeo under Podman.
+
+## shoko-playwright: layout ACs at each viewport; Nuxeo reference placeholder
+
+The author asked whether responsive Nuxeo work should get its own agent, as
+too specific for `iterate`. Decided: no agent (none of the five criteria
+applies, and the loop is UI mode's own), no new mode (same process, only the
+knowledge differs), and nothing in `iterate`'s `SKILL.md` (loaded in every
+mode, so Nuxeo rules there would be dead weight). The parts went where each
+belongs:
+
+- **`shoko-playwright/SKILL.md`, new section "Layout ACs":** a layout AC is
+  checked at each viewport it is about. Sizes from the AC, then the project,
+  else ask; one run per size, named after AC and size; viewport set before
+  load (a resize is another AC); assert what the user sees, never CSS values
+  or classes; a screenshot per size as evidence, no pixel baselines unless
+  the project already uses them; device emulation only when the AC needs it.
+  Generic, since it holds for any web front end.
+- **`shoko-playwright/references/nuxeo.md`, new, placeholder:** the questions
+  a Nuxeo Web UI check needs answered (URL, login, test data, ready signal,
+  locators; breakpoints, where the page scrolls, narrow-screen navigation),
+  each with why. Like `tonosaman-deploy`'s Nuxeo reference, it waits for the
+  author's real setup and must not be filled from memory. Pointed to from a
+  table under "Project specifics".
+
+If rules on *building* the layout responsively (not proving it) grow past a
+page, they go in their own skill or `global/nuxeo.md`, and `iterate` gets one
+pipeline row for them. Not dogfooded.
+
+Correction, same session: the author can't provide a Nuxeo setup, and the
+real need was making the project's **custom Web UI pages** responsive. So
+`references/nuxeo.md` stops waiting for a setup that won't come: its
+questions are answered from the project being worked on each time (the
+custom element's source and styles, its config, its specs), never from
+general Nuxeo knowledge. It is scoped to custom pages: find the page and its
+entry point in the source, assert only on it (a broken stock Web UI is a
+finding, not the AC failing), read breakpoints from the page's own styles
+and ask when they disagree with the AC, and treat adding a test id or label
+to the project's own element as a valid change.

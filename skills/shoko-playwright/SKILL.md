@@ -70,6 +70,33 @@ pass means the AC holds:
   "the document appears in the list", check the list, not a toast that
   says "saved".
 
+## Layout ACs: one check, every viewport the AC names
+
+When an AC is about layout or responsiveness ("on a phone", "on a narrow
+screen", "the menu collapses", "no horizontal scroll"), a check at the
+default desktop size proves nothing about it. The check still belongs to
+one AC, but it runs at each viewport size that AC is about:
+
+- **Take the sizes from the AC, then from the project** (its breakpoints in
+  CSS or theme config, its existing Playwright projects). If neither gives
+  any, ask. Never invent a set of "usual" device sizes.
+- **Name each run after the AC and the size** (`[AC3] 375x667`), so a
+  failure says which size broke.
+- **Set the viewport before the page loads** (in the test's config or before
+  the first navigation). Resizing a page that is already open tests how it
+  handles a resize, which is a different AC. Test that only when the AC
+  asks for it.
+- **Assert what the user sees at that size:** the element is visible or
+  hidden, the menu is behind a toggle that opens it, the content is still
+  reachable, the page does not scroll sideways when the AC says so. Never
+  assert CSS values, class names or pixel positions: they pass while the
+  screen is broken and fail when it is fine.
+- **Keep a screenshot per size as evidence.** Don't use pixel comparison
+  (screenshot baselines) unless the project already does: a new baseline is
+  only correct if someone approved it, so a first run proves nothing.
+- **Emulate a device (touch, user agent, pixel ratio) only when the AC
+  depends on it.** Width and height alone are what make a layout responsive.
+
 ## Project specifics
 
 The base URL, how to log in, which test user and which test data to use
@@ -78,6 +105,10 @@ existing Playwright config and specs first and follow their conventions.
 Never guess credentials and never write a real password into a check:
 read it from the environment or the project's existing mechanism, and ask
 if there is none.
+
+| When | Read |
+|---|---|
+| The app under test is Nuxeo Web UI (URLs under `/nuxeo/ui/`, `nuxeo-*` elements in the page), above all a custom page the project adds | `references/nuxeo.md` (not checked against a real setup) |
 
 ## Running it
 
