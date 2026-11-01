@@ -312,6 +312,7 @@ Rules for anything added here:
 ## Skill editing
 
 `~/.claude/skills/<skill-name>/SKILL.md` is a symlink to `skills/<skill-name>/SKILL.md` in this repo. Edit the repo copy — the local install updates automatically. No manual copy needed.
+`./scripts/install.sh --link` creates those symlinks (skills, plus the agents in `global/agents/` into `~/.claude/agents`), replacing any existing copy.
 
 ## Git workflow
 
