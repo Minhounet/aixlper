@@ -208,6 +208,17 @@ disagree. Each entry quotes **both sides verbatim with their location** -
 quotes are. Never settle one by picking a side silently: the owner decides,
 and the resolution is recorded.
 
+**An open discrepancy is not encoded in a draft.** While an entry is `open`,
+nothing you write - `conception.md` decisions, a plan, a test, code - may
+carry either side's value as if it were decided. That includes a "safe"
+default, a cap, a ceiling or "the strictest one wins": each of those *is*
+picking a side. Write the dependent decision as pending, name the entry
+(`lifetime: pending D1`), and draft only what does not depend on it. A
+mechanism that stays valid whichever side wins (a configurable value) is
+fine, as long as no number is attached to it. If the user asks for a
+default anyway, say it settles D1 and record that as the resolution, with
+who decided.
+
 ### With an architecture skill: structure first
 
 When `chottomatte-archi` (or another architecture skill) is loaded, its

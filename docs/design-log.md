@@ -824,6 +824,18 @@ detection. If this needs to be stronger, the lever is in the `SKILL.md`
 (say outright that a draft must not encode either side of an open
 discrepancy), not in the grader.
 
+### Rule: an open discrepancy is not encoded in a draft (2026-11-01)
+
+Follow-up to the `hidden-contradiction` run, where the skill's failure and
+most of the baseline's were the same behavior: the draft Decisions carried
+a 15-minute cap while the conflict was listed as open. The skill said
+"never settle one by picking a side silently" but not that a draft counts
+as settling. Added under the ledger: while an entry is `open`, no decision,
+plan, test or code carries either side's value, including a "safe" default,
+cap or "strictest wins". The dependent decision is written as pending and
+names the entry. A configurable mechanism without a number is allowed. If
+the user asks for a default anyway, it becomes the recorded resolution.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**
