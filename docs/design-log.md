@@ -836,6 +836,14 @@ cap or "strictest wins". The dependent decision is written as pending and
 names the entry. A configurable mechanism without a number is allowed. If
 the user asks for a default anyway, it becomes the recorded resolution.
 
+**Re-run (Sonnet, `--runs 5`, $0.55): 1.00 with the skill, 0.45 without,
+Δ +0.55**, against 0.90 / 0.50 before the rule. The earlier with-skill
+failure passed, but this is five runs and the skill file also changed in
+between (architecture alignment, `ac33b0b`), so it is consistent with the
+rule working, not proof. `SKILL.md` is now 20.2KB, just past the ~20KB
+guideline: next trim candidate is a pointer-to-reference split, per the
+token self-audit, not a deletion.
+
 ## Token cost: progressive disclosure and output discipline
 
 Cross-cutting session, triggered by the author reporting roughly **$100/day**

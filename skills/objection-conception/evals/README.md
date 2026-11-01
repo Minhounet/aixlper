@@ -7,7 +7,7 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | Case | Signal |
 |---|---|
 | `done-gate` | **Clean, but not discriminating.** 1.00 with the skill and 1.00 without (Sonnet, 5+5 runs, Δ 0.00, judges unanimous, 2026-10-03). It shows no regression, not a skill effect. |
-| `hidden-contradiction` | **Discriminating, modest.** 0.90 with the skill, 0.50 without (Sonnet, 5+5 runs, Δ +0.40, 2026-10-10). The effect is on *not resolving* the conflict, not on spotting it. |
+| `hidden-contradiction` | **Discriminating.** 1.00 with the skill, 0.45 without (Sonnet, 5+5 runs, Δ +0.55, 2026-11-01, after the no-encoding rule); was 0.90 / 0.50 before it. The effect is on *not resolving* the conflict, not on spotting it. |
 | `ac-test-red-first` | **Not discriminating since the true-TDD rewording.** First grader: 1.00 with, 0.67 without (Sonnet, 3+3, 2026-10-31). After rewording the grader for true TDD (small steps through the use case, a big front-loaded test tolerated only if red): 1.00 with, 1.00 without (Sonnet, 2+2). It now shows no regression, not a skill effect. A sharper variant would plan a case where the natural order puts the use-case test last. |
 
 ## `done-gate`
@@ -123,3 +123,20 @@ exact case the full run hit twice.
 - `proof-test-red-first` (weight 2): a use-case-level `[AC1]` test placed
   where it fails when written (or the problem explicitly flagged and fixed).
 - `tags` (weight 1): every test tagged, helper tests as `supports`.
+
+### 2026-11-01 run: after the no-encoding rule, Δ +0.55
+
+Same case, same settings (`--runs 5 --model sonnet`, ablation on, $0.55),
+after adding "an open discrepancy is not encoded in a draft" to
+`SKILL.md`. With the skill: five runs at 1.00 (mean 1.00), against 0.90
+before. Without: 0.50, 0.50, 0.25, 0.75, 0.25 (mean 0.45). The baseline
+still resolves the conflict itself (`expiry-conflict` failed in 4 of 5, one
+on a split vote) and over-flags AC1 versus "promptly" in 3 of 5.
+
+Read this carefully: the with-skill run that failed before (run 5) now
+passes, but five runs cannot tell a fix from noise, and two with-skill runs
+still drew one dissenting judge vote (one on `expiry-conflict`, one on
+`no-false-alarm`). The rule is consistent with the result, it is not proven
+by it. Between the two runs, `SKILL.md` also picked up the architecture-skill
+alignment from `ac33b0b`, so the comparison is not a clean single-change
+ablation. Judges again gave votes only, no written reasons.
