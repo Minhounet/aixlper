@@ -3134,3 +3134,11 @@ one; a new skill, mode or agent is its own decision; proposals never delete a
 section (the repo's "don't remove sections without the author asking").
 
 Not run yet.
+
+**Follow-up: the names say what they are for.** The author liked the trial
+names but asked that their purpose be readable. Each agent's description
+(and the `saiban` skill's) now starts with its role in plain English, then
+the meaning of the word: "Reviewer (kenji = the prosecutor)." That is the
+text Claude Code shows in its agent list. The README tutorial (English and
+French) gained a who's-who table: name, role, who starts it, whether it can
+edit. The names themselves were not changed.

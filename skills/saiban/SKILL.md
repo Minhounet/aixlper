@@ -1,6 +1,6 @@
 ---
 name: saiban
-description: Claude Code only (it spawns the saiban-kenji, saiban-shonin and saiban-tantei agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former name), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+description: Orchestrator (saiban = the trial). Claude Code only (it spawns the saiban-kenji, saiban-shonin and saiban-tantei agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former name), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
 # Saiban: run a known process for the user

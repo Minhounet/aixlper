@@ -123,6 +123,13 @@ The names come from a trial: `saiban` (the trial) runs the case,
 and `saiban-tantei` (the detective) investigates how the skills were used.
 It was called `iterate` before; the installers clean up the old names.
 
+| Name | Role | Started by | Can edit |
+|---|---|---|---|
+| `saiban` (the trial) | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | You (`ci`, or `/saiban`) | Yes |
+| `saiban-kenji` (the prosecutor) | Reviewer: checks each AC's work against the skills, reports, never fixes | `saiban`, after each AC | No |
+| `saiban-shonin` (the witness) | Implementer: writes one GREEN without seeing the test plan or the ACs | `saiban`, only `with dev` | Yes |
+| `saiban-tantei` (the detective) | Inspector: reads how the skills were used, proposes changes to them | `saiban`, improve mode | No |
+
 ### 1. Install
 
 ```bash
@@ -269,6 +276,13 @@ Les noms viennent d'un procès : `saiban` (le procès) mène l'affaire,
 et `saiban-tantei` (le détective) enquête sur l'usage des skills.
 Il s'appelait `iterate` avant ; les scripts d'installation nettoient les
 anciens noms.
+
+| Nom | Rôle | Lancé par | Peut modifier |
+|---|---|---|---|
+| `saiban` (le procès) | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Toi (`ci`, ou `/saiban`) | Oui |
+| `saiban-kenji` (le procureur) | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | `saiban`, après chaque CA | Non |
+| `saiban-shonin` (le témoin) | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | `saiban`, seulement `with dev` | Oui |
+| `saiban-tantei` (le détective) | Inspecteur : lit l'usage des skills, propose des changements | `saiban`, mode improve | Non |
 
 ### 1. Installer
 
