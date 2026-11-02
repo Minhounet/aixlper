@@ -2134,6 +2134,110 @@ image includes `curl` (so an in-container health check works), and the JVM's
 `podman compose` providers, whether `--wait` works there), Jib, and the
 `podman-docker-api.md` steps.
 
+**Second pass: `nuxeo.md` written from a real Podman setup.** The author
+uploaded a working local stack: a rootless Podman setup on WSL2 with
+`podman-compose`, a `manager.sh`, a `dev-deploy.sh`, the compose file, a
+setup guide and a `90-local.conf`. The placeholder's question list is now
+answered from those files, with names genericized (`myapp`, `com.example`).
+Nothing was run from this repo, and Podman is not installed here, so the
+new `nuxeo.md` is marked as written from one setup, not checked.
+
+What the files taught, and where it went:
+
+- **The Nuxeo loop is not the bind-mount rule.** `dev-deploy.sh` copies the
+  module's jars into the running container and restarts only Nuxeo.
+  `SKILL.md` section 4 names this as the one exception, and the intro line
+  now says so ("hold for every runtime, except where a reference says
+  otherwise"). The first wording claimed the server "loads bundles from its
+  own tree" as the reason. That was my inference, not the author's, and was
+  removed: mounting the jars might work too, and the copy loses them on a
+  recreate. The image is still not rebuilt for a jar change.
+- **Dependency jars must never be swept into `bundles/`.** The script stages
+  runtime dependencies separately and copies an explicit `lib/` list. A
+  duplicated server library breaks the classloader, and Tomcat then refuses
+  `/nuxeo`. Auto-detecting "already provided" was ruled out for the same
+  reason: the server ships unversioned jars that no heuristic matches.
+- **A `conf.d` file cannot override a `NUXEOCONF` key.** The entrypoint
+  applies `NUXEOCONF` last. The setup's own comment documents this, and the
+  reference now says so.
+- **`podman-compose` has no `service_healthy`.** `SKILL.md` section 1 now says
+  so. The setup uses a bash wait loop in the service command instead.
+- **A container recreate discards copied jars.** A `down` then `up` removes the
+  copied jars. This is read from the scripts and not yet observed.
+
+Findings against the skill's own rules, left as they are for the author to
+decide:
+
+- The project's `dev-deploy.sh` runs `mvn package -DskipTests`. `SKILL.md`
+  section 5 says not to add that flag on your own. The reference treats the
+  project's script as the project's choice, and says the agent's runs still
+  follow the rule.
+- The project's `manager.sh` waits for `nuxeo.war/WEB-INF` with no timeout,
+  and `destroy` deletes data with `sudo rm -rf`. The reference says to bound
+  the wait and to ask before any data is deleted.
+- The setup's compose file commits dev-only passwords, and the `90-local.conf`
+  mount uses the short syntax. The reference says real credentials belong in
+  `.env`. The short mount is not added to the reference, because the
+  project's `manager.sh` creates the file before `up`, which is the
+  guarantee `SKILL.md` section 4 asks for in another way.
+
+Left out on purpose: the author's personal names and user IDs in the setup
+guide, the proxy address, the internal hostnames and the Studio and Connect
+identifiers. This repo is public.
+
+**Third pass: the files themselves go into the skill.** The author asked for
+the uploaded files to be fed into the skill, not only summarized. They are
+now genericized copies in `references/nuxeo-podman/`: the compose stack,
+`manager.sh`, `build-local.sh`, `dev-deploy.sh`, `90-local.conf.example` and
+the setup guide, with a README that says what each is for. The `nuxeo.md`
+pointer says to read the README first and then only the file needed, so the
+large files cost nothing unless they are opened.
+
+The copies are mechanical (a sed table in the session, names only), then
+checked by hand. Two mistakes were caught in that check and fixed: a
+replacement had changed the Postgres user and database names in `NUXEOCONF`,
+and the database password had drifted from the Postgres container's. Passwords
+are now `change-me` throughout, and the setup guide's personal author block is
+removed. Known gaps the folder's README records: `build-local.sh` and
+`manager.sh` need files not in the folder (the Dockerfile, its config
+directory, `settings.xml`, `addons_artifacts.yml`), and `dev-deploy.sh` needs a
+log4j2 config from that directory.
+
+**Eval case written, not run: `nuxeo-dev-loop`.** The question was whether the
+Nuxeo reference improves the skill. A reading of the diff can't answer that,
+so one case in `skills/tonosaman-deploy/evals/` tests three rules from
+`nuxeo.md`: dependency jars never go to `bundles/` (weight 2), a `conf.d`
+file cannot override a `NUXEOCONF` key and the change needs a recreate, not
+the script's restart (weight 2), and a recreate discards jars copied earlier
+(weight 1). The prompt names the skill, as the `igiari-tdd` suite learned.
+The recreate rule is the least solid: it is read from the scripts and from
+how containers work, not observed on the real stack.
+
+**First run of `nuxeo-dev-loop` (Sonnet, 1+1 run, $0.15).** 1.00 with the
+skill, 0.60 without. Only the `conf.d`/`NUXEOCONF` precedence grader
+separated the arms, and its judges split 2–1 against a baseline that hedged
+("I can't tell which is applied last") and suggested trying the `conf.d`
+plan first. The dependency and recreate graders passed on both arms: the
+baseline filtered the copy to `io.vavr` and knew a recreate loses copied
+jars. So the answer to "does the Nuxeo reference improve the skill" is: on
+this model, for one fact, yes, and for the rest it matches what the model
+already does. Full table and a list of ways to sharpen the case are in the
+suite README.
+
+**Sharpened and rerun (Sonnet, 5+5 runs twice).** A second setting
+(`myapp.audit.verbose`, not in `NUXEOCONF`, so `conf.d` works for it) and a
+new grader, `add-is-allowed`. The first sharpened prompt asked "whether my
+plan works" and the gap fell to +0.06: that wording prompts every model to
+doubt the plan, so the baseline hedged and still picked the safe route.
+Switching to a neutral ask ("how to switch both settings on") gave 1.00 vs
+0.69 (Δ +0.31). The baseline's misses were the practical ones: trying the
+`conf.d` plan first, and saying a restart re-reads `conf.d`. So the Nuxeo
+reference helps on this model by *volunteering the doubt and the order*
+without being asked. One baseline failure is arguable (the grader text was
+clarified afterwards and the case not re-run), and the prompt leaks a hint
+by saying the entrypoint "also applies" `NUXEOCONF`. Both are recorded in
+the suite README.
+
 ## Measuring a cycle: `global/cycle-cost.py`
 
 **Origin.** The author wanted a measure of what one "implement" or "fix"
@@ -2939,3 +3043,26 @@ git outside Studio and deploys via Studio's hot reload.
   `shoko-playwright/references/nuxeo.md` points to it for where a fix lives.
 
 Not dogfooded.
+
+## tonosaman-deploy: the Podman setup and the `nuxeo-dev-loop` eval reach `main`
+
+The October work above (second and third passes, the `nuxeo-dev-loop` eval and
+its two five-run results) lived on a branch that was never merged. Meanwhile
+#38 wrote the Studio section into `references/nuxeo.md` and, without the
+branch, called everything else "still unknown". The author asked to delete
+the old branches and keep the eval. An eval is worthless without the rules it
+grades (`NUXEOCONF` wins over `conf.d`, dependency jars to `lib/` by an
+explicit list, a recreate discards copied jars), so the whole branch was
+merged, not the eval alone.
+
+Conflict resolution in `nuxeo.md`: the Studio section from #38 is kept as is,
+placed after the status and before "Container shape". The status line now
+says both sources (the setup files, and the Studio half told in
+conversation). #38's question list is dropped, since the setup files answer
+it; what is still open lives in "What is not checked yet". The "don't fill
+from memory" rule is kept for anything neither the project nor this file
+covers.
+
+Not re-run after the merge. The case's `prompt.md` and graders don't mention
+Studio, so the merge should not change its scores, but that is an
+assumption until the next run.
