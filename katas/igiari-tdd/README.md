@@ -70,3 +70,80 @@ Re-run: `scripts/kata_super_green.sh --kata <name> --runs 3 --budget-usd 2
 Bowling's threshold is too early to discriminate. String calculator is the
 one real signal so far, and it matches the `generalize-just-enough` eval
 (1.0 with the skill vs 0.0 without).
+
+## Does `shonin-dev` make less biased greens?
+
+`shonin-dev` writes each green in a fresh context that never sees the test
+plan, so it should not build ahead of the tests. The `ahead` count (greens
+that generalize before the plan allows, from a kata's `GENERALIZE_FROM`
+sidecar) measures exactly that, so the comparison uses the two katas that
+have one, both arms through `saiban-orchestrator` in fix mode, differing only
+by "no dev":
+
+```
+for k in bowling string-calculator; do
+  scripts/kata_super_green.sh --kata $k --orchestrator dev   --runs 3 --budget-usd 3 --pmd <pmd> --out /tmp/shonin
+  scripts/kata_super_green.sh --kata $k --orchestrator nodev --runs 3 --budget-usd 3 --pmd <pmd> --out /tmp/shonin
+done
+```
+
+Read first: `subagents` must be above 0 on every dev run (otherwise the dev
+never ran and the run says nothing), then compare `ahead`, then `lint` and
+cost. Budget: 12 runs, about $0.45 each without the dev and half again with
+it, so roughly $7; `--budget-usd 3` caps each run. Then read the histories of
+any run whose `ahead` differs, not only the counts.
+
+Untested: whether the audit tolerates the orchestrator's decision-log commit
+in the history (the wiring was checked with a fake `claude`, nothing more).
+
+### 2026-11-02, bowling, Sonnet, 1 run per arm
+
+| Arm | Subagents | Greens | Reds that failed | `ahead` | Cost |
+|---|---|---|---|---|---|
+| `dev` | 5 (one `shonin-dev` per green) | 5 | 5/5 | 0 | $1.22 |
+| `nodev` | 0 | 4 | 4/5; test 5 passed on arrival, kept as `guard 5` | 0 | $0.47 |
+
+**Reading the histories, not the counts.** Without the dev, green 2 (test
+"all ones → 20") already built the ten-frame walk (`List.range(0, FRAMES)`),
+which no test asked for yet; so test 5 (perfect game) passed the moment it
+was written and the plan lost a red. With the dev, green 2 only summed pins
+and the frame limit arrived at green 5, when test 5 forced it. That is the
+bias the dev exists to remove, seen once.
+
+**`ahead` missed it**: bowling's sidecar allows iteration from green 2, so a
+loop there is not flagged. On this kata, "a planned test passed on arrival"
+(a `guard` or a `PASSED, not a red`) is the better signal.
+
+**Cost: 2.6×** ($1.22 vs $0.47), more than the "half again" measured on a
+two-AC build ticket: the dev's own context reloads the skills on every green.
+
+One run per arm proves nothing on its own. Next: 3 runs per arm on bowling
+and string-calculator, counting reds that passed on arrival.
+
+The first version of the `subagents` count was wrong: a run started inside a
+Claude Code session inherits that session's id, so both runs shared one id
+and the no-dev run reported the dev run's 5 agents. The count now reads each
+run's own project folder (dev 5, nodev 0, re-checked).
+
+### 2026-11-02, larger pass: bowling and string-calculator, 3 runs per arm, Sonnet
+
+| | `dev` (6 runs) | `nodev` (6 runs) |
+|---|---|---|
+| Planned tests that passed on arrival | 0 | 0 |
+| `ahead` (greens built ahead) | 0 | 0 |
+| Refactors flagged "adds generality" | 0 | 1, a false positive: an extraction that moved an existing `take().sum()` into a new method |
+| Lint left at HEAD (`MagicNumber`) | 1 run with 1 | 1 run with 5 |
+| Subagents per run | 5 every run (one per green) | 0 every run |
+| Mean cost | $1.17 | $0.43 |
+
+**No bias difference in this pass.** Without the dev, the orchestrator kept
+every green minimal on both katas, all twelve times. With the first pass,
+the count is 1 slip in 7 no-dev runs (bowling, green 2 built the frame walk
+ahead) against 0 in 7 dev runs: too few to call it a measured effect. The
+cost difference is measured: **2.7×** on these katas.
+
+**Why the katas may undersell it.** The dev exists to stop code written for
+what the orchestrator knows is coming: the plan, and in build mode the ACs
+and the ticket. A five-test kata gives little to know ahead, and the model
+knows these katas by heart either way. A multi-AC build-mode ticket is where
+the effect, if there is one, should show; no fixture for that exists yet.

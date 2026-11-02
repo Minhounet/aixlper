@@ -2134,6 +2134,110 @@ image includes `curl` (so an in-container health check works), and the JVM's
 `podman compose` providers, whether `--wait` works there), Jib, and the
 `podman-docker-api.md` steps.
 
+**Second pass: `nuxeo.md` written from a real Podman setup.** The author
+uploaded a working local stack: a rootless Podman setup on WSL2 with
+`podman-compose`, a `manager.sh`, a `dev-deploy.sh`, the compose file, a
+setup guide and a `90-local.conf`. The placeholder's question list is now
+answered from those files, with names genericized (`myapp`, `com.example`).
+Nothing was run from this repo, and Podman is not installed here, so the
+new `nuxeo.md` is marked as written from one setup, not checked.
+
+What the files taught, and where it went:
+
+- **The Nuxeo loop is not the bind-mount rule.** `dev-deploy.sh` copies the
+  module's jars into the running container and restarts only Nuxeo.
+  `SKILL.md` section 4 names this as the one exception, and the intro line
+  now says so ("hold for every runtime, except where a reference says
+  otherwise"). The first wording claimed the server "loads bundles from its
+  own tree" as the reason. That was my inference, not the author's, and was
+  removed: mounting the jars might work too, and the copy loses them on a
+  recreate. The image is still not rebuilt for a jar change.
+- **Dependency jars must never be swept into `bundles/`.** The script stages
+  runtime dependencies separately and copies an explicit `lib/` list. A
+  duplicated server library breaks the classloader, and Tomcat then refuses
+  `/nuxeo`. Auto-detecting "already provided" was ruled out for the same
+  reason: the server ships unversioned jars that no heuristic matches.
+- **A `conf.d` file cannot override a `NUXEOCONF` key.** The entrypoint
+  applies `NUXEOCONF` last. The setup's own comment documents this, and the
+  reference now says so.
+- **`podman-compose` has no `service_healthy`.** `SKILL.md` section 1 now says
+  so. The setup uses a bash wait loop in the service command instead.
+- **A container recreate discards copied jars.** A `down` then `up` removes the
+  copied jars. This is read from the scripts and not yet observed.
+
+Findings against the skill's own rules, left as they are for the author to
+decide:
+
+- The project's `dev-deploy.sh` runs `mvn package -DskipTests`. `SKILL.md`
+  section 5 says not to add that flag on your own. The reference treats the
+  project's script as the project's choice, and says the agent's runs still
+  follow the rule.
+- The project's `manager.sh` waits for `nuxeo.war/WEB-INF` with no timeout,
+  and `destroy` deletes data with `sudo rm -rf`. The reference says to bound
+  the wait and to ask before any data is deleted.
+- The setup's compose file commits dev-only passwords, and the `90-local.conf`
+  mount uses the short syntax. The reference says real credentials belong in
+  `.env`. The short mount is not added to the reference, because the
+  project's `manager.sh` creates the file before `up`, which is the
+  guarantee `SKILL.md` section 4 asks for in another way.
+
+Left out on purpose: the author's personal names and user IDs in the setup
+guide, the proxy address, the internal hostnames and the Studio and Connect
+identifiers. This repo is public.
+
+**Third pass: the files themselves go into the skill.** The author asked for
+the uploaded files to be fed into the skill, not only summarized. They are
+now genericized copies in `references/nuxeo-podman/`: the compose stack,
+`manager.sh`, `build-local.sh`, `dev-deploy.sh`, `90-local.conf.example` and
+the setup guide, with a README that says what each is for. The `nuxeo.md`
+pointer says to read the README first and then only the file needed, so the
+large files cost nothing unless they are opened.
+
+The copies are mechanical (a sed table in the session, names only), then
+checked by hand. Two mistakes were caught in that check and fixed: a
+replacement had changed the Postgres user and database names in `NUXEOCONF`,
+and the database password had drifted from the Postgres container's. Passwords
+are now `change-me` throughout, and the setup guide's personal author block is
+removed. Known gaps the folder's README records: `build-local.sh` and
+`manager.sh` need files not in the folder (the Dockerfile, its config
+directory, `settings.xml`, `addons_artifacts.yml`), and `dev-deploy.sh` needs a
+log4j2 config from that directory.
+
+**Eval case written, not run: `nuxeo-dev-loop`.** The question was whether the
+Nuxeo reference improves the skill. A reading of the diff can't answer that,
+so one case in `skills/tonosaman-deploy/evals/` tests three rules from
+`nuxeo.md`: dependency jars never go to `bundles/` (weight 2), a `conf.d`
+file cannot override a `NUXEOCONF` key and the change needs a recreate, not
+the script's restart (weight 2), and a recreate discards jars copied earlier
+(weight 1). The prompt names the skill, as the `igiari-tdd` suite learned.
+The recreate rule is the least solid: it is read from the scripts and from
+how containers work, not observed on the real stack.
+
+**First run of `nuxeo-dev-loop` (Sonnet, 1+1 run, $0.15).** 1.00 with the
+skill, 0.60 without. Only the `conf.d`/`NUXEOCONF` precedence grader
+separated the arms, and its judges split 2–1 against a baseline that hedged
+("I can't tell which is applied last") and suggested trying the `conf.d`
+plan first. The dependency and recreate graders passed on both arms: the
+baseline filtered the copy to `io.vavr` and knew a recreate loses copied
+jars. So the answer to "does the Nuxeo reference improve the skill" is: on
+this model, for one fact, yes, and for the rest it matches what the model
+already does. Full table and a list of ways to sharpen the case are in the
+suite README.
+
+**Sharpened and rerun (Sonnet, 5+5 runs twice).** A second setting
+(`myapp.audit.verbose`, not in `NUXEOCONF`, so `conf.d` works for it) and a
+new grader, `add-is-allowed`. The first sharpened prompt asked "whether my
+plan works" and the gap fell to +0.06: that wording prompts every model to
+doubt the plan, so the baseline hedged and still picked the safe route.
+Switching to a neutral ask ("how to switch both settings on") gave 1.00 vs
+0.69 (Δ +0.31). The baseline's misses were the practical ones: trying the
+`conf.d` plan first, and saying a restart re-reads `conf.d`. So the Nuxeo
+reference helps on this model by *volunteering the doubt and the order*
+without being asked. One baseline failure is arguable (the grader text was
+clarified afterwards and the case not re-run), and the prompt leaks a hint
+by saying the entrypoint "also applies" `NUXEOCONF`. Both are recorded in
+the suite README.
+
 ## Measuring a cycle: `global/cycle-cost.py`
 
 **Origin.** The author wanted a measure of what one "implement" or "fix"
@@ -2939,3 +3043,216 @@ git outside Studio and deploys via Studio's hot reload.
   `shoko-playwright/references/nuxeo.md` points to it for where a fix lives.
 
 Not dogfooded.
+
+## tonosaman-deploy: the Podman setup and the `nuxeo-dev-loop` eval reach `main`
+
+The October work above (second and third passes, the `nuxeo-dev-loop` eval and
+its two five-run results) lived on a branch that was never merged. Meanwhile
+#38 wrote the Studio section into `references/nuxeo.md` and, without the
+branch, called everything else "still unknown". The author asked to delete
+the old branches and keep the eval. An eval is worthless without the rules it
+grades (`NUXEOCONF` wins over `conf.d`, dependency jars to `lib/` by an
+explicit list, a recreate discards copied jars), so the whole branch was
+merged, not the eval alone.
+
+Conflict resolution in `nuxeo.md`: the Studio section from #38 is kept as is,
+placed after the status and before "Container shape". The status line now
+says both sources (the setup files, and the Studio half told in
+conversation). #38's question list is dropped, since the setup files answer
+it; what is still open lives in "What is not checked yet". The "don't fill
+from memory" rule is kept for anything neither the project nor this file
+covers.
+
+Not re-run after the merge. The case's `prompt.md` and graders don't mention
+Studio, so the merge should not change its scores, but that is an
+assumption until the next run.
+
+## `iterate` renamed `saiban`, in the repo's Ace Attorney style
+
+The author asked for the orchestrator and its helpers to carry names like the
+skills do. Each name says the agent's role in a trial:
+
+- `iterate` → **`saiban`** (the trial): runs the case phase by phase, with gates.
+- `iterate-reviewer` → **`saiban-kenji`** (the prosecutor): hunts for faults,
+  never fixes.
+- `iterate-dev` → **`saiban-shonin`** (the witness): a witness waits outside
+  and does not hear earlier testimony, as this agent must never see the test
+  plan.
+
+Entries above this one keep the old names; they are history.
+
+**Migration lives in the installers, not in a separate script.** A one-off
+script runs once and is forgotten; a machine last installed months ago would
+never get it. `scripts/retired-names.txt` lists `<kind> <old> <new>` and
+lines are never removed. `install.sh` deletes retired skills (copy or link);
+`--link` also deletes any dangling link into the clone, which covers future
+renames without touching the list. `install-global.sh` deletes a retired
+agent link and moves a retired agent file to `.bak.<ts>` (that name doesn't
+end in `.md`, so Claude Code stops loading it). It now finds agents by glob
+instead of a hard-coded list. The `ci` alias block is rewritten in place
+already, so it follows the rename with no extra code.
+
+Checked in a throwaway `HOME`: old skill link, old agent link and two old
+copied agent files, plus an old `ci` alias. `install.sh --link` removed the
+skill and the dangling agent link; `install-global.sh` backed up and removed
+both copies and rewrote the alias; a second run of each changed nothing. The
+copy (curl) path of `install.sh` was not run: it fetches `main`, which does
+not have the list yet.
+
+Kept for continuity: the skill's description still triggers on "iterate",
+and a `Resume` block written under the old names is read as the same
+process.
+
+## `saiban` improve mode and `saiban-tantei`
+
+The author noticed the loop was open: `saiban`'s final report proposes
+"Improvements", `global/CLAUDE.md` collects `process-notes.md`, and both say
+"never edit". Nothing ever picked the proposals up. They asked for one agent
+that inspects the work, suggests changes, and can apply them when the skills
+are installed by link.
+
+**Shape, by the repo's own rules.** "A newly known, repeated process becomes
+a new mode, not a new agent", so it is **improve mode** of `saiban`, with
+its process in `skills/saiban/references/improve.md` (read only in that mode;
+the skill is already 19KB). Only the inspection step is an agent,
+`saiban-tantei` (the detective), because it meets three criteria: no write
+access (1); its reading of long transcripts stays out of the caller's
+context (3); and it must not know the working session's reasons (5), so it
+judges the run against the text and not against the excuses. That last one
+is why the caller never takes over a failed inspection, unlike the other
+helpers: doing it inline would bring the bias back.
+
+The inspector's checklist and report shape live in `improve.md` section 4,
+and `saiban-tantei.md` points there instead of restating them (the "agent
+never restates a skill's rule" rule).
+
+**Applying.** The clone is found from the install links (`readlink -f
+~/.claude/skills/saiban`), and its own `CLAUDE.md` governs the edits: design
+log, `make validate`, commit format. A copied install has nothing safe to
+edit, so the mode prints a patch instead. Every proposal is approved one by
+one; a new skill, mode or agent is its own decision; proposals never delete a
+section (the repo's "don't remove sections without the author asking").
+
+Not run yet.
+
+**Follow-up: the names say what they are for.** The author liked the trial
+names but asked that their purpose be readable. Each agent's description
+(and the `saiban` skill's) now starts with its role in plain English, then
+the meaning of the word: "Reviewer (kenji = the prosecutor)." That is the
+text Claude Code shows in its agent list. The README tutorial (English and
+French) gained a who's-who table: name, role, who starts it, whether it can
+edit. The names themselves were not changed.
+
+**Second rename, same session: the role as an explicit suffix.** Descriptions
+alone were not enough: the author wants the purpose in the name, like the
+skills (`igiari-tdd`, `shoko-playwright`): an Ace Attorney word, then the
+role. `saiban` → `saiban-orchestrator` (skill and agent), `saiban-kenji` →
+`kenji-reviewer`, `saiban-shonin` → `shonin-dev`, `saiban-tantei` →
+`tantei-inspector`. The shared `saiban-` prefix is gone: the suffix says the
+role, and the descriptions still say who spawns whom. The entries above keep
+the names they were written with.
+
+`retired-names.txt` now maps both old sets (`iterate-*` and `saiban-*`)
+straight to the new names, so a machine skipping a step still lands right.
+Checked in a throwaway `HOME` holding a mix of `saiban-*` links, a `saiban-*`
+copy and an `iterate` copy: all removed (copies backed up), the alias
+rewritten, a second run changed nothing. A `Resume` block under either old
+name is read as the same process.
+
+The author also asked why there were "so many agents", remembering only the
+orchestrator and the reviewer. The dev agent shipped with them in #35 (off by
+default, only with "with dev"); the inspector is the one added today.
+
+## `shonin-dev` on by default
+
+The author asked what the dev agent is for, given the orchestrator already
+has the skills. Answer: it adds no rule, only not knowing (criterion 5): the
+orchestrator wrote the test plan and read the ACs, so its greens drift toward
+code for tests still to come. The author: "I want to avoid biased code", so
+the code is written by a dedicated agent and the orchestrator keeps the
+tests. `shonin-dev` is now on by default wherever a TDD run writes code (fix
+and build modes); "no dev" turns it off, and "with dev" is gone. Split of
+work: the orchestrator writes RED, checks the dev's GREEN with the green gate,
+and does REFACTOR (behaviour-preserving, so knowing the plan matters less
+there).
+
+Known before flipping, and said to the author: the benefit is unmeasured (one
+real `with dev` run, which still had a three-in-one green blamed on the AC
+rule of the time), and the cost is about half again on a build run (about $4
+vs $2.60 on Sonnet, two ACs). The comparison that would settle it:
+`scripts/kata_super_green.sh` on the same kata with and without the dev,
+audit findings per green. Not run.
+
+**The eval that would settle it, prepared.** `kata_super_green.sh` gained
+`--orchestrator dev|nodev`: both arms run `saiban-orchestrator` in fix mode
+(plan pre-approved, no review, no pauses) and differ only by "no dev", so the
+pair isolates the dev. The dev reaches the run through `--agents` under its
+plain name (a plugin agent would carry a prefix the skill doesn't use). The
+metric is the audit's existing `ahead` count, which flags exactly the bias the
+dev exists to remove; `subagents` per run proves the dev actually ran. The
+commands and the reading order are in `katas/igiari-tdd/README.md`. This
+session has no Claude credentials, so the wiring was checked with a fake
+`claude` and a stub PMD only. Not run.
+
+## `saiban-orchestrator` UI mode: other sessions on the same server
+
+The author found that two UI-mode tabs can run at once. That works because a
+Studio Designer change is a file edit the server serves live through the
+Podman volume, with no restart. UI mode now assumes another session may be on
+another screen and keeps four rules: work in the folder the volume syncs
+(never a worktree, whose edits the server never sees); touch only your
+screen's files, asking before a shared one; ask before a restart or recreate,
+which breaks every other session's checks; commit your own files by name,
+since the folder and its git index are shared. Advice given earlier in the
+session, before this, recommended worktrees for parallel work: right for
+fix and build, wrong for UI mode on a volume-synced stack. Not run with two
+sessions yet.
+
+**First result, bowling, one run per arm (Sonnet).** With the dev, every red
+failed (5/5) and the ten-frame limit arrived only when the perfect-game test
+forced it. Without the dev, green 2 built the frame walk ahead and test 5
+passed on arrival (kept as a guard). Cost $1.22 vs $0.47. The `ahead` metric
+saw neither (the kata allows loops from green 2); "a planned test passed on
+arrival" is the better signal there. Too small to conclude; the larger pass
+is next. Details in `katas/igiari-tdd/README.md`.
+
+## Agent evals: `kenji-reviewer` and `tantei-inspector`
+
+`claude plugin eval` scores skills, so the helper agents got their own
+harness, `scripts/eval_agent.sh` with fixtures and answer keys in
+`evals/agents/`. Each agent runs headless as the main session under its real
+definition (`--agents` from `scripts/agent_to_json.py`, so its tool list and
+denials hold), on input whose right answer is known, with a clean control.
+
+First results (Sonnet, 2 runs): the reviewer found all four planted defects
+as blocking, and its one "false alarm" on the clean control was a real
+defect I had built into the control (the over-built rung of `igiari-tdd`'s
+own ladder), so the control was fixed. The inspector found all four planted
+items, proposed nothing from the decoys, deleted nothing, and added a valid
+fifth proposal (two skills far past 20KB). Its evidence line numbers are
+wrong when it reads several files together; the quotes are exact. Details in
+`evals/agents/README.md`.
+
+**Reviewer clean control, settled.** It took four versions of the clean
+fixture before the reviewer passed it, and each rejection was right: an
+over-built green, an AC wider than its interpretation, the runner's prompt
+misquoting the AC, test names and setup outside the author's rules. Final:
+0 blocking in 2 runs (one PASS, one correct minor). The reviewer has not
+produced a false alarm in this eval.
+
+**Larger pass, 12 runs (bowling and string-calculator, 3 per arm).** No bias
+difference: no planned test passed on arrival and nothing was built ahead in
+either arm. With the first pass, no-dev slipped once in 7 runs and dev never
+did: suggestive, not measured. The cost ratio is measured, 2.7× on katas.
+The `refactor-adds` metric produced one false positive (an extraction moving
+an existing `take().sum()` into its own method). The decision whether the
+dev stays on by default is the author's; the katas are a weak test of it,
+since the bias it targets grows with what the orchestrator knows ahead (ACs,
+ticket), which a kata barely has.
+
+**`tantei-inspector` line numbers.** The agent now cites lines by each
+file's own numbering; 3 of 4 runs complied. Because one did not (it cat'ed
+every evidence file at once), `improve.md`'s report shape makes the
+verbatim quote the evidence and the line number optional, allowed only from
+reading that one file. Quote-first holds whatever way the files are read.
+Not re-run after the second change.

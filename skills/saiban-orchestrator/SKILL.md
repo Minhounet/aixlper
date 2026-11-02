@@ -1,26 +1,29 @@
 ---
-name: iterate
-description: Claude Code only (it spawns the iterate-reviewer and iterate-dev agents). Runs a known development process for the user, in five modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "iterate", hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+name: saiban-orchestrator
+description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
-# Iterate: run a known process for the user
+# Saiban orchestrator: run a known process for the user
 
 You orchestrate iterative work. You do not hold rules of your own for coding,
 architecture or refactoring: the skills hold them. Your job is to choose the
 skill for each step, run the loop, keep a readable decision trail, and
 interrupt the user only when it matters.
 
-This skill is the whole process. The `iterate` agent (`claude --agent
-iterate`) only loads it and adds its own working rules; in a plain session,
+This skill is the whole process. The `saiban-orchestrator` agent (`claude --agent
+saiban-orchestrator`) only loads it and adds its own working rules; in a plain session,
 loading this skill gives the same process with the default assistant
 around it. Either way you run in the main session, because you must be able
 to ask the user questions. Claude Code only: some steps spawn the
-`iterate-reviewer` and `iterate-dev` agents.
+`kenji-reviewer`, `shonin-dev` and `tantei-inspector` agents.
 
 ## Start
 
 If `docs/decisions/<topic>.md` already exists for this work, read its
-`Resume` block first and continue from there instead of starting over.
+`Resume` block first and continue from there instead of starting over. A
+block written under an older name (`iterate` or `saiban` for this process,
+`iterate-reviewer` or `saiban-kenji` for the reviewer, `iterate-dev` or
+`saiban-shonin` for the implementer) is the same process.
 
 **Taking over work started elsewhere** (a plain session, by hand, no decision
 log): don't redo it and don't ignore it. Before asking anything, read what is
@@ -66,6 +69,20 @@ view) and the ACs about it. When the ticket spans several screens, agree the
 order with the user at the start, finish and commit one screen before
 touching the next, and pause between them (see "Context: where to cut").
 
+Another session may be working another screen at the same time, against the
+same running server. Assume one may be, and so:
+- **Work in the folder the server serves.** When the stack syncs a local
+  folder into the container (a volume), edits made anywhere else (a git
+  worktree, a copy) never reach the server, and the check tests stale files.
+  Never move the work to a worktree in UI mode.
+- **Touch only your screen's files.** If the change needs a file shared
+  with other screens, say so and ask before editing it.
+- **Ask before a restart or a recreate** of the server or its stack: it
+  breaks every other session's checks while it runs. A change that needs no
+  restart (a file the server already serves live) needs no question.
+- **Commit only your own files**, named one by one, never everything
+  staged or changed: the folder and its git index are shared.
+
 **Think mode.** Thinking and analysis only, no code. Skill:
 `objection-conception`, alone by default. Add `chottomatte-archi` only if the
 user asks for it, or proposes it and the user agrees, when the structure is
@@ -75,6 +92,14 @@ config. Keep the decision log and its `Resume` block as in any mode, and
 commit the design files with it, so a later session can resume from it.
 Ends with the analysis or design ready to approve and, if wanted, the prompt
 to start build or UI mode on it.
+
+**Improve mode.** Change the aixlper skills and agents themselves, from
+evidence of how they were used: earlier reports' "Improvements", decision
+logs, retros, process notes, session transcripts. The inspection goes to
+`tantei-inspector`; the user approves each change; you apply it in the author's
+aixlper clone (found through the install links), never in the current
+project. Read `references/improve.md` before the first step: it holds the
+whole process. No other skill by default.
 
 **Direct mode.** Anything else: a question, an explanation, a small edit, a
 command to run. Do it directly, the way a plain assistant would: no gates
@@ -152,7 +177,7 @@ front. Then each AC is its own TDD run:
    If the audit script cannot run (no approval for it), do by hand the checks
    `igiari-tdd`'s audit section lists, and say so under Open in the final
    report.
-3. Spawn `iterate-reviewer` (below) on the AC's run. Fix each `blocking`
+3. Spawn `kenji-reviewer` (below) on the AC's run. Fix each `blocking`
    finding with a new red/green cycle, or ask the user if it is a real fork;
    note `minor` ones in the decision log. Re-review after a fix.
 4. Do `objection-conception`'s end-of-run update for that AC: evidence,
@@ -179,10 +204,10 @@ deliverable.
 
 ## Delegated steps
 
-Two steps can go to a subagent. Neither can ask the user anything: you keep
+Three steps can go to a subagent. Neither can ask the user anything: you keep
 every gate, every commit and every decision.
 
-- **`iterate-reviewer`, on by default in build and UI modes; in fix mode only
+- **`kenji-reviewer`, on by default in build and UI modes; in fix mode only
   with "with review"; never in think or direct mode.** Only the user turns it
   off ("no review"); never skip it on your own judgment, however small the
   change. A read-only review of
@@ -195,8 +220,11 @@ every gate, every commit and every decision.
   `shoko-playwright` as its skills, and give it the check command. Skip it only if the user
   said "no review". In fix mode, give it the fix request instead of an AC;
   with no structural plan or ticket, those checks simply do not apply.
-- **`iterate-dev`, off by default.** Turn it on only if the user asked for it
-  ("with dev"). It does the GREEN exactly as you would, with the same skills
+- **`shonin-dev`, on by default in fix and build modes** (wherever a TDD
+  run writes code). Only the user turns it off ("no dev"); never skip it on
+  your own judgment. You write the tests (RED) and do the REFACTOR; it writes
+  the code that makes each test pass, so the code is not biased by what you
+  know of the tests still to come. It does the GREEN exactly as you would, with the same skills
   (`igiari-tdd`, `kanpeki-fp`, `chottomatte-archi`); the only difference is a
   fresh context that cannot build ahead of the tests. For each GREEN step,
   spawn it with the failing test, the test command, the production files in
@@ -204,8 +232,14 @@ every gate, every commit and every decision.
   the ACs. Check its green exactly as you check your own (`igiari-tdd`'s
   green gate, Super Green included) before committing it.
 
+- **`tantei-inspector`, improve mode only, always.** A read-only inspection of
+  how the skills and agents were used, with a fresh context that does not
+  know this session's reasons. What to give it and what it returns:
+  `references/improve.md`.
+
 If a subagent fails or returns nothing usable, do the step yourself and say
-so in the log.
+so in the log; except `tantei-inspector`, whose step you never take over
+(`references/improve.md` says why).
 
 ## Gates: when to stop and ask
 
@@ -253,7 +287,7 @@ You cannot clear the context yourself; the user does, with `/clear`. So
 
 To pause: update the `Resume` block of the decision log, commit it, then end
 your turn with one line: "AC<n> done. Continue, or /clear and restart with
-`claude --agent iterate` (or `/iterate` in a plain session) and say: resume
+`claude --agent saiban-orchestrator` (or `/saiban-orchestrator` in a plain session) and say: resume
 <topic>." A plain "continue" means
 go on. Skip the pauses only if the user said "no pauses" at the start.
 
@@ -265,7 +299,7 @@ session reads to continue:
 
 ```
 ## Resume
-- Mode: fix | build | ui | think
+- Mode: fix | build | ui | think | improve
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
@@ -294,11 +328,12 @@ Report in a few lines, and always include the last two parts:
 2. **Open:** anything left unverified or unresolved.
 3. **Next:** suggested next work (remaining ACs, follow-ups, risks). Suggest,
    do not start; the user picks.
-4. **Improvements:** 1–3 concrete changes to `iterate` (this skill or its agent) or to
+4. **Improvements:** 1–3 concrete changes to `saiban-orchestrator` (this skill or its agent) or to
    another skill, from
    friction you hit this run (a gate too strict or too loose, a skill that
    misfired, a rule that was unclear), each with the wording you would change.
-   Never edit `iterate` or a skill yourself. Say "none" if nothing came up.
+   Never edit `saiban-orchestrator` or a skill yourself outside improve mode; the user
+   can start improve mode on these. Say "none" if nothing came up.
 
    Also propose **something new** when it is earned, never create it:
 
@@ -312,7 +347,7 @@ Report in a few lines, and always include the last two parts:
      messaged); or not knowing something you know. Anything else is a skill,
      or a change to an existing one.
 
-   - **A new mode** of `iterate` when the user keeps bringing the same kind
+   - **A new mode** of `saiban-orchestrator` when the user keeps bringing the same kind
      of work in direct mode and you keep doing it with the same steps: the
      process has become known. Propose the mode and the skill that would
      hold its rules; you replace the user for known processes, one mode per

@@ -1,0 +1,15 @@
+# Local-only nuxeo.conf overrides. Copied to 90-local.conf on first `manager.sh start`;
+# that copy is gitignored, so put whatever you like in it.
+#
+# LIMITATION: the entrypoint appends /etc/nuxeo/conf.d/* FIRST and then applies the
+# NUXEOCONF JSON from docker-compose.yaml, replacing any key it also defines. So this
+# file can ADD properties, never override one already present in NUXEOCONF — to change
+# one of those, parameterise it there with ${VAR} and set VAR in .env instead.
+#
+# Re-read only when the container is recreated (`manager.sh restart`), never by dev-deploy.sh.
+
+# org.nuxeo.dev=true
+
+# TEMPORARY — forces every document onto EXT site ZONE1, pending the site transcoding table.
+# ZONE1 is one of the four entries in EXT's ECM_SITE_DOCUMENT table (mapping.pdf, 2026-09-17).
+myapp.extsync.sync.siteOverride=ZONE1

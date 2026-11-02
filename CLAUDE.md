@@ -30,7 +30,7 @@ tool allowlist or model, or genuinely separate/parallel execution
 Subagents aren't portable to Gemini CLI, so they never go in `skills/`.
 They are allowed in `global/agents/` as explicitly Claude-only (say so in
 the description), installed user-level to `~/.claude/agents/` by
-`scripts/install-global.sh` — e.g. `iterate`, the orchestrator that routes
+`scripts/install-global.sh` — e.g. `saiban-orchestrator`, the orchestrator that routes
 between the skills and asks the author at the gates. This repo doesn't run
 them itself. Skills stay portable; agents don't have to. An agent never
 restates a skill's rule in its own words: it loads the skill (or points to
@@ -39,16 +39,29 @@ own: routing, gates, and what it must not know.
 
 **Two kinds of agent, in the author's sense.** The **agent that replaces the
 author** runs a process that is already known, on its own, and asks only for
-the decisions that are truly the author's. There is one: `iterate`, started
+the decisions that are truly the author's. There is one: `saiban-orchestrator`, started
 as the main session, with one mode per way of working. Its whole process
-lives in the `iterate` skill (Claude-only, since it spawns the helpers); the
+lives in the `saiban-orchestrator` skill (Claude-only, since it spawns the helpers); the
 agent only loads that skill and adds its own working rules, so the same
-process also runs as `/iterate` inside a plain session, with no copy. A newly known,
-repeated process becomes a new **mode** of `iterate` (with its rules in a
-skill), not a new agent. **Helper agents** (`iterate-reviewer`,
-`iterate-dev`) are spawned by `iterate` for a single step, and only when that
+process also runs as `/saiban-orchestrator` inside a plain session, with no copy. A newly known,
+repeated process becomes a new **mode** of `saiban-orchestrator` (with its rules in a
+skill), not a new agent. **Helper agents** (`kenji-reviewer`,
+`shonin-dev`) are spawned by `saiban-orchestrator` for a single step, and only when that
 step meets one of the criteria below. Skills hold the processes in both
 cases.
+
+The agents in `global/agents/`, what each is for, and which criterion
+below makes it an agent rather than a step the orchestrator follows inline:
+
+| Agent | Goal | Criterion | Started by |
+|---|---|---|---|
+| `saiban-orchestrator` | Runs a known process for the author, mode by mode, asking only at the gates | The agent that replaces the author (main session, so it can ask) | The author (`ci`) |
+| `kenji-reviewer` | Checks one AC's run against the skills; reports, never fixes | 1 (no Edit/Write), 5 (fresh eyes) | The orchestrator, after each AC |
+| `shonin-dev` | Writes one GREEN from the failing test alone, so the code isn't biased by the plan | 5 (never sees the test plan, ticket or ACs) | The orchestrator, each GREEN in fix and build |
+| `tantei-inspector` | Reads how the skills were used and proposes exact changes to them | 1 (read-only), 3 (long reading kept out), 5 (not the working session's reasons) | The orchestrator, improve mode |
+
+Each is evaluated on a fixture with a known answer (`evals/agents/`), except
+`shonin-dev`, measured on katas (`katas/igiari-tdd/README.md`).
 
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
@@ -98,9 +111,9 @@ sections without the author asking.**
 | `mujitsu-documentum` | **Unverified** | Written from general DQL/API knowledge, never run against a real docbase. Treat every pattern as a draft; don't cite it as settled. Known-weak spot: pattern 4's `get_type_attr_count` is a named placeholder, not confirmed DQL. |
 | `kaizen-refactor` | New, not dogfooded | Refactoring code that already *exists*, surfaced by an IDE inspection. Two tiers: mechanical (no gate) vs. judgment-call (trigger-gated + test safety net). Owns the syntax-level checklist as single source of truth, moved here from `igiari-tdd`. |
 | `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`docs/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design (or right after `chottomatte-archi`'s structural plan when it is loaded, in the same approval), traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived and no blocking discrepancy is open. A discrepancy ledger in `acceptance.md` pinpoints conflicts between the Jira description, the ACs, the design and the built code, each quoted verbatim on both sides. |
-| `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not checked; `references/nuxeo.md` holds the author's Studio setup (Designer synced through a Podman volume, Modeler hot-reloaded from Studio), the rest still a placeholder. |
-| `shoko-playwright` | New, not dogfooded | Validates a web UI change against its ACs with Playwright: one check per AC, run against the app running the current code, the result kept as evidence. Not TDD: a check that already passes means the AC is already met. Written from general Playwright knowledge. Layout ACs are checked at each viewport they name. Nuxeo specifics (URL, login, test data, breakpoints) come from the project; `references/nuxeo.md` lists the questions for custom Web UI pages, answered from the project each time (no reference setup exists). `iterate`'s UI mode uses it. |
-| `iterate` | New, partly dogfooded | **Claude-only.** The known-process runner: five modes (fix, build, ui, think, direct), a fixed skill pipeline per mode, gates, decision log with a `Resume` block, per-AC review by `iterate-reviewer`, optional `iterate-dev`. The `iterate` agent in `global/agents/` is a thin shell that loads it. UI mode works one screen at a time with a pause between screens; a change only the user can make (Studio Modeler) is a gate. Work started in a plain session can be taken over. Build and fix modes ran headless several times; think, direct and ui ran once each (ui on a local page, not yet on Nuxeo). |
+| `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not run here. `references/nuxeo.md` and `references/nuxeo-podman/` are written from the author's real Podman setup (genericized, not run from this repo), including the Studio half (Designer synced through a Podman volume, Modeler hot-reloaded from Studio). One eval case, `nuxeo-dev-loop` (status in `evals/README.md`). |
+| `shoko-playwright` | New, not dogfooded | Validates a web UI change against its ACs with Playwright: one check per AC, run against the app running the current code, the result kept as evidence. Not TDD: a check that already passes means the AC is already met. Written from general Playwright knowledge. Layout ACs are checked at each viewport they name. Nuxeo specifics (URL, login, test data, breakpoints) come from the project; `references/nuxeo.md` lists the questions for custom Web UI pages, answered from the project each time (no reference setup exists). `saiban-orchestrator`'s UI mode uses it. |
+| `saiban-orchestrator` | New, partly dogfooded | **Claude-only.** The known-process runner: six modes (fix, build, ui, think, improve, direct), a fixed skill pipeline per mode, gates, decision log with a `Resume` block, per-AC review by `kenji-reviewer`, `shonin-dev` writing every GREEN by default ("no dev" turns it off); improve mode has `tantei-inspector` inspect how the skills were used and applies the approved changes in the aixlper clone (not run yet). The `saiban-orchestrator` agent in `global/agents/` is a thin shell that loads it. UI mode works one screen at a time with a pause between screens; a change only the user can make (Studio Modeler) is a gate. Work started in a plain session can be taken over. Build and fix modes ran headless several times; think, direct and ui ran once each (ui on a local page, not yet on Nuxeo). |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
 by one with the author, evals checked against the no-skill baseline). The
@@ -152,7 +165,8 @@ global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # user-level Claude-only agents (iterate, iterate-reviewer, iterate-dev)
+global/agents/                    # user-level Claude-only agents (saiban-orchestrator, kenji-reviewer, shonin-dev, tantei-inspector)
+scripts/retired-names.txt         # names a rename retired; both installers remove them
 
 docs/design-log.md                # session-by-session history for active-work skills
 evals/                            # cross-skill evals (scripts/eval_skill_chain.sh, make eval-chain)
@@ -283,14 +297,21 @@ and the `java.md` / `nuxeo.md` it `@`-imports, `litellm-budget.py` (the script
 `settings.template.json` wires into `statusLine` and the `SessionStart` hook
 for the gateway budget display), `cycle-cost.py` (run by hand after an
 implement/fix cycle: reads the session transcript and prices it — see
-`docs/design-log.md`), `agents/` (user-level agents such as `iterate`, started
-per session with `claude --agent iterate`), and `settings.template.json` itself.
+`docs/design-log.md`), `agents/` (user-level agents such as `saiban-orchestrator`, started
+per session with `claude --agent saiban-orchestrator`), and `settings.template.json` itself.
 `scripts/install-global.sh` installs them onto any machine, chmod'ing
 the scripts back to executable since content-only comparison would
 otherwise leave a restored or hand-copied file non-executable. It also
-manages the `ci` alias (`claude --agent iterate --permission-mode
+manages the `ci` alias (`claude --agent saiban-orchestrator --permission-mode
 acceptEdits`) in a marked `# >>> aixlper >>>` block of `~/.bashrc`, replaced
 in place on every run so it is never duplicated; `--no-shell` skips it.
+
+**Renaming a skill or agent:** add a line to `scripts/retired-names.txt`
+(never remove one). `install.sh` removes retired skills, and with `--link`
+also any dangling link into the clone; `install-global.sh` removes retired
+agents (a link deleted, a real file backed up first). `iterate` became
+`saiban-orchestrator` this way (`iterate-reviewer` → `kenji-reviewer`, `iterate-dev` →
+`shonin-dev`); the design log keeps the old names as history.
 
 `settings.template.json` also pins `model`. A re-install overwrites whatever
 model is currently configured (including a runtime downgrade some other

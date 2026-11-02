@@ -23,7 +23,7 @@ tool — no per-client fork.
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close, and pinpoints discrepancies between the Jira description, the criteria, the design and the built code. |
 | [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
 | [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright: one check per criterion, run against the app running the current code, its result kept as evidence. A check that already passes means the criterion is already met. Layout criteria are checked at each viewport size they name. |
-| [`iterate`](skills/iterate/SKILL.md) | **Claude Code only.** Runs a known development process for you: five modes (fix, build, ui, think, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `iterate` agent, or as `/iterate` in a plain session. |
+| [`saiban-orchestrator`](skills/saiban-orchestrator/SKILL.md) | **Claude Code only.** Runs a known development process for you: six modes (fix, build, ui, think, improve, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `saiban-orchestrator` agent, or as `/saiban-orchestrator` in a plain session. |
 
 ## Installing
 
@@ -108,14 +108,28 @@ repo — the curl install above already covers "install easily" without
 that extra machinery, which mainly pays off if this ever needs versioned
 releases or install/update/uninstall commands for a wider audience.
 
-## Tutorial: the `iterate` agent
+## Tutorial: the `saiban-orchestrator` agent
 
-*Version française plus bas : [Tutoriel](#tutoriel--lagent-iterate).*
+*Version française plus bas : [Tutoriel](#tutoriel--lagent-saiban-orchestrator).*
 
-`iterate` is a **Claude Code agent** (not portable to Gemini CLI) that runs
+`saiban-orchestrator` is a **Claude Code agent** (not portable to Gemini CLI) that runs
 the skills above for you, in the right order, and stops only when a decision
 is really yours. It keeps a written trail of every decision, so you can follow
 the work from anywhere, your phone included.
+
+The names follow the skills: an Ace Attorney word, then the role. The words
+come from a trial: *saiban* (the trial) runs the case, *kenji* (the
+prosecutor) reviews each AC and never fixes, *shonin* (the witness) writes the
+code without hearing the test plan, and *tantei* (the detective) investigates
+how the skills were used. They were `iterate`, `iterate-reviewer` and
+`iterate-dev` before; the installers clean up the old names.
+
+| Name | Goal | Why it is a separate agent | Started by | Can edit |
+|---|---|---|---|---|
+| `saiban-orchestrator` | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | It replaces you for a known process, so it must run as the main session to ask you questions | You (`ci`, or `/saiban-orchestrator`) | Yes |
+| `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | Fresh eyes and no write access: it can't fix what it reviews | `saiban-orchestrator`, after each AC | No |
+| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | It must not know what tests come next, so its code can't be biased toward them | `saiban-orchestrator`, each GREEN (fix, build) | Yes |
+| `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | Read-only, and must not know the working session's reasons; its long reading stays out of the main session | `saiban-orchestrator`, improve mode | No |
 
 ### 1. Install
 
@@ -139,19 +153,19 @@ From your project folder:
 
 | You want | You type |
 |---|---|
-| Agent mode (`iterate`) | `ci` |
+| Agent mode (`saiban-orchestrator`) | `ci` |
 | The normal assistant | `claude` |
 
-`ci` is `claude --agent iterate --permission-mode acceptEdits`: it edits
+`ci` is `claude --agent saiban-orchestrator --permission-mode acceptEdits`: it edits
 files without asking each time; commands and pushes still ask.
 
 It only applies to that session: plain `claude` stays the normal assistant,
 though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
-iterate --permission-mode acceptEdits'` lets it edit files without asking
+saiban-orchestrator --permission-mode acceptEdits'` lets it edit files without asking
 each time (commands and pushes still ask). The mode has to be on the command
 line: `permissionMode` in the agent file is ignored when the agent is the
-main session (checked). Avoid `"agent": "iterate"` in a settings file unless you want
-every session there to start as `iterate`, since it replaces the default
+main session (checked). Avoid `"agent": "saiban-orchestrator"` in a settings file unless you want
+every session there to start as `saiban-orchestrator`, since it replaces the default
 system prompt.
 
 Then describe the work in your first message. Two examples:
@@ -170,10 +184,21 @@ Then describe the work in your first message. Two examples:
   until it passes, or, for a change only you can make (Nuxeo Studio
   Modeler), tells you what to change and waits for your hot reload. One
   screen at a time, with a pause between screens. No unit-test TDD here.
+  Two tabs can work two different screens at once, in the same folder (not
+  a worktree: the server only sees the folder its volume syncs). Each tab
+  touches and commits only its own screen's files, and asks you before
+  restarting the server, since that breaks the other tab's checks.
 - **Think mode** (thinking and analysis only): `objection-conception`
   alone; `chottomatte-archi` only if you ask for it (or agree when it
   proposes it). It reads the code it needs, writes only the design files,
   never code.
+- **Improve mode** (the skills and agents themselves): *"improve the skills
+  from my last runs"*. `tantei-inspector`, read-only and fresh, reads your
+  decision logs, retros, process notes and session transcripts, and proposes
+  exact wording changes with the evidence. You accept or reject each one;
+  accepted ones are applied and committed in your aixlper clone, never in the
+  project. Needs the skills installed with `./scripts/install.sh --link`,
+  otherwise it only prints the patch.
 - **Direct mode** (anything else): a question, a small edit, a command. It
   just does it, with no ceremony, so you never need plain `claude`.
 
@@ -184,9 +209,9 @@ message:
 |---|---|
 | `pre-approve TDD plans` | No approval per AC plan. |
 | `no pauses` | No stop after each AC. |
-| `no review` | No `iterate-reviewer` after each AC (build mode). |
-| `with review` | In fix mode, an `iterate-reviewer` pass on the fix (off by default; about $0.30). |
-| `with dev` | GREEN steps go to `iterate-dev`, which only sees the failing test (off by default). |
+| `no review` | No `kenji-reviewer` after each AC (build mode). |
+| `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
+| `no dev` | The orchestrator writes the GREEN itself instead of `shonin-dev` (on by default in fix and build: the code is written by an agent that only sees the failing test, not the plan). Saves about a third of a build run's cost. |
 
 ### Agent or plain session?
 
@@ -198,7 +223,7 @@ message:
   through files instead: a new `ci` session and *"resume PROJ-8"* picks up
   from the decision log's `Resume` block.
 - **Already in a plain session** and the process turns out known? Type
-  `/iterate`: the same process loads as a skill, with the default assistant
+  `/saiban-orchestrator`: the same process loads as a skill, with the default assistant
   around it. The agent and the skill share one text, so nothing drifts.
 
 ### 3. What happens
@@ -209,7 +234,7 @@ message:
    time, seen failing, then the least code that passes it, then a refactor;
    never a batch of tests written ahead. The run ends with the full build
    and an audit of the git history that proves each test was red first.
-3. **A review per AC** by `iterate-reviewer`, which can read but never edit:
+3. **A review per AC** by `kenji-reviewer`, which can read but never edit:
    is the AC really proven, does the structure hold, nothing extra?
 4. **The AC record is updated** in `docs/ticket/<id>/acceptance.md`, then
    committed.
@@ -225,30 +250,45 @@ decides and writes down.
   Its `Resume` block always says where the work stands.
 - `docs/ticket/<id>/`: design, ACs with their evidence, difficulties met.
 - Context gets expensive as it grows. At a pause, type `/clear`, then
-  `claude --agent iterate` and *"resume PROJ-8"*: it continues from the
+  `claude --agent saiban-orchestrator` and *"resume PROJ-8"*: it continues from the
   `Resume` block instead of re-reading everything.
 
 It commits locally, never pushes, and never writes to Jira unless asked.
 
 **Cost, measured** on a two-AC ticket: about $2.60 on Sonnet, $6.30 on
-Opus; `with dev` adds about half (about $4 on Sonnet). A small fix-mode bug:
-about $0.30.
+Opus without `shonin-dev`; with it (now the default) about half more, about
+$4 on Sonnet. A small fix-mode bug: about $0.30 without it, measured before
+it was the default.
 
 ### 5. Improve it
 
 The final report always ends with **Improvements**: friction it hit and the
 exact wording it would change, in the agent or a skill. It never applies
-them itself. Edit `global/agents/iterate.md` (or the skill) and reinstall,
-or symlink `~/.claude/agents/iterate.md` to the repo file so edits apply at
+them itself. Edit `global/agents/saiban-orchestrator.md` (or the skill) and reinstall,
+or symlink `~/.claude/agents/saiban-orchestrator.md` to the repo file so edits apply at
 once.
 
-## Tutoriel : l'agent `iterate`
+## Tutoriel : l'agent `saiban-orchestrator`
 
-`iterate` est un **agent Claude Code** (pas portable sur Gemini CLI) qui
+`saiban-orchestrator` est un **agent Claude Code** (pas portable sur Gemini CLI) qui
 enchaîne les skills ci-dessus à ta place, dans le bon ordre, et ne s'arrête
 que quand une décision t'appartient vraiment. Il garde une trace écrite de
 chaque décision : tu peux suivre le travail de partout, y compris depuis ton
 téléphone.
+
+Les noms suivent ceux des skills : un mot d'Ace Attorney, puis le rôle. Les
+mots viennent d'un procès : *saiban* (le procès) mène l'affaire, *kenji* (le
+procureur) relit chaque CA sans jamais corriger, *shonin* (le témoin) écrit le
+code sans avoir entendu le plan de tests, et *tantei* (le détective) enquête
+sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
+`iterate-dev` avant ; les scripts d'installation nettoient les anciens noms.
+
+| Nom | But | Pourquoi un agent à part | Lancé par | Peut modifier |
+|---|---|---|---|---|
+| `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Il te remplace pour un process connu, donc il tourne en session principale pour pouvoir te poser des questions | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
+| `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | Un regard neuf et aucun droit d'écriture : il ne peut pas corriger ce qu'il relit | `saiban-orchestrator`, après chaque CA | Non |
+| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, à chaque GREEN (fix, build) | Oui |
+| `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, mode improve | Non |
 
 ### 1. Installer
 
@@ -272,21 +312,21 @@ Depuis le dossier de ton projet :
 
 | Tu veux | Tu tapes |
 |---|---|
-| Le mode agent (`iterate`) | `ci` |
+| Le mode agent (`saiban-orchestrator`) | `ci` |
 | L'assistant normal | `claude` |
 
-`ci` vaut `claude --agent iterate --permission-mode acceptEdits` : il modifie
+`ci` vaut `claude --agent saiban-orchestrator --permission-mode acceptEdits` : il modifie
 les fichiers sans demander à chaque fois ; les commandes et les push
 demandent toujours.
 
 Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
 normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias
-ci='claude --agent iterate --permission-mode acceptEdits'` le laisse
+ci='claude --agent saiban-orchestrator --permission-mode acceptEdits'` le laisse
 modifier les fichiers sans demander à chaque fois (les commandes et les push
 demandent toujours). Le mode doit être sur la ligne de commande :
 `permissionMode` dans le fichier de l'agent est ignoré quand l'agent est la
-session principale (vérifié). Évite `"agent": "iterate"` dans un fichier de
-settings, sauf si tu veux que chaque session y démarre en `iterate`, car il
+session principale (vérifié). Évite `"agent": "saiban-orchestrator"` dans un fichier de
+settings, sauf si tu veux que chaque session y démarre en `saiban-orchestrator`, car il
 remplace le prompt système par défaut.
 
 Puis décris le travail dans ton premier message. Deux exemples :
@@ -307,10 +347,23 @@ Puis décris le travail dans ton premier message. Deux exemples :
   seul peux faire (Nuxeo Studio Modeler), te dit quoi changer et attend ton
   hot reload. Un écran à la fois, avec une pause entre les écrans. Pas de
   TDD unitaire ici.
+  Deux onglets peuvent travailler deux écrans différents en même temps, dans
+  le même dossier (pas un worktree : le serveur ne voit que le dossier que son
+  volume synchronise). Chaque onglet ne touche et ne commite que les fichiers
+  de son écran, et te demande avant de redémarrer le serveur, car cela casse
+  les contrôles de l'autre onglet.
 - **Mode think** (réflexion et analyse seules) : `objection-conception`
   seul ; `chottomatte-archi` seulement si tu le demandes (ou acceptes quand
   il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers
   de conception, jamais de code.
+- **Mode improve** (les skills et agents eux-mêmes) : *« améliore les skills
+  à partir de mes derniers runs »*. `tantei-inspector`, en lecture seule et sans
+  contexte, lit tes journaux de décisions, retros, notes de process et
+  transcripts de session, et propose des changements de formulation exacts,
+  preuves à l'appui. Tu acceptes ou refuses chacun ; ceux acceptés sont
+  appliqués et commités dans ton clone aixlper, jamais dans le projet. Il faut
+  les skills installés avec `./scripts/install.sh --link`, sinon il affiche
+  seulement le patch.
 - **Mode direct** (tout le reste) : une question, une petite modif, une
   commande. Il le fait, sans cérémonie, donc plus besoin de `claude` tout
   court.
@@ -322,9 +375,9 @@ message :
 |---|---|
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
 | `no pauses` | Pas d'arrêt après chaque CA. |
-| `no review` | Pas d'`iterate-reviewer` après chaque CA (mode build). |
-| `with review` | En mode fix, une revue `iterate-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
-| `with dev` | Les étapes GREEN passent à `iterate-dev`, qui ne voit que le test en échec (désactivé par défaut). |
+| `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
+| `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
+| `no dev` | L'orchestrateur écrit le GREEN lui-même au lieu de `shonin-dev` (activé par défaut en fix et build : le code est écrit par un agent qui ne voit que le test en échec, pas le plan). Économise environ un tiers du coût d'un run build. |
 
 ### Agent ou session normale ?
 
@@ -338,7 +391,7 @@ message :
   *« resume PROJ-8 »* reprend depuis le bloc `Resume` du journal de
   décisions.
 - **Déjà dans une session normale** et le processus s'avère connu ? Tape
-  `/iterate` : le même processus se charge comme un skill, avec l'assistant
+  `/saiban-orchestrator` : le même processus se charge comme un skill, avec l'assistant
   par défaut autour. L'agent et le skill partagent un seul texte, donc rien
   ne diverge.
 
@@ -352,7 +405,7 @@ message :
    un refactoring ; jamais une série de tests écrits à l'avance. Le cycle se
    termine par le build complet et un audit de l'historique git qui prouve
    que chaque test a d'abord été rouge.
-3. **Une revue par CA** par `iterate-reviewer`, qui lit mais ne modifie
+3. **Une revue par CA** par `kenji-reviewer`, qui lit mais ne modifie
    jamais : la CA est-elle vraiment prouvée, la structure tient-elle, rien
    de plus que demandé ?
 4. **Le suivi de la CA est mis à jour** dans
@@ -370,23 +423,24 @@ floue. Le reste, il le décide et l'écrit.
 - `docs/ticket/<id>/` : conception, CA avec leurs preuves, difficultés
   rencontrées.
 - Le contexte coûte de plus en plus cher en grossissant. À une pause, tape
-  `/clear`, puis `claude --agent iterate` et *« resume PROJ-8 »* : il
+  `/clear`, puis `claude --agent saiban-orchestrator` et *« resume PROJ-8 »* : il
   reprend depuis le bloc `Resume` au lieu de tout relire.
 
 Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
 qu'on le lui demande.
 
 **Coût mesuré** sur un ticket à deux CA : environ 2,60 $ avec Sonnet,
-6,30 $ avec Opus ; `with dev` ajoute environ la moitié (environ 4 $ avec
-Sonnet). Un petit bug en mode fix : environ 0,30 $.
+6,30 $ avec Opus sans `shonin-dev` ; avec (le défaut désormais) environ la
+moitié en plus, environ 4 $ avec Sonnet. Un petit bug en mode fix : environ
+0,30 $ sans lui, mesuré avant qu'il soit le défaut.
 
 ### 5. L'améliorer
 
 Le rapport final se termine toujours par **Improvements** : les frictions
 rencontrées et la formulation exacte qu'il changerait, dans l'agent ou un
 skill. Il ne les applique jamais lui-même. Modifie
-`global/agents/iterate.md` (ou le skill) et réinstalle, ou crée un lien
-symbolique de `~/.claude/agents/iterate.md` vers le fichier du repo pour que
+`global/agents/saiban-orchestrator.md` (ou le skill) et réinstalle, ou crée un lien
+symbolique de `~/.claude/agents/saiban-orchestrator.md` vers le fichier du repo pour que
 les modifications s'appliquent tout de suite.
 
 ## Repo layout
@@ -400,7 +454,7 @@ skills/<skill-name>/evals/        # claude plugin eval cases for the skill
 global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # iterate, iterate-reviewer, iterate-dev (Claude Code only)
+global/agents/                    # saiban-orchestrator, kenji-reviewer, shonin-dev, tantei-inspector (Claude Code only)
 ```
 
 ## Contributing / testing
