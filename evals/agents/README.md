@@ -30,7 +30,24 @@ On `clean` it raised one `blocking` finding both times, and **it was
 right**: the fixture's green 3 answered `add("1,2")` with a split-and-sum
 pipeline, which is `igiari-tdd`'s own "Over-built" rung for that exact
 moment. The fixture was wrong, not the reviewer; `clean` now uses the
-skill's "Super" rung (two operands, no loop). Re-run pending.
+skill's "Super" rung (two operands, no loop).
+
+The next two clean re-runs found two more real flaws, each time correctly:
+AC2 said "one or more numbers" while its interpretation and code stopped at
+two (`add("1,2,3")` returned 3), and then, once the fixture said "one or
+two", the runner's prompt still quoted the old wording (a misquoted source).
+Test names outside `igiari-tdd`'s `should…_when…` rule and a field-built test
+object (the author's `@BeforeEach` rule) were rightly flagged as minor. All
+fixed.
+
+**Final clean run (2 runs): 0 blocking.** One `AC2: PASS`; one with a single
+`minor`, also correct (`igiari-tdd`'s own ladder names extracting
+`parseOperand()` as honest refactor work there, and no refactor ran).
+
+So across 8 reviews: every planted defect found as `blocking` (4 runs), and
+no false alarm once the control really was clean. The lesson is for whoever
+builds the next fixture: a control written by hand is not clean until the
+reviewer agrees, and it took four tries.
 
 **`tantei-inspector`: 4/4 planted items, both runs, 0 decoys proposed**
 (about $0.22 a run). Each proposal quoted its evidence and gave exact

@@ -3232,3 +3232,10 @@ items, proposed nothing from the decoys, deleted nothing, and added a valid
 fifth proposal (two skills far past 20KB). Its evidence line numbers are
 wrong when it reads several files together; the quotes are exact. Details in
 `evals/agents/README.md`.
+
+**Reviewer clean control, settled.** It took four versions of the clean
+fixture before the reviewer passed it, and each rejection was right: an
+over-built green, an AC wider than its interpretation, the runner's prompt
+misquoting the AC, test names and setup outside the author's rules. Final:
+0 blocking in 2 runs (one PASS, one correct minor). The reviewer has not
+produced a false alarm in this eval.
