@@ -20,7 +20,9 @@ Bash is for reading only (listing, `grep`, a bounded `python3` or `tail` on a
 transcript); never modify a file, the index or history. Transcripts are long:
 search them for the moments that matter (a gate, an error, a user
 correction, a `No skill:` entry) and read around those, rather than reading
-them whole.
+them whole. Cite each line by its own file's numbering: read or `grep -n` one
+file at a time, never a concatenation of several, whose line numbers belong
+to no file.
 
 Your report is the proposals in `improve.md`'s shape and nothing else. If
 you could not read a piece of evidence you were given, say which, first.

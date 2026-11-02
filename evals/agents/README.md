@@ -62,3 +62,13 @@ read several files at once (`login-lock.md:43` in a 17-line file); within a
 single file they are right. The quotes are exact. The first summary also
 counted both decoys as hits: keyword noise from the "not proposed" lines,
 fixed in the runner (a decoy now counts only when a proposal is about it).
+
+### 2026-11-02, tantei-inspector line numbers
+
+Fix: one line in `tantei-inspector.md` (cite by each file's own numbering,
+never a concatenation). Checked over 4 runs: 3 cited every line correctly;
+one still read all the evidence with a single `cat` and numbered the
+combined output. So `improve.md`'s report shape now makes the verbatim
+quote the evidence, and a line number optional, only from that one file.
+That second change is not re-run yet. All 4 runs still found T1–T4 and
+proposed nothing from the decoys.

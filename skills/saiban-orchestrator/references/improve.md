@@ -95,11 +95,15 @@ Report each proposal in this shape, most useful first, at most 7:
 
 ```
 P<n>: <file in the clone> - <clarify | move | add | new skill | new mode | new agent (criterion)>
-Evidence: <file:line or a short transcript quote, with the session and date>
+Evidence: <file> "<short verbatim quote>"; a transcript quote also names the session and date
 Problem: <one or two lines>
 Change: <the exact old wording> -> <the exact new wording>
 Log: <one line for docs/design-log.md>
 ```
+
+The quote is the evidence: anyone can find it again. Add a line number only
+when it comes from reading that one file (`grep -n` on it alone); a number
+counted across several files read together points to no file.
 
 If nothing holds up, say `No proposals` and what you looked at.
 

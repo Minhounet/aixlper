@@ -3249,3 +3249,10 @@ an existing `take().sum()` into its own method). The decision whether the
 dev stays on by default is the author's; the katas are a weak test of it,
 since the bias it targets grows with what the orchestrator knows ahead (ACs,
 ticket), which a kata barely has.
+
+**`tantei-inspector` line numbers.** The agent now cites lines by each
+file's own numbering; 3 of 4 runs complied. Because one did not (it cat'ed
+every evidence file at once), `improve.md`'s report shape makes the
+verbatim quote the evidence and the line number optional, allowed only from
+reading that one file. Quote-first holds whatever way the files are read.
+Not re-run after the second change.
