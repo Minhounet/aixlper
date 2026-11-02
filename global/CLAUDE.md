@@ -20,6 +20,20 @@ Never explain what the code does — well-named identifiers already do that.
 
 Always write comments in English.
 
+## Mark code under live test
+
+When validating a change by running it live — especially through any layer where "is this
+actually the new version?" is a real question (a cache, a volume copy, a redeployed container,
+anything other than editing the file the running process reads directly) — add a visible marker
+to the running artifact: a short tag plus the date and time, in a UI label, a log line, or a
+comment. It must be something concrete to point at as proof the change just made is the one
+actually being exercised, not a stale copy.
+
+Remove the marker once the change is confirmed working, before any real/final commit.
+
+Why: debugging against a stale cached version silently wastes a cycle and produces false
+conclusions about whether a fix works.
+
 ## IDE inspections
 
 When the JetBrains IDE is connected in a session (via `/ide`), regularly run IDEA's
