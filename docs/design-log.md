@@ -3102,3 +3102,35 @@ not have the list yet.
 Kept for continuity: the skill's description still triggers on "iterate",
 and a `Resume` block written under the old names is read as the same
 process.
+
+## `saiban` improve mode and `saiban-tantei`
+
+The author noticed the loop was open: `saiban`'s final report proposes
+"Improvements", `global/CLAUDE.md` collects `process-notes.md`, and both say
+"never edit". Nothing ever picked the proposals up. They asked for one agent
+that inspects the work, suggests changes, and can apply them when the skills
+are installed by link.
+
+**Shape, by the repo's own rules.** "A newly known, repeated process becomes
+a new mode, not a new agent", so it is **improve mode** of `saiban`, with
+its process in `skills/saiban/references/improve.md` (read only in that mode;
+the skill is already 19KB). Only the inspection step is an agent,
+`saiban-tantei` (the detective), because it meets three criteria: no write
+access (1); its reading of long transcripts stays out of the caller's
+context (3); and it must not know the working session's reasons (5), so it
+judges the run against the text and not against the excuses. That last one
+is why the caller never takes over a failed inspection, unlike the other
+helpers: doing it inline would bring the bias back.
+
+The inspector's checklist and report shape live in `improve.md` section 4,
+and `saiban-tantei.md` points there instead of restating them (the "agent
+never restates a skill's rule" rule).
+
+**Applying.** The clone is found from the install links (`readlink -f
+~/.claude/skills/saiban`), and its own `CLAUDE.md` governs the edits: design
+log, `make validate`, commit format. A copied install has nothing safe to
+edit, so the mode prints a patch instead. Every proposal is approved one by
+one; a new skill, mode or agent is its own decision; proposals never delete a
+section (the repo's "don't remove sections without the author asking").
+
+Not run yet.

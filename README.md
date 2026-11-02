@@ -23,7 +23,7 @@ tool — no per-client fork.
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close, and pinpoints discrepancies between the Jira description, the criteria, the design and the built code. |
 | [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
 | [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright: one check per criterion, run against the app running the current code, its result kept as evidence. A check that already passes means the criterion is already met. Layout criteria are checked at each viewport size they name. |
-| [`saiban`](skills/saiban/SKILL.md) | **Claude Code only.** Runs a known development process for you: five modes (fix, build, ui, think, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `saiban` agent, or as `/saiban` in a plain session. |
+| [`saiban`](skills/saiban/SKILL.md) | **Claude Code only.** Runs a known development process for you: six modes (fix, build, ui, think, improve, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `saiban` agent, or as `/saiban` in a plain session. |
 
 ## Installing
 
@@ -119,7 +119,8 @@ the work from anywhere, your phone included.
 
 The names come from a trial: `saiban` (the trial) runs the case,
 `saiban-kenji` (the prosecutor) reviews each AC and never fixes, and
-`saiban-shonin` (the witness) writes the code without hearing the test plan.
+`saiban-shonin` (the witness) writes the code without hearing the test plan,
+and `saiban-tantei` (the detective) investigates how the skills were used.
 It was called `iterate` before; the installers clean up the old names.
 
 ### 1. Install
@@ -179,6 +180,13 @@ Then describe the work in your first message. Two examples:
   alone; `chottomatte-archi` only if you ask for it (or agree when it
   proposes it). It reads the code it needs, writes only the design files,
   never code.
+- **Improve mode** (the skills and agents themselves): *"improve the skills
+  from my last runs"*. `saiban-tantei`, read-only and fresh, reads your
+  decision logs, retros, process notes and session transcripts, and proposes
+  exact wording changes with the evidence. You accept or reject each one;
+  accepted ones are applied and committed in your aixlper clone, never in the
+  project. Needs the skills installed with `./scripts/install.sh --link`,
+  otherwise it only prints the patch.
 - **Direct mode** (anything else): a question, a small edit, a command. It
   just does it, with no ceremony, so you never need plain `claude`.
 
@@ -257,7 +265,8 @@ téléphone.
 
 Les noms viennent d'un procès : `saiban` (le procès) mène l'affaire,
 `saiban-kenji` (le procureur) relit chaque AC sans jamais corriger, et
-`saiban-shonin` (le témoin) écrit le code sans avoir entendu le plan de tests.
+`saiban-shonin` (le témoin) écrit le code sans avoir entendu le plan de tests,
+et `saiban-tantei` (le détective) enquête sur l'usage des skills.
 Il s'appelait `iterate` avant ; les scripts d'installation nettoient les
 anciens noms.
 
@@ -322,6 +331,14 @@ Puis décris le travail dans ton premier message. Deux exemples :
   seul ; `chottomatte-archi` seulement si tu le demandes (ou acceptes quand
   il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers
   de conception, jamais de code.
+- **Mode improve** (les skills et agents eux-mêmes) : *« améliore les skills
+  à partir de mes derniers runs »*. `saiban-tantei`, en lecture seule et sans
+  contexte, lit tes journaux de décisions, retros, notes de process et
+  transcripts de session, et propose des changements de formulation exacts,
+  preuves à l'appui. Tu acceptes ou refuses chacun ; ceux acceptés sont
+  appliqués et commités dans ton clone aixlper, jamais dans le projet. Il faut
+  les skills installés avec `./scripts/install.sh --link`, sinon il affiche
+  seulement le patch.
 - **Mode direct** (tout le reste) : une question, une petite modif, une
   commande. Il le fait, sans cérémonie, donc plus besoin de `claude` tout
   court.
@@ -411,7 +428,7 @@ skills/<skill-name>/evals/        # claude plugin eval cases for the skill
 global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # saiban, saiban-kenji, saiban-shonin (Claude Code only)
+global/agents/                    # saiban, saiban-kenji, saiban-shonin, saiban-tantei (Claude Code only)
 ```
 
 ## Contributing / testing

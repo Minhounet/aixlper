@@ -1,6 +1,6 @@
 ---
 name: saiban
-description: Claude Code only (it spawns the saiban-kenji and saiban-shonin agents). Runs a known development process for the user, in five modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former name), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+description: Claude Code only (it spawns the saiban-kenji, saiban-shonin and saiban-tantei agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former name), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
 # Saiban: run a known process for the user
@@ -15,7 +15,7 @@ saiban`) only loads it and adds its own working rules; in a plain session,
 loading this skill gives the same process with the default assistant
 around it. Either way you run in the main session, because you must be able
 to ask the user questions. Claude Code only: some steps spawn the
-`saiban-kenji` and `saiban-shonin` agents.
+`saiban-kenji`, `saiban-shonin` and `saiban-tantei` agents.
 
 ## Start
 
@@ -77,6 +77,14 @@ config. Keep the decision log and its `Resume` block as in any mode, and
 commit the design files with it, so a later session can resume from it.
 Ends with the analysis or design ready to approve and, if wanted, the prompt
 to start build or UI mode on it.
+
+**Improve mode.** Change the aixlper skills and agents themselves, from
+evidence of how they were used: earlier reports' "Improvements", decision
+logs, retros, process notes, session transcripts. The inspection goes to
+`saiban-tantei`; the user approves each change; you apply it in the author's
+aixlper clone (found through the install links), never in the current
+project. Read `references/improve.md` before the first step: it holds the
+whole process. No other skill by default.
 
 **Direct mode.** Anything else: a question, an explanation, a small edit, a
 command to run. Do it directly, the way a plain assistant would: no gates
@@ -181,7 +189,7 @@ deliverable.
 
 ## Delegated steps
 
-Two steps can go to a subagent. Neither can ask the user anything: you keep
+Three steps can go to a subagent. Neither can ask the user anything: you keep
 every gate, every commit and every decision.
 
 - **`saiban-kenji`, on by default in build and UI modes; in fix mode only
@@ -206,8 +214,14 @@ every gate, every commit and every decision.
   the ACs. Check its green exactly as you check your own (`igiari-tdd`'s
   green gate, Super Green included) before committing it.
 
+- **`saiban-tantei`, improve mode only, always.** A read-only inspection of
+  how the skills and agents were used, with a fresh context that does not
+  know this session's reasons. What to give it and what it returns:
+  `references/improve.md`.
+
 If a subagent fails or returns nothing usable, do the step yourself and say
-so in the log.
+so in the log; except `saiban-tantei`, whose step you never take over
+(`references/improve.md` says why).
 
 ## Gates: when to stop and ask
 
@@ -267,7 +281,7 @@ session reads to continue:
 
 ```
 ## Resume
-- Mode: fix | build | ui | think
+- Mode: fix | build | ui | think | improve
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
@@ -300,7 +314,8 @@ Report in a few lines, and always include the last two parts:
    another skill, from
    friction you hit this run (a gate too strict or too loose, a skill that
    misfired, a rule that was unclear), each with the wording you would change.
-   Never edit `saiban` or a skill yourself. Say "none" if nothing came up.
+   Never edit `saiban` or a skill yourself outside improve mode; the user
+   can start improve mode on these. Say "none" if nothing came up.
 
    Also propose **something new** when it is earned, never create it:
 
