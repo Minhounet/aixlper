@@ -23,6 +23,9 @@ the stock Web UI. So the checks open that page, and assert only on it:
   custom element, where it is contributed (route, menu, slot, tab), and what
   data it needs to show something. The check reaches it the way a user
   would, through that entry point.
+- **Know where the fix lives.** A Studio Designer change is a file edit; a
+  Studio Modeler change is made by the user in Studio and hot-reloaded. See
+  `tonosaman-deploy`'s `references/nuxeo.md`.
 - **Leave the stock Web UI out of the assertions.** If the surrounding Web
   UI breaks at some size, that is a finding to report, not a failure of the
   custom page's AC.

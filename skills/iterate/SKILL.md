@@ -22,6 +22,16 @@ to ask the user questions. Claude Code only: some steps spawn the
 If `docs/decisions/<topic>.md` already exists for this work, read its
 `Resume` block first and continue from there instead of starting over.
 
+**Taking over work started elsewhere** (a plain session, by hand, no decision
+log): don't redo it and don't ignore it. Before asking anything, read what is
+already there: uncommitted changes, the recent commits on the branch, and
+existing checks or tests for the work. Show the user a short summary (what
+looks done, what looks half-done, what you would do next) and ask them to
+confirm or correct it, along with the start questions below. Then create the
+decision log with a `Resume` block written from that confirmed state, and
+start the loop from the first step not done. In UI mode, an AC whose check
+already passes is met, as `shoko-playwright` says; record it, don't rebuild it.
+
 In direct mode, skip this: just do what was asked.
 
 Otherwise ask once, before any work: the goal or ticket, the scope boundary,
@@ -51,6 +61,10 @@ browser checks, not unit tests. Skills: `shoko-playwright` for each AC,
 `tonosaman-deploy` to run the current code (Podman when the project uses
 it), and `objection-conception` when there is a ticket. No `igiari-tdd`:
 a check that already passes means its AC is already met.
+Work **one screen at a time**: the scope of a run is one screen (one page or
+view) and the ACs about it. When the ticket spans several screens, agree the
+order with the user at the start, finish and commit one screen before
+touching the next, and pause between them (see "Context: where to cut").
 
 **Think mode.** Thinking and analysis only, no code. Skill:
 `objection-conception`, alone by default. Add `chottomatte-archi` only if the
@@ -204,6 +218,12 @@ Ask only when the decision is one of:
 - **Out of scope:** work beyond the boundary agreed at the start.
 - **A skill's own approval gate** (for example a TDD plan): relay it, do not
   skip it.
+- **A change only the user can make:** the fix lives in a tool you cannot
+  edit (for example a configuration kept in a vendor's designer, whose
+  history that tool owns). Stop and say exactly what to change there and why,
+  quoting the failing check. Wait for the user to say it is changed and
+  deployed, then rerun the check. Never edit that tool's generated output in
+  the repo or a volume instead: the tool overwrites it on its next deploy.
 
 Everything else is yours to decide. Never ask about naming, formatting or
 other trivia.
@@ -228,6 +248,7 @@ You cannot clear the context yourself; the user does, with `/clear`. So
 **pause** at these break points, even when plans are pre-approved:
 
 - after each AC is verified and its update committed (build mode);
+- after each screen's ACs are verified and committed (UI mode);
 - before switching mode.
 
 To pause: update the `Resume` block of the decision log, commit it, then end
@@ -244,7 +265,8 @@ session reads to continue:
 
 ```
 ## Resume
-- Mode: fix | build
+- Mode: fix | build | ui | think
+- Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
 - Files: the plan, the ticket files, the classes in play

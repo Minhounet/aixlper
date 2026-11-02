@@ -167,7 +167,9 @@ Then describe the work in your first message. Two examples:
 - **UI mode** (a web front end, for example Nuxeo): each AC gets a
   Playwright check (`shoko-playwright`), run against the app redeployed
   with Podman. Already passing: the AC is met. Failing: it changes the code
-  until it passes. No unit-test TDD here.
+  until it passes, or, for a change only you can make (Nuxeo Studio
+  Modeler), tells you what to change and waits for your hot reload. One
+  screen at a time, with a pause between screens. No unit-test TDD here.
 - **Think mode** (thinking and analysis only): `objection-conception`
   alone; `chottomatte-archi` only if you ask for it (or agree when it
   proposes it). It reads the code it needs, writes only the design files,
@@ -301,7 +303,10 @@ Puis décris le travail dans ton premier message. Deux exemples :
 - **Mode ui** (un front web, par exemple Nuxeo) : chaque CA reçoit un
   contrôle Playwright (`shoko-playwright`), lancé sur l'application
   redéployée avec Podman. Déjà vert : la CA est remplie. En échec : il
-  modifie le code jusqu'à ce qu'il passe. Pas de TDD unitaire ici.
+  modifie le code jusqu'à ce qu'il passe, ou, pour un changement que toi
+  seul peux faire (Nuxeo Studio Modeler), te dit quoi changer et attend ton
+  hot reload. Un écran à la fois, avec une pause entre les écrans. Pas de
+  TDD unitaire ici.
 - **Mode think** (réflexion et analyse seules) : `objection-conception`
   seul ; `chottomatte-archi` seulement si tu le demandes (ou acceptes quand
   il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers

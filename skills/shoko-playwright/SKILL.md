@@ -31,7 +31,10 @@ skill only produces what goes into them.
    - **Passes:** the AC is already met. Record the evidence (step 4) and
      move on. No code change.
    - **Fails on its assertion:** the behavior is missing or wrong. Make the
-     change, redeploy, run again, until it passes.
+     change, redeploy, run again, until it passes. If the change belongs in
+     something you cannot edit (a configuration kept in a vendor's tool),
+     hand it to the user: what to change and why, then run again once they
+     say it is deployed.
    - **Fails before reaching its assertion** (app down, login failed,
      missing test data, a timeout on page load): that is the environment,
      not the AC. Fix or report it; never count it either way.
