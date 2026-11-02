@@ -3291,3 +3291,42 @@ subagent). The agent body says the skill's `references/` are in its own
 folder, since appended text carries no base directory, unlike a Skill
 call. Anything that starts the agent without `ci` falls back to the old
 instruction to load the skill.
+
+## `yusaburi-mutation`: mutation testing, a skill of its own
+
+**Asked by the author:** where does mutation testing go (new skill, existing
+skill, an agent to break the tests), and when does it run?
+
+**Decided with the author:** a new portable skill, `yusaburi-mutation`
+(*yusaburi* = pressing the witness). Three skills need it (`kaizen-refactor`,
+`igiari-tdd`, `saiban-orchestrator`), and its rules (scope, a verdict per
+survivor, equivalent mutants) are its own. Putting it in `igiari-tdd` would
+make that file, already ~44KB, even bigger. The others point to it in one line each.
+
+**When it runs:** at the end of a TDD run on the production classes the
+run changed (a survivor = code no red asked for, or a test asserting too
+little), and before relying on existing tests to change existing code (a
+Tier 2 refactor, or a fix reaching beyond its own new test: a survivor =
+a hole in the safety net). Never per cycle (each red already was the
+mutation check for its line), never a codebase sweep, never a score target.
+
+**Verdicts tie into existing rules:** unrequested code is removed in a
+refactor; behavior that matters becomes an `igiari-tdd` guard (the survivor
+is its mutation check) in a TDD run, or a `kaizen-refactor`
+characterization test before a change; "equivalent" is the weakest verdict
+and needs a reason per survivor.
+
+**No new agent.** PIT breaks the code deterministically and at every
+mutation point; an LLM picking mutants would cost more and find less.
+The only step that meets a criterion is the equivalent-mutant triage (5:
+the writer is biased to call a survivor harmless), and `kenji-reviewer`
+already has the fresh eyes and the read-only tools: it now checks the
+survivor verdicts when given the list.
+
+**Known limit, written in the skill:** mutation can't see
+over-generalization (see "Measuring restraint" above), missing behavior, or
+wrong expectations.
+
+Not run yet. `references/pitest.md` is from general PIT knowledge. Next:
+dogfood on a kata, and see if `kata_super_green.sh` can record survivors
+with the skill vs `--baseline`.

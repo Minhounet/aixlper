@@ -92,7 +92,7 @@ starting, rather than force-fitting it into a `SKILL.md`.
 
 ## Active work: skills still being designed
 
-Eight skills are in active design and are **not** stable. For each, the
+Nine skills are in active design and are **not** stable. For each, the
 `SKILL.md` is the source of truth for its current rules, and
 `docs/design-log.md` holds the session-by-session history — every rule
 addition, correction and worked example, with the reasoning behind it.
@@ -100,7 +100,7 @@ Read the `SKILL.md` when you need the rule; read the log when you need the
 *why*. Don't restate either here: this section is a map, not a summary.
 Keep the log updated whenever a skill changes.
 
-For all eight: expect them to keep growing from ongoing conversation with
+For all nine: expect them to keep growing from ongoing conversation with
 the author. Don't treat any as complete, and **don't remove or "clean up"
 sections without the author asking.**
 
@@ -113,6 +113,7 @@ sections without the author asking.**
 | `objection-conception` | New, not dogfooded | Ticket-scoped design kept on disk (`docs/ticket/<id>/`: `conception.md`, `retro.md`, `acceptance.md`). Acceptance criteria are checked before design (or right after `chottomatte-archi`'s structural plan when it is loaded, in the same approval), traced to decisions during design, and proven after implementation. A hard gate blocks `status: done` until every criterion is verified or waived and no blocking discrepancy is open. A discrepancy ledger in `acceptance.md` pinpoints conflicts between the Jira description, the ACs, the design and the built code, each quoted verbatim on both sides. |
 | `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not run here. `references/nuxeo.md` and `references/nuxeo-podman/` are written from the author's real Podman setup (genericized, not run from this repo), including the Studio half (Designer synced through a Podman volume, Modeler hot-reloaded from Studio). One eval case, `nuxeo-dev-loop` (status in `evals/README.md`). |
 | `shoko-playwright` | New, not dogfooded | Validates a web UI change against its ACs with Playwright: one check per AC, run against the app running the current code, the result kept as evidence. Not TDD: a check that already passes means the AC is already met. Written from general Playwright knowledge. Layout ACs are checked at each viewport they name. Nuxeo specifics (URL, login, test data, breakpoints) come from the project; `references/nuxeo.md` lists the questions for custom Web UI pages, answered from the project each time (no reference setup exists). `saiban-orchestrator`'s UI mode uses it. |
+| `yusaburi-mutation` | New, not dogfooded | Mutation testing (PIT), scoped to the code a task touches: end of a TDD run (survivor = code no red asked for) and before relying on existing tests to change existing code (survivor = hole in the safety net). Never per cycle, never a score. Verdict per survivor; "equivalent" ones checked by `kenji-reviewer`. `references/pitest.md` written from general PIT knowledge, not run. |
 | `saiban-orchestrator` | New, partly dogfooded | **Claude-only.** The known-process runner: six modes (fix, build, ui, think, improve, direct), a fixed skill pipeline per mode, gates, decision log with a `Resume` block, per-AC review by `kenji-reviewer`, `shonin-dev` writing every GREEN by default ("no dev" turns it off); improve mode has `tantei-inspector` inspect how the skills were used and applies the approved changes in the aixlper clone (not run yet). The `saiban-orchestrator` agent in `global/agents/` is a thin shell that loads it. UI mode works one screen at a time with a pause between screens; a change only the user can make (Studio Modeler) is a gate. Work started in a plain session can be taken over. Build and fix modes ran headless several times; think, direct and ui ran once each (ui on a local page, not yet on Nuxeo). |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one

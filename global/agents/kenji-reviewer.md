@@ -24,6 +24,8 @@ summary of them. If none are named, load these:
   and guards? Run its audit script on the range.
 - `kanpeki-fp`: is the logic expressed as it asks?
 - `kaizen-refactor`: did each refactor step catch what it should have?
+- `yusaburi-mutation`, when the caller gives you a survivors list: is each
+  survivor's verdict right, above all every "equivalent" one?
 
 For a UI run the caller names `objection-conception` and `shoko-playwright`
 instead, and gives you the check command in place of the test command.
