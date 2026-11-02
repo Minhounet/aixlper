@@ -3239,3 +3239,13 @@ over-built green, an AC wider than its interpretation, the runner's prompt
 misquoting the AC, test names and setup outside the author's rules. Final:
 0 blocking in 2 runs (one PASS, one correct minor). The reviewer has not
 produced a false alarm in this eval.
+
+**Larger pass, 12 runs (bowling and string-calculator, 3 per arm).** No bias
+difference: no planned test passed on arrival and nothing was built ahead in
+either arm. With the first pass, no-dev slipped once in 7 runs and dev never
+did: suggestive, not measured. The cost ratio is measured, 2.7× on katas.
+The `refactor-adds` metric produced one false positive (an extraction moving
+an existing `take().sum()` into its own method). The decision whether the
+dev stays on by default is the author's; the katas are a weak test of it,
+since the bias it targets grows with what the orchestrator knows ahead (ACs,
+ticket), which a kata barely has.

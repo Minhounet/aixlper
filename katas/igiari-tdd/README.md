@@ -124,3 +124,26 @@ The first version of the `subagents` count was wrong: a run started inside a
 Claude Code session inherits that session's id, so both runs shared one id
 and the no-dev run reported the dev run's 5 agents. The count now reads each
 run's own project folder (dev 5, nodev 0, re-checked).
+
+### 2026-11-02, larger pass: bowling and string-calculator, 3 runs per arm, Sonnet
+
+| | `dev` (6 runs) | `nodev` (6 runs) |
+|---|---|---|
+| Planned tests that passed on arrival | 0 | 0 |
+| `ahead` (greens built ahead) | 0 | 0 |
+| Refactors flagged "adds generality" | 0 | 1, a false positive: an extraction that moved an existing `take().sum()` into a new method |
+| Lint left at HEAD (`MagicNumber`) | 1 run with 1 | 1 run with 5 |
+| Subagents per run | 5 every run (one per green) | 0 every run |
+| Mean cost | $1.17 | $0.43 |
+
+**No bias difference in this pass.** Without the dev, the orchestrator kept
+every green minimal on both katas, all twelve times. With the first pass,
+the count is 1 slip in 7 no-dev runs (bowling, green 2 built the frame walk
+ahead) against 0 in 7 dev runs: too few to call it a measured effect. The
+cost difference is measured: **2.7×** on these katas.
+
+**Why the katas may undersell it.** The dev exists to stop code written for
+what the orchestrator knows is coming: the plan, and in build mode the ACs
+and the ticket. A five-test kata gives little to know ahead, and the model
+knows these katas by heart either way. A multi-AC build-mode ticket is where
+the effect, if there is one, should show; no fixture for that exists yet.
