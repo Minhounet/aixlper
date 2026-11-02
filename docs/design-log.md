@@ -3330,3 +3330,49 @@ wrong expectations.
 Not run yet. `references/pitest.md` is from general PIT knowledge. Next:
 dogfood on a kata, and see if `kata_super_green.sh` can record survivors
 with the skill vs `--baseline`.
+
+### Dogfood, 2026-11-02: two katas, one per trigger
+
+Run by hand in a throwaway Maven project (JDK 21, JUnit 5.11,
+`pitest-maven` 1.17.4 + `pitest-junit5-plugin` 1.2.1), commands taken
+literally from `references/pitest.md`.
+
+**Trigger 1, end of a TDD run: string calculator** (`katas/igiari-tdd`
+plan, 5 cycles, audit clean). At HEAD: 2 mutants (defaults) / 3
+(`STRONGER`), all killed. The real signal came from the counterfactual: on
+the code at green 4, before refactor 4 removed the now-redundant
+`if (!numbers.contains(","))` single-number branch, PIT flagged exactly that
+line (`RemoveConditionalMutator`, SURVIVED) with both mutator sets. So it
+catches what a missed refactor leaves behind. But that branch *was* asked
+for (by green 2): verdict 1 said "code no red asked for", which didn't fit.
+Reworded to include code a later green made redundant.
+
+**Trigger 2, before a Tier 2 refactor: legacy shipping cost** (nested ifs,
+3 existing tests, 2 of them `> 0` checks). **86% line coverage, 31%
+mutation score** (11/16 survived). A fresh subagent, given only the code,
+the tests and the survivor list, wrote 13 characterization tests: 14/16
+killed. The 2 left are boundary mutants at exactly 1 kg, where both
+branches compute the same value, so they really are equivalent; the reason
+it gave was precise. It also pinned four suspicious behaviors (flat cap
+above 10 kg, case-sensitive country, no weight check, no cap abroad). After
+the Tier 2 refactor (split by country, guard clauses), a planted
+`<=`→`<` at the cap failed one characterization test, and passed the
+original 3 tests.
+
+**Fixed in the skill and reference from this run:**
+- An uncovered line with no mutation point (`cost = 20`) never appears as
+  a survivor or `NO_COVERAGE`: the skill now says to read the line coverage
+  too.
+- PIT refuses a red suite: run only on a green one (stated, with the log
+  line to recognize).
+- `-q` doesn't silence PIT (~45 lines per run): the command now sends the
+  console to a file and prints only the two summary lines.
+- Giving the characterizing context the survivors is fine: they say where
+  the holes are, not what the change will be.
+- One run ≈ 20 s on a single small class, mostly Maven start, which supports
+  "never per cycle".
+
+Harness slip, not the skill: the kata's first red committed `target/` (no
+`.gitignore`), which broke the audit's checkouts; history was rewritten in
+the scratch repo to strip it. Not yet: Gradle, a real project, a headless
+run where an agent follows the skill unprompted.

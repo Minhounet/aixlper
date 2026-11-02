@@ -1,8 +1,10 @@
 # PIT (PITest): setup, scoped runs, reading the report
 
 Read this when running a mutation check on a Java project built with Maven
-or Gradle. Written from general PIT knowledge, not yet run from this repo:
-check each flag against the plugin version the project uses.
+or Gradle. The Maven path was run once (2026-11-02: `pitest-maven` 1.17.4,
+`pitest-junit5-plugin` 1.2.1, JUnit 5.11, JDK 21); the Gradle path is
+written from general knowledge, not run. Check each flag against the plugin
+version the project uses.
 
 ## Is it already set up?
 
@@ -44,12 +46,24 @@ run is too slow; then narrow it to the tests of those classes.
 
 ## Maven
 
-PIT works on compiled classes, so compile in the same command:
+PIT works on compiled classes, so compile in the same command. `-q` does
+not silence PIT itself (about 45 lines per run, even on one class), so send
+the console to a file and print only the summary:
 
 ```
 mvn -q test-compile org.pitest:pitest-maven:mutationCoverage \
-  -DtargetClasses=<list> -DoutputFormats=CSV -DtimestampedReports=false
+  -DtargetClasses=<list> -DoutputFormats=CSV -DtimestampedReports=false \
+  > pit.log 2>&1; grep -E 'Line Coverage|Generated' pit.log | tail -2
 ```
+
+A failing test stops it: `Tests failing without mutation ... requires a
+green suite` in the log means the suite is red, not that PIT is broken.
+One run on a single small class took about 20 seconds, most of it Maven
+starting.
+
+The default mutator set is enough to start. `-Dmutators=STRONGER` adds
+mutants (2 → 3 on one small class, 4 → 6 on another) but found no other
+survivor in the one run where both were compared.
 
 Add `-Dthreads=<cores>` for speed. `-DwithHistory` reuses the previous
 run's results for unchanged code, useful when re-running after killing a
@@ -74,6 +88,10 @@ Print only what needs a verdict:
 ```
 grep -E ',(SURVIVED|NO_COVERAGE),' <report>/mutations.csv
 ```
+
+The `Line Coverage` line from the summary is the other half: below 100% of
+the scope, open `index.html` in the same folder to see which lines no test
+runs (a line with no mutation point never appears in the CSV).
 
 Statuses: `KILLED` (good), `SURVIVED` and `NO_COVERAGE` (need a verdict),
 `TIMED_OUT`, `MEMORY_ERROR`, `RUN_ERROR` (the environment, not a verdict:

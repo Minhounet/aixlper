@@ -21,9 +21,12 @@ Only these moments, each scoped to the code the task touches:
 
 | Moment | Scope | A survivor means |
 |---|---|---|
-| **End of a TDD run**, after the full build and the history audit | Production classes the run changed | Code no red asked for, or a test that asserts too little |
+| **End of a TDD run**, after the full build and the history audit | Production classes the run changed | Code no red asked for (or made redundant by a later green), or a test that asserts too little |
 | **Before relying on existing tests to change existing code**: a judgment-call refactor, or a fix that touches lines its own new test does not reach | Classes about to change | A hole in the safety net, to fill before the change |
 | **When the user asks** | What they name | Whatever they asked about |
+
+Run it only on a green suite: a mutation tool needs every test passing
+before it mutates anything.
 
 Never:
 
@@ -51,19 +54,28 @@ it is a build change, which is the author's call.
 ## A verdict for each survivor
 
 List every survivor (and every mutant with no coverage) in scope, one line
-each: file, line, what was mutated. Then give each one a verdict:
+each: file, line, what was mutated. Then read the line coverage too: a line
+the tool found no mutation for (a constant assigned, `return 20`) never
+shows up as a survivor, even when no test runs it. An uncovered line in
+scope gets the same verdicts as a survivor.
 
-1. **Unrequested code** (TDD run only): no test asked for this line or this
-   condition. Remove it in a refactor step (the tests stay green, so
-   behavior *as specified* is unchanged), unless the plan or an AC asks for
-   it, in which case it is case 2.
+Then give each one a verdict:
+
+1. **Unrequested code** (TDD run only): no test asks for this line or this
+   condition, either because none ever did, or because a later green made
+   it redundant (a special case the general path now covers). Remove it in
+   a refactor step (the tests stay green, so behavior *as specified* is
+   unchanged), unless the plan or an AC asks for it, in which case it is
+   case 2.
 2. **Behavior that matters, not pinned**: write the test that kills it.
    - In a TDD run, the code already exists, so the test passes on write:
      it is an `igiari-tdd` **guard**, committed as that skill defines, with
      the surviving mutant as its mutation check.
    - Before changing existing code, it is a **characterization test**
      (pin what the code does today), written as `kaizen-refactor`'s safety
-     net says, by a context that hasn't seen the planned change.
+     net says, by a context that hasn't seen the planned change. Give
+     that context the survivors and uncovered lines: they say where the
+     holes are, not what the change will be.
    Re-run the mutation tool on that class and check the mutant is now
    killed.
 3. **Equivalent**: the mutant behaves exactly like the original, so no
