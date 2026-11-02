@@ -84,8 +84,9 @@ EOF
 
 test_class() {  # the test methods given, one per argument
   { printf 'package com.example;\n\nimport static org.junit.jupiter.api.Assertions.assertEquals;\n\n'
-    printf 'import org.junit.jupiter.api.DisplayName;\nimport org.junit.jupiter.api.Test;\n\n'
-    printf 'class StringCalculatorTest {\n\n    private final StringCalculator calculator = new StringCalculator();\n'
+    printf 'import org.junit.jupiter.api.BeforeEach;\nimport org.junit.jupiter.api.DisplayName;\nimport org.junit.jupiter.api.Test;\n\n'
+    printf 'class StringCalculatorTest {\n\n    private StringCalculator calculator;\n\n'
+    printf '    @BeforeEach\n    void setUp() {\n        calculator = new StringCalculator();\n    }\n'
     for m in "$@"; do printf '%s\n' "$m"; done
     printf '}\n'; } > "$tst"
 }

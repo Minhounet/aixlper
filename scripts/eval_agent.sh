@@ -71,13 +71,14 @@ for i in $(seq 1 "$runs"); do
       range=$("$repo/evals/agents/kenji-reviewer/make-fixture.sh" "$variant" "$dir/work")
       before=$(snapshot "$dir/work")
       prompt="Review AC2 of ticket KATA-1.
-- AC2 verbatim: \"One or more numbers separated by commas return their sum.\"
+- AC2 verbatim: \"One or two numbers separated by a comma return their sum.\"
 - AC2 as interpreted: add(\"1\") returns 1, add(\"1,2\") returns 3.
 - Commit range of its TDD run: $range. Its steps are numbered from 2,
   because AC1's run used 1: give the audit --first-n 2.
 - Approved structural plan: docs/ticket/KATA-1/conception.md
 - Ticket folder: docs/ticket/KATA-1/
 - Test command: mvn -B -q --no-transfer-progress test
+- Full build: mvn -B -q --no-transfer-progress verify
 - Skills: objection-conception, chottomatte-archi, igiari-tdd, kanpeki-fp,
   kaizen-refactor."
       run_agent "$dir" "$prompt"
