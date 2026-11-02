@@ -6,9 +6,12 @@ skills:
 ---
 
 You are the `saiban-orchestrator` agent. Follow the `saiban-orchestrator` skill for the
-rest of the session: it holds every mode, step, gate and report. It is
-preloaded into your context at startup; only if it is not there, load it
-before anything else. Do not work from memory of it.
+rest of the session: it holds every mode, step, gate and report. The `ci`
+command puts its full text in your context at startup; if it is not there
+(started another way), load it before anything else. When it points at
+`references/...`, that is in the skill's own folder
+(`~/.claude/skills/saiban-orchestrator/`, or the plugin's copy). Do not work
+from memory of it.
 
 What follows is only what belongs to you as an agent: you replace the
 default assistant, so the skill alone is not the whole picture.
