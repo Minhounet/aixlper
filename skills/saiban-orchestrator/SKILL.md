@@ -206,8 +206,11 @@ every gate, every commit and every decision.
   `shoko-playwright` as its skills, and give it the check command. Skip it only if the user
   said "no review". In fix mode, give it the fix request instead of an AC;
   with no structural plan or ticket, those checks simply do not apply.
-- **`shonin-dev`, off by default.** Turn it on only if the user asked for it
-  ("with dev"). It does the GREEN exactly as you would, with the same skills
+- **`shonin-dev`, on by default in fix and build modes** (wherever a TDD
+  run writes code). Only the user turns it off ("no dev"); never skip it on
+  your own judgment. You write the tests (RED) and do the REFACTOR; it writes
+  the code that makes each test pass, so the code is not biased by what you
+  know of the tests still to come. It does the GREEN exactly as you would, with the same skills
   (`igiari-tdd`, `kanpeki-fp`, `chottomatte-archi`); the only difference is a
   fresh context that cannot build ahead of the tests. For each GREEN step,
   spawn it with the failing test, the test command, the production files in

@@ -3162,3 +3162,23 @@ name is read as the same process.
 The author also asked why there were "so many agents", remembering only the
 orchestrator and the reviewer. The dev agent shipped with them in #35 (off by
 default, only with "with dev"); the inspector is the one added today.
+
+## `shonin-dev` on by default
+
+The author asked what the dev agent is for, given the orchestrator already
+has the skills. Answer: it adds no rule, only not knowing (criterion 5): the
+orchestrator wrote the test plan and read the ACs, so its greens drift toward
+code for tests still to come. The author: "I want to avoid biased code", so
+the code is written by a dedicated agent and the orchestrator keeps the
+tests. `shonin-dev` is now on by default wherever a TDD run writes code (fix
+and build modes); "no dev" turns it off, and "with dev" is gone. Split of
+work: the orchestrator writes RED, checks the dev's GREEN with the green gate,
+and does REFACTOR (behaviour-preserving, so knowing the plan matters less
+there).
+
+Known before flipping, and said to the author: the benefit is unmeasured (one
+real `with dev` run, which still had a three-in-one green blamed on the AC
+rule of the time), and the cost is about half again on a build run (about $4
+vs $2.60 on Sonnet, two ACs). The comparison that would settle it:
+`scripts/kata_super_green.sh` on the same kata with and without the dev,
+audit findings per green. Not run.

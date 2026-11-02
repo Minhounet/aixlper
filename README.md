@@ -128,7 +128,7 @@ how the skills were used. They were `iterate`, `iterate-reviewer` and
 |---|---|---|---|
 | `saiban-orchestrator` | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | You (`ci`, or `/saiban-orchestrator`) | Yes |
 | `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | `saiban-orchestrator`, after each AC | No |
-| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | `saiban-orchestrator`, only `with dev` | Yes |
+| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | `saiban-orchestrator`, each GREEN (fix, build) | Yes |
 | `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | `saiban-orchestrator`, improve mode | No |
 
 ### 1. Install
@@ -207,7 +207,7 @@ message:
 | `no pauses` | No stop after each AC. |
 | `no review` | No `kenji-reviewer` after each AC (build mode). |
 | `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
-| `with dev` | GREEN steps go to `shonin-dev`, which only sees the failing test (off by default). |
+| `no dev` | The orchestrator writes the GREEN itself instead of `shonin-dev` (on by default in fix and build: the code is written by an agent that only sees the failing test, not the plan). Saves about a third of a build run's cost. |
 
 ### Agent or plain session?
 
@@ -252,8 +252,9 @@ decides and writes down.
 It commits locally, never pushes, and never writes to Jira unless asked.
 
 **Cost, measured** on a two-AC ticket: about $2.60 on Sonnet, $6.30 on
-Opus; `with dev` adds about half (about $4 on Sonnet). A small fix-mode bug:
-about $0.30.
+Opus without `shonin-dev`; with it (now the default) about half more, about
+$4 on Sonnet. A small fix-mode bug: about $0.30 without it, measured before
+it was the default.
 
 ### 5. Improve it
 
@@ -282,7 +283,7 @@ sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
 |---|---|---|---|
 | `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
 | `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | `saiban-orchestrator`, après chaque CA | Non |
-| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | `saiban-orchestrator`, seulement `with dev` | Oui |
+| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | `saiban-orchestrator`, à chaque GREEN (fix, build) | Oui |
 | `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | `saiban-orchestrator`, mode improve | Non |
 
 ### 1. Installer
@@ -367,7 +368,7 @@ message :
 | `no pauses` | Pas d'arrêt après chaque CA. |
 | `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
 | `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
-| `with dev` | Les étapes GREEN passent à `shonin-dev`, qui ne voit que le test en échec (désactivé par défaut). |
+| `no dev` | L'orchestrateur écrit le GREEN lui-même au lieu de `shonin-dev` (activé par défaut en fix et build : le code est écrit par un agent qui ne voit que le test en échec, pas le plan). Économise environ un tiers du coût d'un run build. |
 
 ### Agent ou session normale ?
 
@@ -420,8 +421,9 @@ Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
 qu'on le lui demande.
 
 **Coût mesuré** sur un ticket à deux CA : environ 2,60 $ avec Sonnet,
-6,30 $ avec Opus ; `with dev` ajoute environ la moitié (environ 4 $ avec
-Sonnet). Un petit bug en mode fix : environ 0,30 $.
+6,30 $ avec Opus sans `shonin-dev` ; avec (le défaut désormais) environ la
+moitié en plus, environ 4 $ avec Sonnet. Un petit bug en mode fix : environ
+0,30 $ sans lui, mesuré avant qu'il soit le défaut.
 
 ### 5. L'améliorer
 
