@@ -58,7 +58,7 @@ status: in-progress
 EOF
 
 acceptance() {  # $1 = AC2 evidence line, $2 = AC2 status, $3 = AC1 status
-  local ac1_evidence="returnsZeroForEmptyString [AC1], mvn verify passed"
+  local ac1_evidence="shouldReturnZero_whenInputIsEmpty [AC1], mvn verify passed"
   [ "${3:-verified}" = verified ] || ac1_evidence="-"
   cat > docs/ticket/KATA-1/acceptance.md <<EOF
 # KATA-1: acceptance criteria
@@ -71,7 +71,7 @@ acceptance() {  # $1 = AC2 evidence line, $2 = AC2 status, $3 = AC1 status
 - Status: ${3:-verified}
 
 ## AC2: comma-separated numbers
-- Source: "One or more numbers separated by commas return their sum."
+- Source: "One or two numbers separated by a comma return their sum."
 - Interpretation: add("1") returns 1, add("1,2") returns 3.
 - Covered by: D1
 - Evidence: $1
@@ -92,19 +92,19 @@ test_class() {  # the test methods given, one per argument
 T1='
     @Test
     @DisplayName("[AC1] empty string returns 0")
-    void returnsZeroForEmptyString() {
+    void shouldReturnZero_whenInputIsEmpty() {
         assertEquals(0, calculator.add(""));
     }'
 T2='
     @Test
     @DisplayName("[AC2] a single number returns itself")
-    void returnsTheNumberForASingleNumber() {
+    void shouldReturnTheNumber_whenInputIsOneNumber() {
         assertEquals(1, calculator.add("1"));
     }'
 T3='
     @Test
     @DisplayName("[AC2] two numbers return their sum")
-    void returnsTheSumOfTwoNumbers() {
+    void shouldReturnTheSum_whenInputIsTwoNumbers() {
         assertEquals(3, calculator.add("1,2"));
     }'
 prod() { printf 'package com.example;\n\n%s\n' "$1" > "$src"; }
@@ -119,7 +119,7 @@ prod 'public class StringCalculator {
 commit "init: KATA-1 design and empty StringCalculator"
 
 # AC1's run, identical in both variants.
-test_class "$T1"; commit "red 1: returnsZeroForEmptyString [AC1]"
+test_class "$T1"; commit "red 1: shouldReturnZero_whenInputIsEmpty [AC1]"
 prod 'public class StringCalculator {
 
     public int add(String numbers) {
@@ -131,7 +131,7 @@ acceptance "-" "designed"; commit "KATA-1: AC1 verified"
 base=$(git rev-parse HEAD)
 
 if [ "$variant" = clean ]; then
-  test_class "$T1" "$T2"; commit "red 2: returnsTheNumberForASingleNumber [AC2]"
+  test_class "$T1" "$T2"; commit "red 2: shouldReturnTheNumber_whenInputIsOneNumber [AC2]"
   prod 'public class StringCalculator {
 
     public int add(String numbers) {
@@ -139,7 +139,7 @@ if [ "$variant" = clean ]; then
     }
 }'
   commit "green 2: parse a single number"
-  test_class "$T1" "$T2" "$T3"; commit "red 3: returnsTheSumOfTwoNumbers [AC2]"
+  test_class "$T1" "$T2" "$T3"; commit "red 3: shouldReturnTheSum_whenInputIsTwoNumbers [AC2]"
   # igiari-tdd's own "Super" rung for this exact moment: two operands, no
   # loop. A split-and-sum pipeline here is its "Over-built" rung (invalid).
   prod 'public class StringCalculator {
@@ -158,10 +158,10 @@ if [ "$variant" = clean ]; then
     }
 }'
   commit "green 3: sum two comma-separated numbers"
-  acceptance "returnsTheNumberForASingleNumber [AC2], returnsTheSumOfTwoNumbers [AC2], mvn verify passed" "verified"
+  acceptance "shouldReturnTheNumber_whenInputIsOneNumber [AC2], shouldReturnTheSum_whenInputIsTwoNumbers [AC2], mvn verify passed" "verified"
   commit "KATA-1: AC2 verified"
 else
-  test_class "$T1" "$T2"; commit "red 2: returnsTheNumberForASingleNumber [AC2]"
+  test_class "$T1" "$T2"; commit "red 2: shouldReturnTheNumber_whenInputIsOneNumber [AC2]"
   # D1: green 2 builds the whole split-and-sum rule for a test that only asks for "1".
   prod 'import io.vavr.collection.List;
 
@@ -177,7 +177,7 @@ public class StringCalculator {
 }'
   commit "green 2: parse numbers"
   # D2: red 3 passes the moment it is written (green 2 already did the work).
-  test_class "$T1" "$T2" "$T3"; commit "red 3: returnsTheSumOfTwoNumbers [AC2]"
+  test_class "$T1" "$T2" "$T3"; commit "red 3: shouldReturnTheSum_whenInputIsTwoNumbers [AC2]"
   prod 'import io.vavr.collection.List;
 
 public class StringCalculator {
@@ -209,7 +209,7 @@ public class StringCalculator {
 }'
   commit "refactor 3: guard input"
   # D4: AC2 verified on a test that was never red.
-  acceptance "returnsTheSumOfTwoNumbers [AC2], mvn verify passed" "verified"
+  acceptance "shouldReturnTheSum_whenInputIsTwoNumbers [AC2], mvn verify passed" "verified"
   commit "KATA-1: AC2 verified"
 fi
 echo "$base..$(git rev-parse HEAD)"

@@ -7,9 +7,10 @@
 #
 # usage: eval_agent.sh --agent <kenji-reviewer|tantei-inspector>
 #          [--runs 1] [--model sonnet] [--budget-usd 1] [--max-turns 60]
-#          [--out <dir>]
+#          [--out <dir>] [--only clean|defects]
 #   kenji-reviewer    each run reviews two fixtures: `clean` (should PASS)
-#                     and `defects` (four planted defects, D1-D4)
+#                     and `defects` (four planted defects, D1-D4); --only
+#                     runs just one of them
 #   tantei-inspector  each run inspects one fixture: four planted items
 #                     (T1-T4) and two decoys (X1, X2)
 # Prints one summary line per fixture per run. The hints in it are keyword
@@ -18,7 +19,7 @@
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
-agent= runs=1 model=sonnet budget=1 max_turns=60 out=
+agent= runs=1 model=sonnet budget=1 max_turns=60 out= only=
 while [ $# -gt 0 ]; do
   case $1 in
     --agent) agent=$2; shift 2;;
@@ -27,6 +28,7 @@ while [ $# -gt 0 ]; do
     --budget-usd) budget=$2; shift 2;;
     --max-turns) max_turns=$2; shift 2;;
     --out) out=$2; shift 2;;
+    --only) only=$2; shift 2;;
     -h|--help) sed -n '2,/^set -uo pipefail/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0;;
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
@@ -64,7 +66,7 @@ run_agent() {
 
 for i in $(seq 1 "$runs"); do
   if [ "$agent" = kenji-reviewer ]; then
-    for variant in clean defects; do
+    for variant in ${only:-clean defects}; do
       dir="$out/kenji-$variant-$i"; rm -rf "$dir"; mkdir -p "$dir"
       range=$("$repo/evals/agents/kenji-reviewer/make-fixture.sh" "$variant" "$dir/work")
       before=$(snapshot "$dir/work")
