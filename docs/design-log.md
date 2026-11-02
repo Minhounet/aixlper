@@ -3256,3 +3256,21 @@ every evidence file at once), `improve.md`'s report shape makes the
 verbatim quote the evidence and the line number optional, allowed only from
 reading that one file. Quote-first holds whatever way the files are read.
 Not re-run after the second change.
+
+## `saiban-orchestrator` agent preloads its skill
+
+The author noticed the agent only *told* the model to load the
+`saiban-orchestrator` skill: nothing forced it. Inlining the skill into the
+agent was rejected: it breaks the rule that an agent never restates a
+skill, and would drift from the copy `/saiban-orchestrator` uses in a plain
+session. Instead the agent's frontmatter now has `skills: [saiban-orchestrator]`,
+which Claude Code documents as injecting the full skill content into the
+agent's context at startup. The body's first line now says the skill is
+preloaded and to load it only if it is missing, so the 20KB is not loaded
+twice.
+
+Unverified: the docs describe `skills:` for subagents and do not say
+whether it applies when the agent is the main session (`claude --agent`).
+The fallback wording keeps the old behaviour if it does not. To check:
+start `claude --agent saiban-orchestrator` and ask whether the skill is
+already in context, quoting its Start section, before any Skill call.
