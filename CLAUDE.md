@@ -50,6 +50,19 @@ skill), not a new agent. **Helper agents** (`kenji-reviewer`,
 step meets one of the criteria below. Skills hold the processes in both
 cases.
 
+The agents in `global/agents/`, what each is for, and which criterion
+below makes it an agent rather than a step the orchestrator follows inline:
+
+| Agent | Goal | Criterion | Started by |
+|---|---|---|---|
+| `saiban-orchestrator` | Runs a known process for the author, mode by mode, asking only at the gates | The agent that replaces the author (main session, so it can ask) | The author (`ci`) |
+| `kenji-reviewer` | Checks one AC's run against the skills; reports, never fixes | 1 (no Edit/Write), 5 (fresh eyes) | The orchestrator, after each AC |
+| `shonin-dev` | Writes one GREEN from the failing test alone, so the code isn't biased by the plan | 5 (never sees the test plan, ticket or ACs) | The orchestrator, each GREEN in fix and build |
+| `tantei-inspector` | Reads how the skills were used and proposes exact changes to them | 1 (read-only), 3 (long reading kept out), 5 (not the working session's reasons) | The orchestrator, improve mode |
+
+Each is evaluated on a fixture with a known answer (`evals/agents/`), except
+`shonin-dev`, measured on katas (`katas/igiari-tdd/README.md`).
+
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
 be delegated rather than followed inline? A step needs an actual subagent

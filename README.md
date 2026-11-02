@@ -124,12 +124,12 @@ code without hearing the test plan, and *tantei* (the detective) investigates
 how the skills were used. They were `iterate`, `iterate-reviewer` and
 `iterate-dev` before; the installers clean up the old names.
 
-| Name | Role | Started by | Can edit |
-|---|---|---|---|
-| `saiban-orchestrator` | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | You (`ci`, or `/saiban-orchestrator`) | Yes |
-| `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | `saiban-orchestrator`, after each AC | No |
-| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | `saiban-orchestrator`, each GREEN (fix, build) | Yes |
-| `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | `saiban-orchestrator`, improve mode | No |
+| Name | Goal | Why it is a separate agent | Started by | Can edit |
+|---|---|---|---|---|
+| `saiban-orchestrator` | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | It replaces you for a known process, so it must run as the main session to ask you questions | You (`ci`, or `/saiban-orchestrator`) | Yes |
+| `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | Fresh eyes and no write access: it can't fix what it reviews | `saiban-orchestrator`, after each AC | No |
+| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | It must not know what tests come next, so its code can't be biased toward them | `saiban-orchestrator`, each GREEN (fix, build) | Yes |
+| `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | Read-only, and must not know the working session's reasons; its long reading stays out of the main session | `saiban-orchestrator`, improve mode | No |
 
 ### 1. Install
 
@@ -283,12 +283,12 @@ code sans avoir entendu le plan de tests, et *tantei* (le détective) enquête
 sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
 `iterate-dev` avant ; les scripts d'installation nettoient les anciens noms.
 
-| Nom | Rôle | Lancé par | Peut modifier |
-|---|---|---|---|
-| `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
-| `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | `saiban-orchestrator`, après chaque CA | Non |
-| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | `saiban-orchestrator`, à chaque GREEN (fix, build) | Oui |
-| `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | `saiban-orchestrator`, mode improve | Non |
+| Nom | But | Pourquoi un agent à part | Lancé par | Peut modifier |
+|---|---|---|---|---|
+| `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Il te remplace pour un process connu, donc il tourne en session principale pour pouvoir te poser des questions | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
+| `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | Un regard neuf et aucun droit d'écriture : il ne peut pas corriger ce qu'il relit | `saiban-orchestrator`, après chaque CA | Non |
+| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, à chaque GREEN (fix, build) | Oui |
+| `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, mode improve | Non |
 
 ### 1. Installer
 
