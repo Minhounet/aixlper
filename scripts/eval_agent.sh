@@ -123,9 +123,14 @@ text = open(sys.argv[1]).read()
 blocks = re.split(r'(?m)^\**P\d+\**[:.]', text)[1:]
 def hit(pattern):
     return 'Y' if any(re.search(pattern, b, re.I) for b in blocks) else '-'
+# A decoy counts only if a proposal is *about* it (its header or its Change
+# line): an answer naming it as "not proposed" is the right answer.
+heads = [b.split('\n', 1)[0] + ' ' + ' '.join(re.findall(r'(?m)^Change:.*$', b)) for b in blocks]
+def about(pattern):
+    return 'Y' if any(re.search(pattern, h, re.I) for h in heads) else '-'
 print(f"proposals {len(blocks)}  T1 {hit(r'listener')} T2 {hit(r'nam(e|ing)')} "
       f"T3 {hit(r'shonin|never see|ACs')} T4 {hit(r'release notes')}  "
-      f"X1 {hit(r'gradle')} X2 {hit(r'module|rename')}  delete {hit(r'\b(delete|remove) (the|this) section')}")
+      f"X1 {about(r'gradle')} X2 {about(r'maven module|module rename')}  delete {hit(r'\b(delete|remove) (the|this) section')}")
 PY
 )
     echo "tantei-inspector #$i  cost \$$cost  changed-on-disk $changed  $hints"

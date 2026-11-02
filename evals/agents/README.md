@@ -18,4 +18,30 @@ gives keyword hints, and the score comes from reading `answer.md` against
 
 ## Results
 
-None yet.
+### 2026-11-02, Sonnet, 2 runs each
+
+**`kenji-reviewer`: 4/4 planted defects, both runs, all `blocking`**
+(about $0.27 a fixture). Each finding named the right skill rule: D1 and D2
+as rule 5 (over-built green, so red 3 never failed, confirmed by running the
+audit), D3 as rule 6 plus "no AC asked for it", D4 as objection-conception's
+"a test that passed on arrival is not evidence". Nothing changed on disk.
+
+On `clean` it raised one `blocking` finding both times, and **it was
+right**: the fixture's green 3 answered `add("1,2")` with a split-and-sum
+pipeline, which is `igiari-tdd`'s own "Over-built" rung for that exact
+moment. The fixture was wrong, not the reviewer; `clean` now uses the
+skill's "Super" rung (two operands, no loop). Re-run pending.
+
+**`tantei-inspector`: 4/4 planted items, both runs, 0 decoys proposed**
+(about $0.22 a run). Each proposal quoted its evidence and gave exact
+old → new wording; both decoys were named as one-offs and explicitly not
+proposed; no deletion; nothing changed on disk. Both runs also made a fifth,
+unplanted proposal that holds: `igiari-tdd` (44KB) and `chottomatte-archi`
+(33KB) are far past the repo's ~20KB line, with a token audit left to the
+author.
+
+One real flaw, both runs: **line numbers in the evidence are wrong** when it
+read several files at once (`login-lock.md:43` in a 17-line file); within a
+single file they are right. The quotes are exact. The first summary also
+counted both decoys as hits: keyword noise from the "not proposed" lines,
+fixed in the runner (a decoy now counts only when a proposal is about it).

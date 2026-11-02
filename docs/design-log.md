@@ -3215,3 +3215,20 @@ passed on arrival (kept as a guard). Cost $1.22 vs $0.47. The `ahead` metric
 saw neither (the kata allows loops from green 2); "a planned test passed on
 arrival" is the better signal there. Too small to conclude; the larger pass
 is next. Details in `katas/igiari-tdd/README.md`.
+
+## Agent evals: `kenji-reviewer` and `tantei-inspector`
+
+`claude plugin eval` scores skills, so the helper agents got their own
+harness, `scripts/eval_agent.sh` with fixtures and answer keys in
+`evals/agents/`. Each agent runs headless as the main session under its real
+definition (`--agents` from `scripts/agent_to_json.py`, so its tool list and
+denials hold), on input whose right answer is known, with a clean control.
+
+First results (Sonnet, 2 runs): the reviewer found all four planted defects
+as blocking, and its one "false alarm" on the clean control was a real
+defect I had built into the control (the over-built rung of `igiari-tdd`'s
+own ladder), so the control was fixed. The inspector found all four planted
+items, proposed nothing from the decoys, deleted nothing, and added a valid
+fifth proposal (two skills far past 20KB). Its evidence line numbers are
+wrong when it reads several files together; the quotes are exact. Details in
+`evals/agents/README.md`.

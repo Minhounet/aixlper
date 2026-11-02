@@ -140,19 +140,24 @@ if [ "$variant" = clean ]; then
 }'
   commit "green 2: parse a single number"
   test_class "$T1" "$T2" "$T3"; commit "red 3: returnsTheSumOfTwoNumbers [AC2]"
-  prod 'import io.vavr.collection.List;
+  # igiari-tdd's own "Super" rung for this exact moment: two operands, no
+  # loop. A split-and-sum pipeline here is its "Over-built" rung (invalid).
+  prod 'public class StringCalculator {
 
-public class StringCalculator {
-
-    private static final String SEPARATOR = ",";
+    private static final String DELIMITER = ",";
 
     public int add(String numbers) {
-        return numbers.isEmpty()
-                ? 0
-                : List.of(numbers.split(SEPARATOR)).map(Integer::parseInt).sum().intValue();
+        if (numbers.isEmpty()) {
+            return 0;
+        }
+        String[] operands = numbers.split(DELIMITER);
+        if (operands.length == 1) {
+            return Integer.parseInt(operands[0]);
+        }
+        return Integer.parseInt(operands[0]) + Integer.parseInt(operands[1]);
     }
 }'
-  commit "green 3: sum comma-separated numbers"
+  commit "green 3: sum two comma-separated numbers"
   acceptance "returnsTheNumberForASingleNumber [AC2], returnsTheSumOfTwoNumbers [AC2], mvn verify passed" "verified"
   commit "KATA-1: AC2 verified"
 else

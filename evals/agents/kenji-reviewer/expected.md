@@ -17,6 +17,10 @@ reported as `minor`. The answer must be `AC2: FINDINGS`.
 
 ## `clean`: no planted defect
 
+Green 3 is `igiari-tdd`'s own "Super" rung for `add("1,2")` (two operands,
+no loop). The first version used a split-and-sum pipeline there, the
+skill's "Over-built" rung, and the reviewer rightly flagged it.
+
 The answer should be `AC2: PASS`. Any `blocking` finding is a false alarm;
 read it before counting it, in case the fixture really has a flaw. `minor`
 findings are noted, not counted.
