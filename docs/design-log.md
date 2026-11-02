@@ -3193,3 +3193,17 @@ dev exists to remove; `subagents` per run proves the dev actually ran. The
 commands and the reading order are in `katas/igiari-tdd/README.md`. This
 session has no Claude credentials, so the wiring was checked with a fake
 `claude` and a stub PMD only. Not run.
+
+## `saiban-orchestrator` UI mode: other sessions on the same server
+
+The author found that two UI-mode tabs can run at once. That works because a
+Studio Designer change is a file edit the server serves live through the
+Podman volume, with no restart. UI mode now assumes another session may be on
+another screen and keeps four rules: work in the folder the volume syncs
+(never a worktree, whose edits the server never sees); touch only your
+screen's files, asking before a shared one; ask before a restart or recreate,
+which breaks every other session's checks; commit your own files by name,
+since the folder and its git index are shared. Advice given earlier in the
+session, before this, recommended worktrees for parallel work: right for
+fix and build, wrong for UI mode on a volume-synced stack. Not run with two
+sessions yet.

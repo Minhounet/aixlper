@@ -69,6 +69,20 @@ view) and the ACs about it. When the ticket spans several screens, agree the
 order with the user at the start, finish and commit one screen before
 touching the next, and pause between them (see "Context: where to cut").
 
+Another session may be working another screen at the same time, against the
+same running server. Assume one may be, and so:
+- **Work in the folder the server serves.** When the stack syncs a local
+  folder into the container (a volume), edits made anywhere else (a git
+  worktree, a copy) never reach the server, and the check tests stale files.
+  Never move the work to a worktree in UI mode.
+- **Touch only your screen's files.** If the change needs a file shared
+  with other screens, say so and ask before editing it.
+- **Ask before a restart or a recreate** of the server or its stack: it
+  breaks every other session's checks while it runs. A change that needs no
+  restart (a file the server already serves live) needs no question.
+- **Commit only your own files**, named one by one, never everything
+  staged or changed: the folder and its git index are shared.
+
 **Think mode.** Thinking and analysis only, no code. Skill:
 `objection-conception`, alone by default. Add `chottomatte-archi` only if the
 user asks for it, or proposes it and the user agrees, when the structure is

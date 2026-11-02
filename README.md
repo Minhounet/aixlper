@@ -184,6 +184,10 @@ Then describe the work in your first message. Two examples:
   until it passes, or, for a change only you can make (Nuxeo Studio
   Modeler), tells you what to change and waits for your hot reload. One
   screen at a time, with a pause between screens. No unit-test TDD here.
+  Two tabs can work two different screens at once, in the same folder (not
+  a worktree: the server only sees the folder its volume syncs). Each tab
+  touches and commits only its own screen's files, and asks you before
+  restarting the server, since that breaks the other tab's checks.
 - **Think mode** (thinking and analysis only): `objection-conception`
   alone; `chottomatte-archi` only if you ask for it (or agree when it
   proposes it). It reads the code it needs, writes only the design files,
@@ -343,6 +347,11 @@ Puis décris le travail dans ton premier message. Deux exemples :
   seul peux faire (Nuxeo Studio Modeler), te dit quoi changer et attend ton
   hot reload. Un écran à la fois, avec une pause entre les écrans. Pas de
   TDD unitaire ici.
+  Deux onglets peuvent travailler deux écrans différents en même temps, dans
+  le même dossier (pas un worktree : le serveur ne voit que le dossier que son
+  volume synchronise). Chaque onglet ne touche et ne commite que les fichiers
+  de son écran, et te demande avant de redémarrer le serveur, car cela casse
+  les contrôles de l'autre onglet.
 - **Mode think** (réflexion et analyse seules) : `objection-conception`
   seul ; `chottomatte-archi` seulement si tu le demandes (ou acceptes quand
   il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers
