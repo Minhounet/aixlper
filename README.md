@@ -23,7 +23,7 @@ tool — no per-client fork.
 | [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close, and pinpoints discrepancies between the Jira description, the criteria, the design and the built code. |
 | [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
 | [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright: one check per criterion, run against the app running the current code, its result kept as evidence. A check that already passes means the criterion is already met. Layout criteria are checked at each viewport size they name. |
-| [`saiban`](skills/saiban/SKILL.md) | **Claude Code only.** Runs a known development process for you: six modes (fix, build, ui, think, improve, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `saiban` agent, or as `/saiban` in a plain session. |
+| [`saiban-orchestrator`](skills/saiban-orchestrator/SKILL.md) | **Claude Code only.** Runs a known development process for you: six modes (fix, build, ui, think, improve, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `saiban-orchestrator` agent, or as `/saiban-orchestrator` in a plain session. |
 
 ## Installing
 
@@ -108,27 +108,28 @@ repo — the curl install above already covers "install easily" without
 that extra machinery, which mainly pays off if this ever needs versioned
 releases or install/update/uninstall commands for a wider audience.
 
-## Tutorial: the `saiban` agent
+## Tutorial: the `saiban-orchestrator` agent
 
-*Version française plus bas : [Tutoriel](#tutoriel--lagent-saiban).*
+*Version française plus bas : [Tutoriel](#tutoriel--lagent-saiban-orchestrator).*
 
-`saiban` is a **Claude Code agent** (not portable to Gemini CLI) that runs
+`saiban-orchestrator` is a **Claude Code agent** (not portable to Gemini CLI) that runs
 the skills above for you, in the right order, and stops only when a decision
 is really yours. It keeps a written trail of every decision, so you can follow
 the work from anywhere, your phone included.
 
-The names come from a trial: `saiban` (the trial) runs the case,
-`saiban-kenji` (the prosecutor) reviews each AC and never fixes, and
-`saiban-shonin` (the witness) writes the code without hearing the test plan,
-and `saiban-tantei` (the detective) investigates how the skills were used.
-It was called `iterate` before; the installers clean up the old names.
+The names follow the skills: an Ace Attorney word, then the role. The words
+come from a trial: *saiban* (the trial) runs the case, *kenji* (the
+prosecutor) reviews each AC and never fixes, *shonin* (the witness) writes the
+code without hearing the test plan, and *tantei* (the detective) investigates
+how the skills were used. They were `iterate`, `iterate-reviewer` and
+`iterate-dev` before; the installers clean up the old names.
 
 | Name | Role | Started by | Can edit |
 |---|---|---|---|
-| `saiban` (the trial) | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | You (`ci`, or `/saiban`) | Yes |
-| `saiban-kenji` (the prosecutor) | Reviewer: checks each AC's work against the skills, reports, never fixes | `saiban`, after each AC | No |
-| `saiban-shonin` (the witness) | Implementer: writes one GREEN without seeing the test plan or the ACs | `saiban`, only `with dev` | Yes |
-| `saiban-tantei` (the detective) | Inspector: reads how the skills were used, proposes changes to them | `saiban`, improve mode | No |
+| `saiban-orchestrator` | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | You (`ci`, or `/saiban-orchestrator`) | Yes |
+| `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | `saiban-orchestrator`, after each AC | No |
+| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | `saiban-orchestrator`, only `with dev` | Yes |
+| `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | `saiban-orchestrator`, improve mode | No |
 
 ### 1. Install
 
@@ -152,19 +153,19 @@ From your project folder:
 
 | You want | You type |
 |---|---|
-| Agent mode (`saiban`) | `ci` |
+| Agent mode (`saiban-orchestrator`) | `ci` |
 | The normal assistant | `claude` |
 
-`ci` is `claude --agent saiban --permission-mode acceptEdits`: it edits
+`ci` is `claude --agent saiban-orchestrator --permission-mode acceptEdits`: it edits
 files without asking each time; commands and pushes still ask.
 
 It only applies to that session: plain `claude` stays the normal assistant,
 though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
-saiban --permission-mode acceptEdits'` lets it edit files without asking
+saiban-orchestrator --permission-mode acceptEdits'` lets it edit files without asking
 each time (commands and pushes still ask). The mode has to be on the command
 line: `permissionMode` in the agent file is ignored when the agent is the
-main session (checked). Avoid `"agent": "saiban"` in a settings file unless you want
-every session there to start as `saiban`, since it replaces the default
+main session (checked). Avoid `"agent": "saiban-orchestrator"` in a settings file unless you want
+every session there to start as `saiban-orchestrator`, since it replaces the default
 system prompt.
 
 Then describe the work in your first message. Two examples:
@@ -188,7 +189,7 @@ Then describe the work in your first message. Two examples:
   proposes it). It reads the code it needs, writes only the design files,
   never code.
 - **Improve mode** (the skills and agents themselves): *"improve the skills
-  from my last runs"*. `saiban-tantei`, read-only and fresh, reads your
+  from my last runs"*. `tantei-inspector`, read-only and fresh, reads your
   decision logs, retros, process notes and session transcripts, and proposes
   exact wording changes with the evidence. You accept or reject each one;
   accepted ones are applied and committed in your aixlper clone, never in the
@@ -204,9 +205,9 @@ message:
 |---|---|
 | `pre-approve TDD plans` | No approval per AC plan. |
 | `no pauses` | No stop after each AC. |
-| `no review` | No `saiban-kenji` after each AC (build mode). |
-| `with review` | In fix mode, a `saiban-kenji` pass on the fix (off by default; about $0.30). |
-| `with dev` | GREEN steps go to `saiban-shonin`, which only sees the failing test (off by default). |
+| `no review` | No `kenji-reviewer` after each AC (build mode). |
+| `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
+| `with dev` | GREEN steps go to `shonin-dev`, which only sees the failing test (off by default). |
 
 ### Agent or plain session?
 
@@ -218,7 +219,7 @@ message:
   through files instead: a new `ci` session and *"resume PROJ-8"* picks up
   from the decision log's `Resume` block.
 - **Already in a plain session** and the process turns out known? Type
-  `/saiban`: the same process loads as a skill, with the default assistant
+  `/saiban-orchestrator`: the same process loads as a skill, with the default assistant
   around it. The agent and the skill share one text, so nothing drifts.
 
 ### 3. What happens
@@ -229,7 +230,7 @@ message:
    time, seen failing, then the least code that passes it, then a refactor;
    never a batch of tests written ahead. The run ends with the full build
    and an audit of the git history that proves each test was red first.
-3. **A review per AC** by `saiban-kenji`, which can read but never edit:
+3. **A review per AC** by `kenji-reviewer`, which can read but never edit:
    is the AC really proven, does the structure hold, nothing extra?
 4. **The AC record is updated** in `docs/ticket/<id>/acceptance.md`, then
    committed.
@@ -245,7 +246,7 @@ decides and writes down.
   Its `Resume` block always says where the work stands.
 - `docs/ticket/<id>/`: design, ACs with their evidence, difficulties met.
 - Context gets expensive as it grows. At a pause, type `/clear`, then
-  `claude --agent saiban` and *"resume PROJ-8"*: it continues from the
+  `claude --agent saiban-orchestrator` and *"resume PROJ-8"*: it continues from the
   `Resume` block instead of re-reading everything.
 
 It commits locally, never pushes, and never writes to Jira unless asked.
@@ -258,31 +259,31 @@ about $0.30.
 
 The final report always ends with **Improvements**: friction it hit and the
 exact wording it would change, in the agent or a skill. It never applies
-them itself. Edit `global/agents/saiban.md` (or the skill) and reinstall,
-or symlink `~/.claude/agents/saiban.md` to the repo file so edits apply at
+them itself. Edit `global/agents/saiban-orchestrator.md` (or the skill) and reinstall,
+or symlink `~/.claude/agents/saiban-orchestrator.md` to the repo file so edits apply at
 once.
 
-## Tutoriel : l'agent `saiban`
+## Tutoriel : l'agent `saiban-orchestrator`
 
-`saiban` est un **agent Claude Code** (pas portable sur Gemini CLI) qui
+`saiban-orchestrator` est un **agent Claude Code** (pas portable sur Gemini CLI) qui
 enchaîne les skills ci-dessus à ta place, dans le bon ordre, et ne s'arrête
 que quand une décision t'appartient vraiment. Il garde une trace écrite de
 chaque décision : tu peux suivre le travail de partout, y compris depuis ton
 téléphone.
 
-Les noms viennent d'un procès : `saiban` (le procès) mène l'affaire,
-`saiban-kenji` (le procureur) relit chaque AC sans jamais corriger, et
-`saiban-shonin` (le témoin) écrit le code sans avoir entendu le plan de tests,
-et `saiban-tantei` (le détective) enquête sur l'usage des skills.
-Il s'appelait `iterate` avant ; les scripts d'installation nettoient les
-anciens noms.
+Les noms suivent ceux des skills : un mot d'Ace Attorney, puis le rôle. Les
+mots viennent d'un procès : *saiban* (le procès) mène l'affaire, *kenji* (le
+procureur) relit chaque CA sans jamais corriger, *shonin* (le témoin) écrit le
+code sans avoir entendu le plan de tests, et *tantei* (le détective) enquête
+sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
+`iterate-dev` avant ; les scripts d'installation nettoient les anciens noms.
 
 | Nom | Rôle | Lancé par | Peut modifier |
 |---|---|---|---|
-| `saiban` (le procès) | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Toi (`ci`, ou `/saiban`) | Oui |
-| `saiban-kenji` (le procureur) | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | `saiban`, après chaque CA | Non |
-| `saiban-shonin` (le témoin) | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | `saiban`, seulement `with dev` | Oui |
-| `saiban-tantei` (le détective) | Inspecteur : lit l'usage des skills, propose des changements | `saiban`, mode improve | Non |
+| `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
+| `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | `saiban-orchestrator`, après chaque CA | Non |
+| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | `saiban-orchestrator`, seulement `with dev` | Oui |
+| `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | `saiban-orchestrator`, mode improve | Non |
 
 ### 1. Installer
 
@@ -306,21 +307,21 @@ Depuis le dossier de ton projet :
 
 | Tu veux | Tu tapes |
 |---|---|
-| Le mode agent (`saiban`) | `ci` |
+| Le mode agent (`saiban-orchestrator`) | `ci` |
 | L'assistant normal | `claude` |
 
-`ci` vaut `claude --agent saiban --permission-mode acceptEdits` : il modifie
+`ci` vaut `claude --agent saiban-orchestrator --permission-mode acceptEdits` : il modifie
 les fichiers sans demander à chaque fois ; les commandes et les push
 demandent toujours.
 
 Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
 normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias
-ci='claude --agent saiban --permission-mode acceptEdits'` le laisse
+ci='claude --agent saiban-orchestrator --permission-mode acceptEdits'` le laisse
 modifier les fichiers sans demander à chaque fois (les commandes et les push
 demandent toujours). Le mode doit être sur la ligne de commande :
 `permissionMode` dans le fichier de l'agent est ignoré quand l'agent est la
-session principale (vérifié). Évite `"agent": "saiban"` dans un fichier de
-settings, sauf si tu veux que chaque session y démarre en `saiban`, car il
+session principale (vérifié). Évite `"agent": "saiban-orchestrator"` dans un fichier de
+settings, sauf si tu veux que chaque session y démarre en `saiban-orchestrator`, car il
 remplace le prompt système par défaut.
 
 Puis décris le travail dans ton premier message. Deux exemples :
@@ -346,7 +347,7 @@ Puis décris le travail dans ton premier message. Deux exemples :
   il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers
   de conception, jamais de code.
 - **Mode improve** (les skills et agents eux-mêmes) : *« améliore les skills
-  à partir de mes derniers runs »*. `saiban-tantei`, en lecture seule et sans
+  à partir de mes derniers runs »*. `tantei-inspector`, en lecture seule et sans
   contexte, lit tes journaux de décisions, retros, notes de process et
   transcripts de session, et propose des changements de formulation exacts,
   preuves à l'appui. Tu acceptes ou refuses chacun ; ceux acceptés sont
@@ -364,9 +365,9 @@ message :
 |---|---|
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
 | `no pauses` | Pas d'arrêt après chaque CA. |
-| `no review` | Pas d'`saiban-kenji` après chaque CA (mode build). |
-| `with review` | En mode fix, une revue `saiban-kenji` du correctif (désactivée par défaut ; environ 0,30 $). |
-| `with dev` | Les étapes GREEN passent à `saiban-shonin`, qui ne voit que le test en échec (désactivé par défaut). |
+| `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
+| `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
+| `with dev` | Les étapes GREEN passent à `shonin-dev`, qui ne voit que le test en échec (désactivé par défaut). |
 
 ### Agent ou session normale ?
 
@@ -380,7 +381,7 @@ message :
   *« resume PROJ-8 »* reprend depuis le bloc `Resume` du journal de
   décisions.
 - **Déjà dans une session normale** et le processus s'avère connu ? Tape
-  `/saiban` : le même processus se charge comme un skill, avec l'assistant
+  `/saiban-orchestrator` : le même processus se charge comme un skill, avec l'assistant
   par défaut autour. L'agent et le skill partagent un seul texte, donc rien
   ne diverge.
 
@@ -394,7 +395,7 @@ message :
    un refactoring ; jamais une série de tests écrits à l'avance. Le cycle se
    termine par le build complet et un audit de l'historique git qui prouve
    que chaque test a d'abord été rouge.
-3. **Une revue par CA** par `saiban-kenji`, qui lit mais ne modifie
+3. **Une revue par CA** par `kenji-reviewer`, qui lit mais ne modifie
    jamais : la CA est-elle vraiment prouvée, la structure tient-elle, rien
    de plus que demandé ?
 4. **Le suivi de la CA est mis à jour** dans
@@ -412,7 +413,7 @@ floue. Le reste, il le décide et l'écrit.
 - `docs/ticket/<id>/` : conception, CA avec leurs preuves, difficultés
   rencontrées.
 - Le contexte coûte de plus en plus cher en grossissant. À une pause, tape
-  `/clear`, puis `claude --agent saiban` et *« resume PROJ-8 »* : il
+  `/clear`, puis `claude --agent saiban-orchestrator` et *« resume PROJ-8 »* : il
   reprend depuis le bloc `Resume` au lieu de tout relire.
 
 Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
@@ -427,8 +428,8 @@ Sonnet). Un petit bug en mode fix : environ 0,30 $.
 Le rapport final se termine toujours par **Improvements** : les frictions
 rencontrées et la formulation exacte qu'il changerait, dans l'agent ou un
 skill. Il ne les applique jamais lui-même. Modifie
-`global/agents/saiban.md` (ou le skill) et réinstalle, ou crée un lien
-symbolique de `~/.claude/agents/saiban.md` vers le fichier du repo pour que
+`global/agents/saiban-orchestrator.md` (ou le skill) et réinstalle, ou crée un lien
+symbolique de `~/.claude/agents/saiban-orchestrator.md` vers le fichier du repo pour que
 les modifications s'appliquent tout de suite.
 
 ## Repo layout
@@ -442,7 +443,7 @@ skills/<skill-name>/evals/        # claude plugin eval cases for the skill
 global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # saiban, saiban-kenji, saiban-shonin, saiban-tantei (Claude Code only)
+global/agents/                    # saiban-orchestrator, kenji-reviewer, shonin-dev, tantei-inspector (Claude Code only)
 ```
 
 ## Contributing / testing

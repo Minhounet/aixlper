@@ -30,7 +30,7 @@
 # Renamed agents (scripts/retired-names.txt) are removed from
 # ~/.claude/agents/: a link is deleted, a real file is backed up first.
 #
-# The `ci` alias (claude --agent saiban --permission-mode acceptEdits) lives
+# The `ci` alias (claude --agent saiban-orchestrator --permission-mode acceptEdits) lives
 # in a block between "# >>> aixlper >>>" and "# <<< aixlper <<<": re-running
 # replaces that block in place, so it is never duplicated, and nothing else in
 # the file is touched.
@@ -259,7 +259,7 @@ fi
 RC_BEGIN='# >>> aixlper >>>'
 RC_END='# <<< aixlper <<<'
 RC_BLOCK="$RC_BEGIN
-alias ci='claude --agent saiban --permission-mode acceptEdits'
+alias ci='claude --agent saiban-orchestrator --permission-mode acceptEdits'
 $RC_END"
 if [ "$NO_SHELL" -eq 0 ]; then
   current=""

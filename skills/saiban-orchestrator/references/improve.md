@@ -1,6 +1,6 @@
 # Improve mode: change the skills and agents from how they were used
 
-Read this when `saiban` runs in improve mode: the user asks to improve the
+Read this when `saiban-orchestrator` runs in improve mode: the user asks to improve the
 skills or agents, to act on the "Improvements" of earlier reports, or to
 look back at a run and fix what rubbed.
 
@@ -17,10 +17,10 @@ record, one entry per accepted change. No pauses beyond the gate in step 5.
 The skills and agents are edited where they live, never in the installed
 copy. Resolve the links:
 
-- `readlink -f ~/.claude/skills/saiban` ends in `<clone>/skills/saiban`;
+- `readlink -f ~/.claude/skills/saiban-orchestrator` ends in `<clone>/skills/saiban-orchestrator`;
   `<clone>` is two levels up. Check it has `CLAUDE.md` and `skills/`.
-- Agents: `readlink -f ~/.claude/agents/saiban.md` ends in
-  `<clone>/global/agents/saiban.md`.
+- Agents: `readlink -f ~/.claude/agents/saiban-orchestrator.md` ends in
+  `<clone>/global/agents/saiban-orchestrator.md`.
 
 If either is a plain file or directory (installed by copy, or as a plugin),
 there is nothing safe to edit: the next install overwrites a copy. Say so,
@@ -38,9 +38,9 @@ Ask once, with a recommendation: all skills and agents, or named ones; which
 evidence (this session only, or the project's history too). Skip what the
 first message already says.
 
-## 3. Inspect: spawn `saiban-tantei`
+## 3. Inspect: spawn `tantei-inspector`
 
-The inspection goes to `saiban-tantei`, a read-only helper. Three reasons,
+The inspection goes to `tantei-inspector`, a read-only helper. Three reasons,
 each one of the repo's criteria for an agent: it must not write; it must
 not know the working session's reasons for what it did, so it judges the
 run against the text as written instead of against the excuses; and it reads
@@ -67,7 +67,7 @@ inspection yourself would bring back exactly the bias it exists to avoid.
 
 ## 4. What the inspector checks
 
-This section is the inspector's checklist (`saiban-tantei` reads it here).
+This section is the inspector's checklist (`tantei-inspector` reads it here).
 
 Load each skill and agent in scope as written (read the files in the clone,
 not a memory of them). Then look in the evidence for:
@@ -79,7 +79,7 @@ not a memory of them). Then look in the evidence for:
    the user's, a pause nobody needed, a step done twice, a skill loaded too
    late (or not at all) for the step that needed it.
 3. **A gap**: the same `No skill:` entry, or the same note in
-   `process-notes.md`, at least twice. Propose a skill, a mode of `saiban`,
+   `process-notes.md`, at least twice. Propose a skill, a mode of `saiban-orchestrator`,
    or a helper agent, by the repo's own criteria; for an agent, name the
    criterion it meets.
 4. **A contradiction** between two skills, or between an agent and the

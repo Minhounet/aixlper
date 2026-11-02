@@ -3142,3 +3142,23 @@ the meaning of the word: "Reviewer (kenji = the prosecutor)." That is the
 text Claude Code shows in its agent list. The README tutorial (English and
 French) gained a who's-who table: name, role, who starts it, whether it can
 edit. The names themselves were not changed.
+
+**Second rename, same session: the role as an explicit suffix.** Descriptions
+alone were not enough: the author wants the purpose in the name, like the
+skills (`igiari-tdd`, `shoko-playwright`): an Ace Attorney word, then the
+role. `saiban` → `saiban-orchestrator` (skill and agent), `saiban-kenji` →
+`kenji-reviewer`, `saiban-shonin` → `shonin-dev`, `saiban-tantei` →
+`tantei-inspector`. The shared `saiban-` prefix is gone: the suffix says the
+role, and the descriptions still say who spawns whom. The entries above keep
+the names they were written with.
+
+`retired-names.txt` now maps both old sets (`iterate-*` and `saiban-*`)
+straight to the new names, so a machine skipping a step still lands right.
+Checked in a throwaway `HOME` holding a mix of `saiban-*` links, a `saiban-*`
+copy and an `iterate` copy: all removed (copies backed up), the alias
+rewritten, a second run changed nothing. A `Resume` block under either old
+name is read as the same process.
+
+The author also asked why there were "so many agents", remembering only the
+orchestrator and the reviewer. The dev agent shipped with them in #35 (off by
+default, only with "with dev"); the inspector is the one added today.

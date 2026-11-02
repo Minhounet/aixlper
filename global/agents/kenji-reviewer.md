@@ -1,6 +1,6 @@
 ---
-name: saiban-kenji
-description: Reviewer (kenji = the prosecutor). Claude Code only. Read-only reviewer that saiban spawns after each AC's TDD run, before the AC is marked verified. It loads the same skills saiban works with and checks the run against them as written; the only difference is fresh eyes and no write access. Not for direct use.
+name: kenji-reviewer
+description: Reviewer (kenji = the prosecutor). Claude Code only. Read-only reviewer that saiban-orchestrator spawns after each AC's TDD run, before the AC is marked verified. It loads the same skills saiban-orchestrator works with and checks the run against them as written; the only difference is fresh eyes and no write access. Not for direct use.
 tools: Read, Grep, Glob, Bash, Skill
 disallowedTools: Edit, Write, NotebookEdit
 ---
