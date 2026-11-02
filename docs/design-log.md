@@ -2908,3 +2908,34 @@ entry point in the source, assert only on it (a broken stock Web UI is a
 finding, not the AC failing), read breakpoints from the page's own styles
 and ask when they disagree with the AC, and treat adding a test id or label
 to the project's own element as a valid change.
+
+## iterate: take over plain-session work, one screen at a time, user-only changes; Studio setup
+
+The author works screen by screen on Nuxeo Web UI custom pages, to avoid the
+tunnel effect, and starts some of that work in plain sessions. Their setup:
+the local Studio project is synced into the container through a Podman
+volume. Studio Designer changes are plain file edits; Studio Modeler has no
+git outside Studio and deploys via Studio's hot reload.
+
+- **`iterate` Start: taking over.** Work with no decision log (a plain
+  session, by hand) was neither redone nor adopted. Now: read uncommitted
+  changes, recent commits and existing checks first, summarize done /
+  half-done / next, confirm with the user, then write the `Resume` block from
+  that state. In UI mode, a passing check is a met AC, recorded, not rebuilt.
+- **`iterate` UI mode: one screen per run.** Several screens are ordered at
+  the start; one is finished and committed before the next, with a pause
+  between them. The pause list had build mode only, so UI mode would have run
+  every screen in one go. The `Resume` template gains a `Screen` line, and its
+  mode list (`fix | build`, stale since the new modes) now has ui and think.
+- **New gate: a change only the user can make** (the fix lives in a vendor
+  tool whose history it owns, e.g. Studio Modeler): say what to change and
+  why, wait for "deployed", rerun the check, never edit the tool's generated
+  output. Mirrored in `shoko-playwright`'s failing-assertion branch, worded
+  generically; the Studio specifics stay in the references.
+- **`tonosaman-deploy/references/nuxeo.md`:** the Studio section is written
+  from the author's description (Designer via volume, Modeler via hot reload,
+  Modeler first when both are needed). Not run yet; volume mapping and hot
+  reload timing still to confirm. The rest stays a placeholder.
+  `shoko-playwright/references/nuxeo.md` points to it for where a fix lives.
+
+Not dogfooded.

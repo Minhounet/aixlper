@@ -32,7 +32,7 @@ Check the build files, in this order — the first match wins:
 
 | Marker | Runtime | Read |
 |---|---|---|
-| `nuxeo-*` dependencies, a `*-package` module with `package.xml`, or a `Nuxeo-Component` manifest entry | Nuxeo | `references/nuxeo.md` |
+| `nuxeo-*` dependencies, a `*-package` module with `package.xml`, or a `Nuxeo-Component` manifest entry; or a Nuxeo Studio project (Designer or Modeler) | Nuxeo | `references/nuxeo.md` |
 | `spring-boot-maven-plugin`, or the `org.springframework.boot` Gradle plugin | Spring Boot | `references/spring-boot.md` |
 | anything else with a `main` class | Plain JDK batch | `references/jdk-batch.md` |
 
