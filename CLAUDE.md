@@ -302,8 +302,9 @@ per session with `claude --agent saiban-orchestrator`), and `settings.template.j
 `scripts/install-global.sh` installs them onto any machine, chmod'ing
 the scripts back to executable since content-only comparison would
 otherwise leave a restored or hand-copied file non-executable. It also
-manages the `ci` alias (`claude --agent saiban-orchestrator --permission-mode
-acceptEdits`) in a marked `# >>> aixlper >>>` block of `~/.bashrc`, replaced
+manages the `ci` command (`claude --agent saiban-orchestrator --permission-mode
+acceptEdits`, plus the `saiban-orchestrator` skill appended to the system
+prompt when installed) in a marked `# >>> aixlper >>>` block of `~/.bashrc`, replaced
 in place on every run so it is never duplicated; `--no-shell` skips it.
 
 **Renaming a skill or agent:** add a line to `scripts/retired-names.txt`

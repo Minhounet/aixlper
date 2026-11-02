@@ -3256,3 +3256,38 @@ every evidence file at once), `improve.md`'s report shape makes the
 verbatim quote the evidence and the line number optional, allowed only from
 reading that one file. Quote-first holds whatever way the files are read.
 Not re-run after the second change.
+
+## `saiban-orchestrator` agent preloads its skill
+
+The author noticed the agent only *told* the model to load the
+`saiban-orchestrator` skill: nothing forced it. Inlining the skill into the
+agent was rejected: it breaks the rule that an agent never restates a
+skill, and would drift from the copy `/saiban-orchestrator` uses in a plain
+session. Instead the agent's frontmatter now has `skills: [saiban-orchestrator]`,
+which Claude Code documents as injecting the full skill content into the
+agent's context at startup. The body's first line now says the skill is
+preloaded and to load it only if it is missing, so the 20KB is not loaded
+twice.
+
+**Checked, and it does not work for the main session.** Headless runs
+(`claude -p`, Sonnet, every reading tool and Skill disabled, asked to quote
+the first sentence of the skill's Direct mode paragraph):
+
+| Arm | Answer | Input tokens |
+|---|---|---|
+| `--agent`, with `skills:` | NOT LOADED | 33,359 |
+| `--agent`, control without `skills:` | NOT LOADED | 33,359 (same prefix, read from cache) |
+| spawned as a subagent, with `skills:` | quoted it exactly | — |
+| spawned as a subagent, control | NOT LOADED | — |
+| `--agent` + `--append-system-prompt-file SKILL.md` | quoted it exactly, and the agent's own Run mode | 40,435 |
+
+So `skills:` only works for a spawned subagent, and the `ci` path ignores
+it. The guarantee now lives in `ci`: `install-global.sh` writes it as a
+shell function that adds `--append-system-prompt-file` with the installed
+`SKILL.md` when the file exists, and runs plain `--agent` otherwise. The
+skill text goes after the agent's own prompt; nothing is replaced. `skills:` stays in
+the agent for the case its Run mode already covers (spawned as a
+subagent). The agent body says the skill's `references/` are in its own
+folder, since appended text carries no base directory, unlike a Skill
+call. Anything that starts the agent without `ci` falls back to the old
+instruction to load the skill.

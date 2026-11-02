@@ -30,8 +30,10 @@
 # Renamed agents (scripts/retired-names.txt) are removed from
 # ~/.claude/agents/: a link is deleted, a real file is backed up first.
 #
-# The `ci` alias (claude --agent saiban-orchestrator --permission-mode acceptEdits) lives
-# in a block between "# >>> aixlper >>>" and "# <<< aixlper <<<": re-running
+# The `ci` command (claude --agent saiban-orchestrator --permission-mode acceptEdits,
+# plus --append-system-prompt-file with the saiban-orchestrator skill when it is
+# installed, since the agent's `skills:` preload is ignored for a main
+# session) lives in a block between "# >>> aixlper >>>" and "# <<< aixlper <<<": re-running
 # replaces that block in place, so it is never duplicated, and nothing else in
 # the file is touched.
 
@@ -259,7 +261,13 @@ fi
 RC_BEGIN='# >>> aixlper >>>'
 RC_END='# <<< aixlper <<<'
 RC_BLOCK="$RC_BEGIN
-alias ci='claude --agent saiban-orchestrator --permission-mode acceptEdits'
+unalias ci 2>/dev/null || true
+function ci {
+  local skill=\"\$HOME/.claude/skills/saiban-orchestrator/SKILL.md\"
+  local extra=()
+  [ -f \"\$skill\" ] && extra=(--append-system-prompt-file \"\$skill\")
+  claude --agent saiban-orchestrator --permission-mode acceptEdits \"\${extra[@]}\" \"\$@\"
+}
 $RC_END"
 if [ "$NO_SHELL" -eq 0 ]; then
   current=""

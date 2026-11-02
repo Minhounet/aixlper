@@ -157,7 +157,11 @@ From your project folder:
 | The normal assistant | `claude` |
 
 `ci` is `claude --agent saiban-orchestrator --permission-mode acceptEdits`: it edits
-files without asking each time; commands and pushes still ask.
+files without asking each time; commands and pushes still ask. It also adds
+`--append-system-prompt-file ~/.claude/skills/saiban-orchestrator/SKILL.md`
+when that file exists, so the skill is in context from the start: the
+agent's `skills:` preload is ignored when the agent is the main session
+(checked).
 
 It only applies to that session: plain `claude` stays the normal assistant,
 though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
@@ -317,7 +321,11 @@ Depuis le dossier de ton projet :
 
 `ci` vaut `claude --agent saiban-orchestrator --permission-mode acceptEdits` : il modifie
 les fichiers sans demander à chaque fois ; les commandes et les push
-demandent toujours.
+demandent toujours. Il ajoute aussi
+`--append-system-prompt-file ~/.claude/skills/saiban-orchestrator/SKILL.md`
+quand ce fichier existe, pour que le skill soit dans le contexte dès le
+départ : le préchargement `skills:` de l'agent est ignoré quand l'agent est
+la session principale (vérifié).
 
 Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
 normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias
