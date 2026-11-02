@@ -70,3 +70,28 @@ Re-run: `scripts/kata_super_green.sh --kata <name> --runs 3 --budget-usd 2
 Bowling's threshold is too early to discriminate. String calculator is the
 one real signal so far, and it matches the `generalize-just-enough` eval
 (1.0 with the skill vs 0.0 without).
+
+## Does `shonin-dev` make less biased greens? (not run yet)
+
+`shonin-dev` writes each green in a fresh context that never sees the test
+plan, so it should not build ahead of the tests. The `ahead` count (greens
+that generalize before the plan allows, from a kata's `GENERALIZE_FROM`
+sidecar) measures exactly that, so the comparison uses the two katas that
+have one, both arms through `saiban-orchestrator` in fix mode, differing only
+by "no dev":
+
+```
+for k in bowling string-calculator; do
+  scripts/kata_super_green.sh --kata $k --orchestrator dev   --runs 3 --budget-usd 3 --pmd <pmd> --out /tmp/shonin
+  scripts/kata_super_green.sh --kata $k --orchestrator nodev --runs 3 --budget-usd 3 --pmd <pmd> --out /tmp/shonin
+done
+```
+
+Read first: `subagents` must be above 0 on every dev run (otherwise the dev
+never ran and the run says nothing), then compare `ahead`, then `lint` and
+cost. Budget: 12 runs, about $0.45 each without the dev and half again with
+it, so roughly $7; `--budget-usd 3` caps each run. Then read the histories of
+any run whose `ahead` differs, not only the counts.
+
+Untested: whether the audit tolerates the orchestrator's decision-log commit
+in the history (the wiring was checked with a fake `claude`, nothing more).

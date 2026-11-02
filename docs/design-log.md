@@ -3182,3 +3182,14 @@ rule of the time), and the cost is about half again on a build run (about $4
 vs $2.60 on Sonnet, two ACs). The comparison that would settle it:
 `scripts/kata_super_green.sh` on the same kata with and without the dev,
 audit findings per green. Not run.
+
+**The eval that would settle it, prepared.** `kata_super_green.sh` gained
+`--orchestrator dev|nodev`: both arms run `saiban-orchestrator` in fix mode
+(plan pre-approved, no review, no pauses) and differ only by "no dev", so the
+pair isolates the dev. The dev reaches the run through `--agents` under its
+plain name (a plugin agent would carry a prefix the skill doesn't use). The
+metric is the audit's existing `ahead` count, which flags exactly the bias the
+dev exists to remove; `subagents` per run proves the dev actually ran. The
+commands and the reading order are in `katas/igiari-tdd/README.md`. This
+session has no Claude credentials, so the wiring was checked with a fake
+`claude` and a stub PMD only. Not run.

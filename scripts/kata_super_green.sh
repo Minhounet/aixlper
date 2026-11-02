@@ -6,17 +6,25 @@
 #
 # usage: kata_super_green.sh --kata <name> [--runs 1] [--model sonnet]
 #          [--budget-usd 2] [--max-turns 150] [--out <dir>] [--pmd <pmd bin>]
-#          [--baseline]
+#          [--baseline | --orchestrator dev|nodev]
 #   --kata        a file name in katas/igiari-tdd/ without .md
 #   --budget-usd  per run, passed to claude --max-budget-usd
 #   --pmd         the PMD 7 launcher (default: pmd on PATH)
 #   --baseline    no skill loaded: plain TDD with the same commit format,
 #                 the comparison arm (run dirs are named <kata>-base-<n>)
+#   --orchestrator  run through saiban-orchestrator in fix mode (plan
+#                 pre-approved, no review, no pauses) instead of igiari-tdd
+#                 alone. `dev`: its default, shonin-dev writes each green;
+#                 `nodev`: the same with "no dev". The pair measures the dev
+#                 agent and nothing else (run dirs <kata>-dev-<n>, -nodev-<n>).
+#                 The summary adds `subagents`, counted from the session's
+#                 subagent transcripts: 0 in a dev run means the dev never ran
+#                 and the run is invalid; above 0 in a nodev run, check which.
 # Prints one summary line per run; details stay in <out>/<kata>-<n>/.
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
-kata= baseline= runs=1 model=sonnet budget=2 max_turns=150 out= pmd=${PMD:-pmd}
+kata= baseline= orch= runs=1 model=sonnet budget=2 max_turns=150 out= pmd=${PMD:-pmd}
 while [ $# -gt 0 ]; do
   case $1 in
     --kata) kata=$2; shift 2;;
@@ -27,6 +35,8 @@ while [ $# -gt 0 ]; do
     --out) out=$2; shift 2;;
     --pmd) pmd=$2; shift 2;;
     --baseline) baseline=1; shift;;
+    --orchestrator) orch=$2; shift 2
+      case $orch in dev|nodev) ;; *) echo "--orchestrator takes dev or nodev" >&2; exit 2;; esac;;
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
 done
@@ -38,6 +48,7 @@ gen_from=
   gen_from=$(sed -n 's/^GENERALIZE_FROM=\([0-9][0-9]*\)$/\1/p' "$repo/katas/igiari-tdd/$kata.audit")
 [ -f "$plan" ] || { echo "no kata: $plan" >&2; exit 2; }
 command -v "$pmd" >/dev/null || { echo "PMD not found: $pmd (use --pmd)" >&2; exit 2; }
+[ -z "$baseline" ] || [ -z "$orch" ] || { echo "--baseline and --orchestrator are separate arms" >&2; exit 2; }
 out=${out:-$(mktemp -d)}
 mkdir -p "$out"
 
@@ -54,6 +65,27 @@ if [ ! -d "$plugin" ]; then
       [ -d "$repo/skills/$s/$d" ] && cp -r "$repo/skills/$s/$d" "$plugin/skills/$s/"
     done
   done
+fi
+
+# The orchestrator arms need its skill, every skill the dev loads, and the dev
+# agent itself under its plain name (a plugin agent would get a prefix the
+# skill doesn't use), so the agent goes in through --agents instead.
+orch_plugin="$out/plugin-orchestrator"
+if [ -n "$orch" ] && [ ! -d "$orch_plugin" ]; then
+  cp -r "$plugin" "$orch_plugin"
+  for s in saiban-orchestrator chottomatte-archi; do
+    cp -r "$repo/skills/$s" "$orch_plugin/skills/"
+    rm -rf "$orch_plugin/skills/$s/evals"
+  done
+  python3 -I - "$repo/global/agents/shonin-dev.md" "$out/agents.json" <<'PY'
+import json, re, sys
+text = open(sys.argv[1]).read()
+_, front, body = text.split('---', 2)
+meta = dict(re.findall(r'^(\w+): (.*)$', front, re.M))
+agent = {'description': meta['description'], 'prompt': body.strip(),
+         'tools': [t.strip() for t in meta['tools'].split(',')]}
+json.dump({meta['name']: agent}, open(sys.argv[2], 'w'))
+PY
 fi
 
 new_project() {
@@ -85,8 +117,9 @@ EOF
   git -C "$1" -c user.email=kata@example.com -c user.name=kata commit -qm "init"
 }
 
+arm=${baseline:+-base}${orch:+-$orch}
 for i in $(seq 1 "$runs"); do
-  dir="$out/$kata${baseline:+-base}-$i"
+  dir="$out/$kata$arm-$i"
   rm -rf "$dir"; new_project "$dir/work"
   base=$(git -C "$dir/work" rev-parse HEAD)
   if [ -n "$baseline" ]; then
@@ -101,6 +134,21 @@ that makes it pass, and \"refactor N: ...\" only when you change something.
 Run every planned test straight through to the end without waiting for
 approval, then run mvn verify. There is no IDE attached; use Maven."
     plugin_args=()
+  elif [ -n "$orch" ]; then
+    opts="no review, no pauses, plan pre-approved"
+    [ "$orch" = nodev ] && opts="$opts, no dev"
+    prompt="Use the saiban-orchestrator skill in fix mode ($opts) to implement
+this kata in Java, in the Maven project in the current directory. JUnit 5 and
+Vavr are already in the pom. Scope: this kata only; nothing outside this
+directory may change.
+
+$(cat "$plan")
+
+The test plan above is the igiari-tdd plan, approved as-is: do not wait for
+approval, run every cycle straight through to the end, then the final full
+build and the audit igiari-tdd describes (the task started at commit $base).
+Commit each step as igiari-tdd says. There is no IDE attached; use Maven."
+    plugin_args=(--plugin-dir "$orch_plugin" --agents "$out/agents.json")
   else
     prompt="Use the igiari-tdd skill to implement this kata in Java, in the Maven
 project in the current directory. JUnit 5 and Vavr are already in the pom.
@@ -115,10 +163,15 @@ the skill says. There is no IDE attached; use Maven."
   fi
   (cd "$dir/work" && git config user.email kata@example.com && git config user.name kata &&
     claude -p "$prompt" "${plugin_args[@]}" --model "$model" \
-      --allowedTools "Bash Edit Write Read Glob Grep Skill" \
+      --allowedTools "Bash Edit Write Read Glob Grep Skill${orch:+ Agent Task}" \
       --max-turns "$max_turns" --max-budget-usd "$budget" \
       --output-format json > "$dir/result.json" 2> "$dir/stderr.txt")
   cost=$(python3 -I -c "import json,sys; print(round(json.load(open(sys.argv[1])).get('total_cost_usd',0),3))" "$dir/result.json" 2>/dev/null || echo "?")
+  spawns=
+  if [ -n "$orch" ]; then
+    sid=$(python3 -I -c "import json,sys; print(json.load(open(sys.argv[1])).get('session_id',''))" "$dir/result.json" 2>/dev/null)
+    spawns=$(ls "$HOME"/.claude/projects/*/"$sid"/subagents/*.jsonl 2>/dev/null | wc -l)
+  fi
   ahead_args=()
   [ -z "$gen_from" ] || ahead_args=(--generalize-from "$gen_from"
     --ahead-cmd "$pmd check -d src/main -R $repo/skills/igiari-tdd/scripts/generalization-pmd.xml -f text --no-progress --no-cache")
@@ -133,5 +186,5 @@ the skill says. There is no IDE attached; use Maven."
   blame=$(sed -n '/possible super-green misses/{n;p}' "$dir/audit.txt")
   ahead=$(grep '^ahead total' "$dir/audit.txt" | sed 's/^ahead total: //')
   sites=$(grep '^sites total' "$dir/audit.txt" | sed 's/^sites total: //')
-  echo "$kata${baseline:+ (baseline)} #$i  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  ahead: ${ahead:-n/a}  refactor-adds: ${sites:-n/a}  blame:$blame"
+  echo "$kata${baseline:+ (baseline)}${orch:+ ($orch)} #$i${orch:+  subagents $spawns}  cost \$$cost  greens $greens  audit exit $audit  lint: ${lint:-n/a}  ahead: ${ahead:-n/a}  refactor-adds: ${sites:-n/a}  blame:$blame"
 done
