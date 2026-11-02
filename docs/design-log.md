@@ -3207,3 +3207,11 @@ since the folder and its git index are shared. Advice given earlier in the
 session, before this, recommended worktrees for parallel work: right for
 fix and build, wrong for UI mode on a volume-synced stack. Not run with two
 sessions yet.
+
+**First result, bowling, one run per arm (Sonnet).** With the dev, every red
+failed (5/5) and the ten-frame limit arrived only when the perfect-game test
+forced it. Without the dev, green 2 built the frame walk ahead and test 5
+passed on arrival (kept as a guard). Cost $1.22 vs $0.47. The `ahead` metric
+saw neither (the kata allows loops from green 2); "a planned test passed on
+arrival" is the better signal there. Too small to conclude; the larger pass
+is next. Details in `katas/igiari-tdd/README.md`.

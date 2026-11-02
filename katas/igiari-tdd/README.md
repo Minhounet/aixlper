@@ -71,7 +71,7 @@ Bowling's threshold is too early to discriminate. String calculator is the
 one real signal so far, and it matches the `generalize-just-enough` eval
 (1.0 with the skill vs 0.0 without).
 
-## Does `shonin-dev` make less biased greens? (not run yet)
+## Does `shonin-dev` make less biased greens?
 
 `shonin-dev` writes each green in a fresh context that never sees the test
 plan, so it should not build ahead of the tests. The `ahead` count (greens
@@ -95,3 +95,32 @@ any run whose `ahead` differs, not only the counts.
 
 Untested: whether the audit tolerates the orchestrator's decision-log commit
 in the history (the wiring was checked with a fake `claude`, nothing more).
+
+### 2026-11-02, bowling, Sonnet, 1 run per arm
+
+| Arm | Subagents | Greens | Reds that failed | `ahead` | Cost |
+|---|---|---|---|---|---|
+| `dev` | 5 (one `shonin-dev` per green) | 5 | 5/5 | 0 | $1.22 |
+| `nodev` | 0 | 4 | 4/5; test 5 passed on arrival, kept as `guard 5` | 0 | $0.47 |
+
+**Reading the histories, not the counts.** Without the dev, green 2 (test
+"all ones → 20") already built the ten-frame walk (`List.range(0, FRAMES)`),
+which no test asked for yet; so test 5 (perfect game) passed the moment it
+was written and the plan lost a red. With the dev, green 2 only summed pins
+and the frame limit arrived at green 5, when test 5 forced it. That is the
+bias the dev exists to remove, seen once.
+
+**`ahead` missed it**: bowling's sidecar allows iteration from green 2, so a
+loop there is not flagged. On this kata, "a planned test passed on arrival"
+(a `guard` or a `PASSED, not a red`) is the better signal.
+
+**Cost: 2.6×** ($1.22 vs $0.47), more than the "half again" measured on a
+two-AC build ticket: the dev's own context reloads the skills on every green.
+
+One run per arm proves nothing on its own. Next: 3 runs per arm on bowling
+and string-calculator, counting reds that passed on arrival.
+
+The first version of the `subagents` count was wrong: a run started inside a
+Claude Code session inherits that session's id, so both runs shared one id
+and the no-dev run reported the dev run's 5 agents. The count now reads each
+run's own project folder (dev 5, nodev 0, re-checked).

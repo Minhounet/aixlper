@@ -77,15 +77,7 @@ if [ -n "$orch" ] && [ ! -d "$orch_plugin" ]; then
     cp -r "$repo/skills/$s" "$orch_plugin/skills/"
     rm -rf "$orch_plugin/skills/$s/evals"
   done
-  python3 -I - "$repo/global/agents/shonin-dev.md" "$out/agents.json" <<'PY'
-import json, re, sys
-text = open(sys.argv[1]).read()
-_, front, body = text.split('---', 2)
-meta = dict(re.findall(r'^(\w+): (.*)$', front, re.M))
-agent = {'description': meta['description'], 'prompt': body.strip(),
-         'tools': [t.strip() for t in meta['tools'].split(',')]}
-json.dump({meta['name']: agent}, open(sys.argv[2], 'w'))
-PY
+  python3 -I "$repo/scripts/agent_to_json.py" "$repo/global/agents/shonin-dev.md" > "$out/agents.json"
 fi
 
 new_project() {
@@ -169,8 +161,11 @@ the skill says. There is no IDE attached; use Maven."
   cost=$(python3 -I -c "import json,sys; print(round(json.load(open(sys.argv[1])).get('total_cost_usd',0),3))" "$dir/result.json" 2>/dev/null || echo "?")
   spawns=
   if [ -n "$orch" ]; then
-    sid=$(python3 -I -c "import json,sys; print(json.load(open(sys.argv[1])).get('session_id',''))" "$dir/result.json" 2>/dev/null)
-    spawns=$(ls "$HOME"/.claude/projects/*/"$sid"/subagents/*.jsonl 2>/dev/null | wc -l)
+    # By the run's own project folder, not its session id: a run started from
+    # inside a Claude Code session inherits that session's id, so two runs
+    # share one id and an id-based glob counts the first run's agents twice.
+    proj=$(python3 -I -c "import re,sys; print(re.sub(r'[^A-Za-z0-9]', '-', sys.argv[1]))" "$(cd "$dir/work" && pwd -P)")
+    spawns=$(ls "$HOME/.claude/projects/$proj"/*/subagents/*.jsonl 2>/dev/null | wc -l)
   fi
   ahead_args=()
   [ -z "$gen_from" ] || ahead_args=(--generalize-from "$gen_from"
