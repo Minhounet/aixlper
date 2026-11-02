@@ -3066,3 +3066,39 @@ covers.
 Not re-run after the merge. The case's `prompt.md` and graders don't mention
 Studio, so the merge should not change its scores, but that is an
 assumption until the next run.
+
+## `iterate` renamed `saiban`, in the repo's Ace Attorney style
+
+The author asked for the orchestrator and its helpers to carry names like the
+skills do. Each name says the agent's role in a trial:
+
+- `iterate` → **`saiban`** (the trial): runs the case phase by phase, with gates.
+- `iterate-reviewer` → **`saiban-kenji`** (the prosecutor): hunts for faults,
+  never fixes.
+- `iterate-dev` → **`saiban-shonin`** (the witness): a witness waits outside
+  and does not hear earlier testimony, as this agent must never see the test
+  plan.
+
+Entries above this one keep the old names; they are history.
+
+**Migration lives in the installers, not in a separate script.** A one-off
+script runs once and is forgotten; a machine last installed months ago would
+never get it. `scripts/retired-names.txt` lists `<kind> <old> <new>` and
+lines are never removed. `install.sh` deletes retired skills (copy or link);
+`--link` also deletes any dangling link into the clone, which covers future
+renames without touching the list. `install-global.sh` deletes a retired
+agent link and moves a retired agent file to `.bak.<ts>` (that name doesn't
+end in `.md`, so Claude Code stops loading it). It now finds agents by glob
+instead of a hard-coded list. The `ci` alias block is rewritten in place
+already, so it follows the rename with no extra code.
+
+Checked in a throwaway `HOME`: old skill link, old agent link and two old
+copied agent files, plus an old `ci` alias. `install.sh --link` removed the
+skill and the dangling agent link; `install-global.sh` backed up and removed
+both copies and rewrote the alias; a second run of each changed nothing. The
+copy (curl) path of `install.sh` was not run: it fetches `main`, which does
+not have the list yet.
+
+Kept for continuity: the skill's description still triggers on "iterate",
+and a `Resume` block written under the old names is read as the same
+process.

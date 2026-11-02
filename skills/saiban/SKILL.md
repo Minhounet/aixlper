@@ -1,26 +1,28 @@
 ---
-name: iterate
-description: Claude Code only (it spawns the iterate-reviewer and iterate-dev agents). Runs a known development process for the user, in five modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "iterate", hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+name: saiban
+description: Claude Code only (it spawns the saiban-kenji and saiban-shonin agents). Runs a known development process for the user, in five modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former name), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
-# Iterate: run a known process for the user
+# Saiban: run a known process for the user
 
 You orchestrate iterative work. You do not hold rules of your own for coding,
 architecture or refactoring: the skills hold them. Your job is to choose the
 skill for each step, run the loop, keep a readable decision trail, and
 interrupt the user only when it matters.
 
-This skill is the whole process. The `iterate` agent (`claude --agent
-iterate`) only loads it and adds its own working rules; in a plain session,
+This skill is the whole process. The `saiban` agent (`claude --agent
+saiban`) only loads it and adds its own working rules; in a plain session,
 loading this skill gives the same process with the default assistant
 around it. Either way you run in the main session, because you must be able
 to ask the user questions. Claude Code only: some steps spawn the
-`iterate-reviewer` and `iterate-dev` agents.
+`saiban-kenji` and `saiban-shonin` agents.
 
 ## Start
 
 If `docs/decisions/<topic>.md` already exists for this work, read its
-`Resume` block first and continue from there instead of starting over.
+`Resume` block first and continue from there instead of starting over. A
+block written before the rename says `iterate`, `iterate-reviewer` or
+`iterate-dev`: same process, now `saiban`, `saiban-kenji`, `saiban-shonin`.
 
 **Taking over work started elsewhere** (a plain session, by hand, no decision
 log): don't redo it and don't ignore it. Before asking anything, read what is
@@ -152,7 +154,7 @@ front. Then each AC is its own TDD run:
    If the audit script cannot run (no approval for it), do by hand the checks
    `igiari-tdd`'s audit section lists, and say so under Open in the final
    report.
-3. Spawn `iterate-reviewer` (below) on the AC's run. Fix each `blocking`
+3. Spawn `saiban-kenji` (below) on the AC's run. Fix each `blocking`
    finding with a new red/green cycle, or ask the user if it is a real fork;
    note `minor` ones in the decision log. Re-review after a fix.
 4. Do `objection-conception`'s end-of-run update for that AC: evidence,
@@ -182,7 +184,7 @@ deliverable.
 Two steps can go to a subagent. Neither can ask the user anything: you keep
 every gate, every commit and every decision.
 
-- **`iterate-reviewer`, on by default in build and UI modes; in fix mode only
+- **`saiban-kenji`, on by default in build and UI modes; in fix mode only
   with "with review"; never in think or direct mode.** Only the user turns it
   off ("no review"); never skip it on your own judgment, however small the
   change. A read-only review of
@@ -195,7 +197,7 @@ every gate, every commit and every decision.
   `shoko-playwright` as its skills, and give it the check command. Skip it only if the user
   said "no review". In fix mode, give it the fix request instead of an AC;
   with no structural plan or ticket, those checks simply do not apply.
-- **`iterate-dev`, off by default.** Turn it on only if the user asked for it
+- **`saiban-shonin`, off by default.** Turn it on only if the user asked for it
   ("with dev"). It does the GREEN exactly as you would, with the same skills
   (`igiari-tdd`, `kanpeki-fp`, `chottomatte-archi`); the only difference is a
   fresh context that cannot build ahead of the tests. For each GREEN step,
@@ -253,7 +255,7 @@ You cannot clear the context yourself; the user does, with `/clear`. So
 
 To pause: update the `Resume` block of the decision log, commit it, then end
 your turn with one line: "AC<n> done. Continue, or /clear and restart with
-`claude --agent iterate` (or `/iterate` in a plain session) and say: resume
+`claude --agent saiban` (or `/saiban` in a plain session) and say: resume
 <topic>." A plain "continue" means
 go on. Skip the pauses only if the user said "no pauses" at the start.
 
@@ -294,11 +296,11 @@ Report in a few lines, and always include the last two parts:
 2. **Open:** anything left unverified or unresolved.
 3. **Next:** suggested next work (remaining ACs, follow-ups, risks). Suggest,
    do not start; the user picks.
-4. **Improvements:** 1–3 concrete changes to `iterate` (this skill or its agent) or to
+4. **Improvements:** 1–3 concrete changes to `saiban` (this skill or its agent) or to
    another skill, from
    friction you hit this run (a gate too strict or too loose, a skill that
    misfired, a rule that was unclear), each with the wording you would change.
-   Never edit `iterate` or a skill yourself. Say "none" if nothing came up.
+   Never edit `saiban` or a skill yourself. Say "none" if nothing came up.
 
    Also propose **something new** when it is earned, never create it:
 
@@ -312,7 +314,7 @@ Report in a few lines, and always include the last two parts:
      messaged); or not knowing something you know. Anything else is a skill,
      or a change to an existing one.
 
-   - **A new mode** of `iterate` when the user keeps bringing the same kind
+   - **A new mode** of `saiban` when the user keeps bringing the same kind
      of work in direct mode and you keep doing it with the same steps: the
      process has become known. Propose the mode and the skill that would
      hold its rules; you replace the user for known processes, one mode per

@@ -1,6 +1,6 @@
 ---
-name: iterate-dev
-description: Claude Code only. Optional implementer that iterate spawns for the GREEN step of a TDD cycle, only when the user turned it on at the start ("with dev"). It does the GREEN exactly as iterate would, with the same skills; the only difference is a fresh context that never sees the test plan, the ticket or the ACs. Off by default. Not for direct use.
+name: saiban-shonin
+description: Claude Code only. Optional implementer that saiban spawns for the GREEN step of a TDD cycle, only when the user turned it on at the start ("with dev"). It does the GREEN exactly as saiban would, with the same skills; the only difference is a fresh context that never sees the test plan, the ticket or the ACs. Off by default. Not for direct use.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 ---
 

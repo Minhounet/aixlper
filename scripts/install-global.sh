@@ -27,7 +27,10 @@
 #   --dry-run   Report what would change and write nothing.
 #   --no-shell  Leave the shell rc file alone (no `ci` alias).
 #
-# The `ci` alias (claude --agent iterate --permission-mode acceptEdits) lives
+# Renamed agents (scripts/retired-names.txt) are removed from
+# ~/.claude/agents/: a link is deleted, a real file is backed up first.
+#
+# The `ci` alias (claude --agent saiban --permission-mode acceptEdits) lives
 # in a block between "# >>> aixlper >>>" and "# <<< aixlper <<<": re-running
 # replaces that block in place, so it is never duplicated, and nothing else in
 # the file is touched.
@@ -51,8 +54,9 @@ DRY_RUN=0
 # their executable bit preserved, which the copy loop below handles
 # for any file in this list, not just this one.
 # agents/*.md land in ~/.claude/agents/, which makes them available in
-# every project without being the default anywhere.
-CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py agents/iterate.md agents/iterate-reviewer.md agents/iterate-dev.md)
+# every project without being the default anywhere. They are found by glob
+# once the source is known (below), so a new agent can't be forgotten here.
+CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py)
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -85,6 +89,10 @@ else
   SRC_DIR="$(find "$WORK_DIR" -mindepth 1 -maxdepth 1 -type d)/global"
   [ -d "$SRC_DIR" ] || die "no global/ directory in the fetched archive"
 fi
+
+for agent in "$SRC_DIR"/agents/*.md; do
+  [ -e "$agent" ] && CONFIG_FILES+=("agents/$(basename "$agent")")
+done
 
 TEMPLATE="$SRC_DIR/settings.template.json"
 [ -f "$TEMPLATE" ] || die "missing $TEMPLATE"
@@ -226,11 +234,32 @@ else
   fi
 fi
 
+# Agents this repo renamed: an old one left in place would still be offered
+# (and `claude --agent iterate` would still start the old copy). A link is
+# removed; a real file is moved to a .bak so nothing hand-edited is lost (the
+# .bak name doesn't end in .md, so Claude Code no longer loads it). Skill
+# lines are install.sh's job: this script never touches ~/.claude/skills/.
+RETIRED="$SRC_DIR/../scripts/retired-names.txt"
+if [ -f "$RETIRED" ]; then
+  while read -r kind old new_name _; do
+    [ "$kind" = "agent" ] || continue
+    dest="$TARGET_DIR/agents/$old.md"
+    if [ -L "$dest" ]; then
+      act "remove retired agent link $old.md (now $new_name)"
+      [ "$DRY_RUN" -eq 1 ] || rm -f "$dest"
+    elif [ -f "$dest" ]; then
+      backup_if_needed "$dest"
+      act "remove retired agent $old.md (now $new_name)"
+      [ "$DRY_RUN" -eq 1 ] || rm -f "$dest"
+    fi
+  done < <(grep -v '^[[:space:]]*\(#\|$\)' "$RETIRED")
+fi
+
 # The ci alias: a marked block, replaced in place so re-runs never duplicate it.
 RC_BEGIN='# >>> aixlper >>>'
 RC_END='# <<< aixlper <<<'
 RC_BLOCK="$RC_BEGIN
-alias ci='claude --agent iterate --permission-mode acceptEdits'
+alias ci='claude --agent saiban --permission-mode acceptEdits'
 $RC_END"
 if [ "$NO_SHELL" -eq 0 ]; then
   current=""

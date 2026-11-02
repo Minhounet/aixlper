@@ -174,7 +174,7 @@ judgment is the point (designing a structure, debugging something unfamiliar).
 
 ## Spot a process worth packaging
 
-In a plain session (not when running as the `iterate` agent, which proposes
+In a plain session (not when running as the `saiban` agent, which proposes
 its own changes), notice when the work you are doing by hand is a process:
 the same kind of work, done with the same steps, that could run on its own.
 
@@ -187,7 +187,7 @@ When the same kind of work already appears at least twice in that file,
 propose, at the end of the task, what it should become, and why:
 
 - **a skill**, for the rules of how to do it;
-- **a mode of `iterate`**, if the whole process is known and repeatable, so
+- **a mode of `saiban`**, if the whole process is known and repeatable, so
   the agent can run it for me;
 - **a helper agent**, only if one step needs a narrower tool list, a
   different model, to run in the background, to be addressable on its own,

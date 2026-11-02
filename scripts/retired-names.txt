@@ -1,0 +1,8 @@
+# Names this repo no longer ships, read by scripts/install.sh (skill lines) and
+# scripts/install-global.sh (agent lines), so a re-install removes what a
+# rename left behind. One entry per line: <kind> <old name> <new name>.
+# Never remove a line: a machine last installed long ago still has the old name.
+skill iterate          saiban
+agent iterate          saiban
+agent iterate-reviewer saiban-kenji
+agent iterate-dev      saiban-shonin

@@ -113,7 +113,7 @@ Next: run it on Opus, and consider tightening the prompt so that
 
 ## `ac-test-red-first`
 
-Pins the rule decided after the first full `iterate` run: **TDD wins on how
+Pins the rule decided after the first full `iterate` run (the agent now named `saiban`): **TDD wins on how
 an AC is proven**. The agent gets an approved structure and a `designed` AC1
 (lock after three failures) and is asked for the ordered TDD test plan for
 AC1 only, tagged per AC. The natural plan unit-tests `UserAccount` first and
