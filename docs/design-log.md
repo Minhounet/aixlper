@@ -3424,3 +3424,24 @@ Two slips, both now in the skill:
   any commit a verdict adds.
 
 Side note again: `kaizen-refactor` not loaded (2 runs out of 3).
+
+## shoko-playwright: native/OS-rendered UI can't be proven by a DOM check
+
+`saiban-orchestrator` improve mode run on real `saiban-orchestrator` UI-mode
+work (a Nuxeo project, ticket PROJ-1234, real `saiban-orchestrator` session
+with real `kenji-reviewer` reviews), not a kata. `tantei-inspector` read the
+project's decision log, its `retro.md`, and the session transcript, against
+the skill as written in the clone.
+
+A fix added a native `title` attribute to a truncated field so its full
+value was reachable on hover. Every automated check passed — the attribute
+existed with the right value, and hovering triggered the element's own
+`:hover` CSS — and the real user still reported no tooltip ever appeared.
+Root cause: a native `title` tooltip is rendered by the browser's own
+chrome, not the page, so it can't be located or screenshotted by Playwright
+at all; a DOM-level pass there proves nothing about what the user actually
+saw. Took two rounds of user-reported failure to find. "Checks that don't
+lie" now says this explicitly: when the AC's proof is something rendered
+outside the page (a native tooltip, an OS file/print dialog, browser
+autofill), say so and get a human to confirm once in a real browser, or
+pick an in-page mechanism the check can actually observe instead.

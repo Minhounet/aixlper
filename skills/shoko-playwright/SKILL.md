@@ -57,6 +57,14 @@ pass means the AC holds:
   for the condition (visible, has text, has count, has URL). Never a fixed
   sleep: it is either too short (flaky) or too long (slow), and it hides
   the real condition.
+- **Some things the user sees can't be asserted on at all**: a native
+  `title` tooltip, an OS file/print dialog, browser autofill are rendered
+  by the browser chrome, not the page, so Playwright can't locate them or
+  capture them in a screenshot. A DOM-presence or attribute-value check
+  (the attribute exists, hover fired a CSS rule) is not evidence the user
+  ever saw anything — say so, and get a human to confirm once in a real
+  browser, or pick a mechanism the check can actually observe (an in-page
+  tooltip component, for example) when one is available.
 - **Find elements the way a user would:** by role and accessible name, by
   label, by visible text, or by a test id the app provides. Avoid CSS paths
   and XPath tied to layout; they break on any redesign and say nothing
