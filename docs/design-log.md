@@ -3403,3 +3403,24 @@ Still unproven: the verdict path. Both runs refactored the redundant
 branch away, so nothing survived; a kata that leaves a survivor is needed
 to see verdicts given unprompted. Side note, not this skill: run 2 never
 loaded `kaizen-refactor`, which run 1 did.
+
+### Headless run 3, 2026-11-03: a survivor, a verdict, a numbering slip
+
+A kata built to leave a survivor: discount at 10000 cents or more, plan
+testing only 5000 and 20000 (scratch, not added to `katas/`). Sonnet, same
+silent prompt, $0.35. The agent loaded `yusaburi-mutation`, ran PIT after
+the audit, found the boundary survivor (`<` → `<=`, re-checked by hand:
+5/6 before, 6/6 after), gave verdict 2 because the spec says "or more",
+and committed `guard 3: ...(mutation: < to <= on threshold)`. The guard
+fails with the mutant put back in (checked). This verdict path works
+unprompted.
+
+Two slips, both now in the skill:
+- Named `guard 3` after `green 2`; `igiari-tdd`'s audit flags it OUT OF
+  ORDER (a guard takes the number of the green it follows). The skill now
+  says: at the end of a run, `guard N` with the last green's N.
+- Didn't re-run the audit after adding the guard, so it never saw the
+  slip. The skill now says to re-run the full build and the audit after
+  any commit a verdict adds.
+
+Side note again: `kaizen-refactor` not loaded (2 runs out of 3).

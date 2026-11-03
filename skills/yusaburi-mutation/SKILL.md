@@ -70,7 +70,9 @@ Then give each one a verdict:
 2. **Behavior that matters, not pinned**: write the test that kills it.
    - In a TDD run, the code already exists, so the test passes on write:
      it is an `igiari-tdd` **guard**, committed as that skill defines, with
-     the surviving mutant as its mutation check.
+     the surviving mutant as its mutation check. At the end of a run that
+     means `guard N` with N the last green's number, not a new step
+     number.
    - Before changing existing code, it is a **characterization test**
      (pin what the code does today), written as `kaizen-refactor`'s safety
      net says, by a context that hasn't seen the planned change. Give
@@ -78,6 +80,10 @@ Then give each one a verdict:
      holes are, not what the change will be.
    Re-run the mutation tool on that class and check the mutant is now
    killed.
+
+In a TDD run, any commit a verdict adds (a guard, a removal) comes after
+the audit, so re-run the full build and `igiari-tdd`'s audit once more
+before reporting: the history it checked no longer ends where it did.
 3. **Equivalent**: the mutant behaves exactly like the original, so no
    test could kill it (for example a boundary on a value that can never be
    equal). This is the weakest verdict and the one the code's writer
