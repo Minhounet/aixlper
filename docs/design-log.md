@@ -3494,3 +3494,19 @@ confidence than the other findings from this run — no harm happened, only
 an ambiguity. "Context: where to cut" now says explicitly: several
 fix-review rounds on the same AC's finding are one pause unit, paused once
 at the end, not once per round.
+
+## saiban-orchestrator: Direct mode pointed at a heading that doesn't exist in the skill
+
+Same real-project improve-mode run as above. Direct mode says "no gates
+beyond the working rules below," but `SKILL.md` has no "working rules"
+section — that heading lives only in `global/agents/saiban-orchestrator.md`.
+Since this same `SKILL.md` is also meant to load standalone in a plain
+session (no agent, per this repo's own `CLAUDE.md`), "below" pointed at
+nothing in that case. Found by `tantei-inspector` reading the skill file
+itself, not from the session evidence. Reworded to name the agent's working
+rules explicitly, and say none apply otherwise.
+
+Also updated this run's status in `CLAUDE.md`'s skill table: UI mode has
+now run a full multi-screen pass on a real Nuxeo project (several fixes
+shipped and reviewed, not just a local page), and improve mode has now run
+once, on that same project's evidence (these 6 proposals).

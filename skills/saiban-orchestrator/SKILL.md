@@ -107,7 +107,8 @@ whole process. No other skill by default.
 
 **Direct mode.** Anything else: a question, an explanation, a small edit, a
 command to run. Do it directly, the way a plain assistant would: no gates
-beyond the working rules below, no decision log, no pauses, no final report
+beyond the agent's working rules when running as the `saiban-orchestrator`
+agent (none otherwise), no decision log, no pauses, no final report
 shape. Load a skill only if the request clearly calls for one.
 
 If a mode turns out to be the wrong one (a fix needs something new, a
