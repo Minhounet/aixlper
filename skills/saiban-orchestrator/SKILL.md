@@ -286,7 +286,9 @@ comes back.
 You cannot clear the context yourself; the user does, with `/clear`. So
 **pause** at these break points, even when plans are pre-approved:
 
-- after each AC is verified and its update committed (build mode);
+- after each AC is verified and its update committed (build mode) — several
+  fix-review rounds on the same AC's finding are one unit, paused once at
+  the end, not once per round;
 - after each screen's ACs are verified and committed (UI mode);
 - before switching mode.
 

@@ -3482,3 +3482,15 @@ project's own decision log named this as a process gap in its own words.
 `Start` now says: in UI mode, before touching anything new, re-verify every
 previously-committed fix against the running app, not only the files the
 resumed session means to touch.
+
+## saiban-orchestrator: a multi-round fix on one AC is one pause unit
+
+Same real-project improve-mode run as above (ticket PROJ-1234). One AC's
+finding took three fix-review rounds (one bug found and fixed inside
+another's own fix) before it was actually closed; the orchestrator paused
+only once, at the end of all three, and later wrote in its own words that
+this was "probably right" but the skill never actually said so. Lower
+confidence than the other findings from this run — no harm happened, only
+an ambiguity. "Context: where to cut" now says explicitly: several
+fix-review rounds on the same AC's finding are one pause unit, paused once
+at the end, not once per round.
