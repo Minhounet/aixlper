@@ -40,7 +40,10 @@ skill only produces what goes into them.
      not the AC. Fix or report it; never count it either way.
 4. **Record the evidence:** the check's name, the command that ran it, its
    result line, and the path to a trace or screenshot when one was kept.
-   Record only a pass you actually saw in this run.
+   Record only a pass you actually saw in this run. When the evidence is a
+   matrix/table that needs to leave the session for someone to paste
+   elsewhere (a ticket, a wiki), see `references/handoff.md` before
+   building anything ad hoc for it.
 
 Keep every check: commit it with the change. Together they become the
 regression suite for the screens they cover.
@@ -112,6 +115,7 @@ if there is none.
 | When | Read |
 |---|---|
 | The app under test is Nuxeo Web UI (URLs under `/nuxeo/ui/`, `nuxeo-*` elements in the page), above all a custom page the project adds | `references/nuxeo.md` (not checked against a real setup) |
+| Evidence (a recette matrix, a table) needs to leave the session for someone to paste into a ticket or wiki | `references/handoff.md` |
 
 ## Running it
 
