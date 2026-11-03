@@ -52,8 +52,8 @@ paths that exist (check each before listing it):
 - `docs/decisions/*.md` in the project: `No skill:` entries, deviations,
   gates the user answered, takeovers.
 - `docs/ticket/*/retro.md`: difficulties logged during runs.
-- final reports' "Improvements" from earlier runs, if the user saved or
-  pasted them.
+- the `Improvements:` lines in those decision logs, and final reports'
+  "Improvements" the user saved or pasted.
 - `~/.claude/process-notes.md`: processes done by hand, repeated.
 - the session transcripts, `~/.claude/projects/<project dir>/*.jsonl` (the
   newest first, the current one included when the user asks about this
