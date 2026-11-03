@@ -3471,3 +3471,14 @@ after an unrelated recreate, found only when the user manually retested by
 hand days later. The reference now states the revert risk directly and
 says to re-check a Designer edit is still live after any later
 rebuild/recreate, not just once after making it.
+
+## saiban-orchestrator: resuming UI-mode work didn't re-check prior fixes
+
+Same real-project improve-mode run as above (ticket PROJ-1234). Same root
+cause as the `tonosaman-deploy` finding above, at the orchestrator level:
+nothing in `Start` re-verifies that earlier, already-shipped fixes are
+still actually live before starting new work from a `Resume` block. The
+project's own decision log named this as a process gap in its own words.
+`Start` now says: in UI mode, before touching anything new, re-verify every
+previously-committed fix against the running app, not only the files the
+resumed session means to touch.

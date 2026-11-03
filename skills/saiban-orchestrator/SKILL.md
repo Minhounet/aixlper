@@ -20,7 +20,11 @@ to ask the user questions. Claude Code only: some steps spawn the
 ## Start
 
 If `docs/decisions/<topic>.md` already exists for this work, read its
-`Resume` block first and continue from there instead of starting over. A
+`Resume` block first and continue from there instead of starting over. In
+UI mode, before touching anything new, re-verify every previously-committed
+fix against the running app, not only the files this resumed session means
+to touch: a redeploy or container recreate can silently revert one nobody
+asked about this session. A
 block written under an older name (`iterate` or `saiban` for this process,
 `iterate-reviewer` or `saiban-kenji` for the reviewer, `iterate-dev` or
 `saiban-shonin` for the implementer) is the same process.
