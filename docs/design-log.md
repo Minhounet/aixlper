@@ -3291,3 +3291,136 @@ subagent). The agent body says the skill's `references/` are in its own
 folder, since appended text carries no base directory, unlike a Skill
 call. Anything that starts the agent without `ci` falls back to the old
 instruction to load the skill.
+
+## `yusaburi-mutation`: mutation testing, a skill of its own
+
+**Asked by the author:** where does mutation testing go (new skill, existing
+skill, an agent to break the tests), and when does it run?
+
+**Decided with the author:** a new portable skill, `yusaburi-mutation`
+(*yusaburi* = pressing the witness). Three skills need it (`kaizen-refactor`,
+`igiari-tdd`, `saiban-orchestrator`), and its rules (scope, a verdict per
+survivor, equivalent mutants) are its own. Putting it in `igiari-tdd` would
+make that file, already ~44KB, even bigger. The others point to it in one line each.
+
+**When it runs:** at the end of a TDD run on the production classes the
+run changed (a survivor = code no red asked for, or a test asserting too
+little), and before relying on existing tests to change existing code (a
+Tier 2 refactor, or a fix reaching beyond its own new test: a survivor =
+a hole in the safety net). Never per cycle (each red already was the
+mutation check for its line), never a codebase sweep, never a score target.
+
+**Verdicts tie into existing rules:** unrequested code is removed in a
+refactor; behavior that matters becomes an `igiari-tdd` guard (the survivor
+is its mutation check) in a TDD run, or a `kaizen-refactor`
+characterization test before a change; "equivalent" is the weakest verdict
+and needs a reason per survivor.
+
+**No new agent.** PIT breaks the code deterministically and at every
+mutation point; an LLM picking mutants would cost more and find less.
+The only step that meets a criterion is the equivalent-mutant triage (5:
+the writer is biased to call a survivor harmless), and `kenji-reviewer`
+already has the fresh eyes and the read-only tools: it now checks the
+survivor verdicts when given the list.
+
+**Known limit, written in the skill:** mutation can't see
+over-generalization (see "Measuring restraint" above), missing behavior, or
+wrong expectations.
+
+Not run yet. `references/pitest.md` is from general PIT knowledge. Next:
+dogfood on a kata, and see if `kata_super_green.sh` can record survivors
+with the skill vs `--baseline`.
+
+### Dogfood, 2026-11-02: two katas, one per trigger
+
+Run by hand in a throwaway Maven project (JDK 21, JUnit 5.11,
+`pitest-maven` 1.17.4 + `pitest-junit5-plugin` 1.2.1), commands taken
+literally from `references/pitest.md`.
+
+**Trigger 1, end of a TDD run: string calculator** (`katas/igiari-tdd`
+plan, 5 cycles, audit clean). At HEAD: 2 mutants (defaults) / 3
+(`STRONGER`), all killed. The real signal came from the counterfactual: on
+the code at green 4, before refactor 4 removed the now-redundant
+`if (!numbers.contains(","))` single-number branch, PIT flagged exactly that
+line (`RemoveConditionalMutator`, SURVIVED) with both mutator sets. So it
+catches what a missed refactor leaves behind. But that branch *was* asked
+for (by green 2): verdict 1 said "code no red asked for", which didn't fit.
+Reworded to include code a later green made redundant.
+
+**Trigger 2, before a Tier 2 refactor: legacy shipping cost** (nested ifs,
+3 existing tests, 2 of them `> 0` checks). **86% line coverage, 31%
+mutation score** (11/16 survived). A fresh subagent, given only the code,
+the tests and the survivor list, wrote 13 characterization tests: 14/16
+killed. The 2 left are boundary mutants at exactly 1 kg, where both
+branches compute the same value, so they really are equivalent; the reason
+it gave was precise. It also pinned four suspicious behaviors (flat cap
+above 10 kg, case-sensitive country, no weight check, no cap abroad). After
+the Tier 2 refactor (split by country, guard clauses), a planted
+`<=`→`<` at the cap failed one characterization test, and passed the
+original 3 tests.
+
+**Fixed in the skill and reference from this run:**
+- An uncovered line with no mutation point (`cost = 20`) never appears as
+  a survivor or `NO_COVERAGE`: the skill now says to read the line coverage
+  too.
+- PIT refuses a red suite: run only on a green one (stated, with the log
+  line to recognize).
+- `-q` doesn't silence PIT (~45 lines per run): the command now sends the
+  console to a file and prints only the two summary lines.
+- Giving the characterizing context the survivors is fine: they say where
+  the holes are, not what the change will be.
+- One run ≈ 20 s on a single small class, mostly Maven start, which supports
+  "never per cycle".
+
+Harness slip, not the skill: the kata's first red committed `target/` (no
+`.gitignore`), which broke the audit's checkouts; history was rewritten in
+the scratch repo to strip it. Not yet: Gradle, a real project, a headless
+run where an agent follows the skill unprompted.
+
+### Headless run 1, 2026-11-03: PIT run, skill never loaded
+
+String calculator, Sonnet, `igiari-tdd` prompt silent about mutation, PIT
+in the pom, `yusaburi-mutation` in the plugin bundle. The agent ran PIT on
+its own after the audit, scoped to the changed class, and reported 2/2
+killed (re-run by hand: true). $0.46. But it never loaded
+`yusaburi-mutation`: it acted on the one-line pointer alone, with its own
+command, so with a survivor it would have had no verdict rules. The pointer
+said "as `yusaburi-mutation` says", not "load". Both pointers (`igiari-tdd`,
+`kaizen-refactor`) now say to load the skill, like the existing
+`kaizen-refactor` pointer that does get loaded. Re-run pending.
+
+### Headless run 2, 2026-11-03: skill loaded
+
+Same setup, with the explicit-load pointers. The agent loaded
+`yusaburi-mutation` (after `igiari-tdd` and `kanpeki-fp`), ran PIT once
+after the audit, scoped to the changed class, and reported 2/2 killed,
+100% line coverage, "no survivors and no uncovered lines": that is the
+skill's line-coverage rule being followed. $0.43. It did not open
+`references/pitest.md` and wrote its own bounded command (grep on the
+console, no CSV); fine here, since nothing survived.
+
+Still unproven: the verdict path. Both runs refactored the redundant
+branch away, so nothing survived; a kata that leaves a survivor is needed
+to see verdicts given unprompted. Side note, not this skill: run 2 never
+loaded `kaizen-refactor`, which run 1 did.
+
+### Headless run 3, 2026-11-03: a survivor, a verdict, a numbering slip
+
+A kata built to leave a survivor: discount at 10000 cents or more, plan
+testing only 5000 and 20000 (scratch, not added to `katas/`). Sonnet, same
+silent prompt, $0.35. The agent loaded `yusaburi-mutation`, ran PIT after
+the audit, found the boundary survivor (`<` → `<=`, re-checked by hand:
+5/6 before, 6/6 after), gave verdict 2 because the spec says "or more",
+and committed `guard 3: ...(mutation: < to <= on threshold)`. The guard
+fails with the mutant put back in (checked). This verdict path works
+unprompted.
+
+Two slips, both now in the skill:
+- Named `guard 3` after `green 2`; `igiari-tdd`'s audit flags it OUT OF
+  ORDER (a guard takes the number of the green it follows). The skill now
+  says: at the end of a run, `guard N` with the last green's N.
+- Didn't re-run the audit after adding the guard, so it never saw the
+  slip. The skill now says to re-run the full build and the audit after
+  any commit a verdict adds.
+
+Side note again: `kaizen-refactor` not loaded (2 runs out of 3).

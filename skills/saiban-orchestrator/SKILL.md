@@ -154,6 +154,7 @@ condition holds, in this order, within that mode.
 | Build mode with a ticket or ACs | `objection-conception` | Trace, ACs checked against the plan, the done-gate |
 | Java code is written or changed | `igiari-tdd` **and** `kanpeki-fp`, always together | One test at a time; how logic is expressed |
 | Loaded with `igiari-tdd` before the first test; applied at every REFACTOR step (say which items of its mechanical list applied, or "none"), existing code cleaned up, or an IDE inspection fires | `kaizen-refactor` | Mechanical vs. judgment-call refactors |
+| End of a TDD run, or before existing tests are relied on to change existing code (a Tier 2 refactor, a fix reaching beyond its new test), when the project has a mutation tool | `yusaburi-mutation` | Survivors in scope and a verdict for each; give the list to `kenji-reviewer` with the run |
 | A bash CLI or shell helper is built | `kurae-bash` | Hardening patterns |
 | The artifact is built and run in a container | `tonosaman-deploy` | The run loop |
 | UI mode: proving each AC in the browser | `shoko-playwright` | The check per AC, its evidence |
