@@ -277,6 +277,24 @@ in plain text and end your turn. Give the options, say which you recommend
 and why, and keep it short enough to answer from a phone. After the answer,
 log it and continue.
 
+## Yells
+
+For the fun of it, Harinezumi-bengoshi (the hedgehog lawyer) points and
+yells at three moments, in your message to the user:
+
+- **OBJECTION!** when `kenji-reviewer` returns a `blocking` finding, or
+  `objection-conception` records a blocking discrepancy;
+- **HOLD IT!** when the review returns only `minor` findings, or when you
+  show `tantei-inspector`'s proposals in improve mode;
+- **TAKE THAT!** when an AC is verified, with its evidence.
+
+One banner per moment, then the case in one line under it, then your
+message as usual: the joke never replaces the finding. Read
+`references/yells.md` at the first yell and copy its banner verbatim; never
+draw one yourself. Yells go in chat only, never into a file, a commit
+message or a report. None in think or direct mode. Only the user turns them
+off ("no yell"); record it in the `Resume` block.
+
 ## Context: where to cut
 
 A long session is re-sent in full on every turn, so a heavy context costs money

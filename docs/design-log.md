@@ -3510,3 +3510,28 @@ Also updated this run's status in `CLAUDE.md`'s skill table: UI mode has
 now run a full multi-screen pass on a real Nuxeo project (several fixes
 shipped and reviewed, not just a local page), and improve mode has now run
 once, on that same project's evidence (these 6 proposals).
+
+## saiban-orchestrator: Harinezumi-bengoshi yells
+
+The author asked for humour in the process: the orchestrator now prints an
+ASCII banner at three moments (OBJECTION! on a blocking finding or
+discrepancy, HOLD IT! on minor-only findings or improve-mode proposals,
+TAKE THAT! on a verified AC), with a hedgehog lawyer pointing at the line.
+
+- **The orchestrator yells, not `kenji-reviewer`.** The reviewer's report has
+  a fixed shape ("nothing else") and goes to the orchestrator, never to the
+  user; a banner there would break the format and never be seen.
+- **Fixed banners in a reference, copied verbatim.** Models garble ASCII art
+  drawn from scratch, and the author's one requirement was that the finger
+  read clearly. The art was built once by script (glyphs concatenated, every
+  row width checked, max 75 columns) and lives in
+  `references/yells.md`; `SKILL.md` keeps the rule, its moments and the off
+  switch. `SKILL.md` was already past ~20KB, another reason the ~3KB of art
+  stays out of it; the reference is read only at the first yell.
+- **An original character.** The catchphrases come from courtroom games;
+  drawing a game's character was ruled out, so the pointer is an ordinary
+  hedgehog (the author's choice, after a pointing hand and a hog lawyer).
+- **Bounded.** One banner per moment, the finding always on the line under
+  it, chat only (never in files, commits or reports), none in think or
+  direct mode, and "no yell" turns it off. Cost: roughly 400 output tokens a
+  banner. Not yet seen in a real run.
