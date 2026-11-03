@@ -142,9 +142,10 @@ covered:
    characterization tests first (tests that pin today's actual behavior,
    not the behavior you're about to introduce) before any Tier 2 move.
 4. Covered is not checked: a line can run in a test that asserts nothing
-   about it. When the project has a mutation tool, run it on the classes
-   about to change, as `yusaburi-mutation` says; each survivor is a hole
-   to fill with a characterization test before the Tier 2 move.
+   about it. When the project has a mutation tool (PIT in the build), load
+   the `yusaburi-mutation` skill and run it on the classes about to change,
+   by its rules; each survivor is a hole to fill with a characterization
+   test before the Tier 2 move.
 
 **Who writes the characterization tests.** By the time you know a Tier 2
 change is needed, you already know what the code is *supposed* to become —

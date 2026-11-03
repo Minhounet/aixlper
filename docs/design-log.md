@@ -3376,3 +3376,15 @@ Harness slip, not the skill: the kata's first red committed `target/` (no
 `.gitignore`), which broke the audit's checkouts; history was rewritten in
 the scratch repo to strip it. Not yet: Gradle, a real project, a headless
 run where an agent follows the skill unprompted.
+
+### Headless run 1, 2026-11-03: PIT run, skill never loaded
+
+String calculator, Sonnet, `igiari-tdd` prompt silent about mutation, PIT
+in the pom, `yusaburi-mutation` in the plugin bundle. The agent ran PIT on
+its own after the audit, scoped to the changed class, and reported 2/2
+killed (re-run by hand: true). $0.46. But it never loaded
+`yusaburi-mutation`: it acted on the one-line pointer alone, with its own
+command, so with a survivor it would have had no verdict rules. The pointer
+said "as `yusaburi-mutation` says", not "load". Both pointers (`igiari-tdd`,
+`kaizen-refactor`) now say to load the skill, like the existing
+`kaizen-refactor` pointer that does get loaded. Re-run pending.

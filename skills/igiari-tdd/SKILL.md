@@ -558,9 +558,11 @@ refactor that raises the number of iterating methods added generality
 instead of making room (rule 6). Turning a loop into a stream in the same
 method doesn't count.
 
-Then, when the project has a mutation tool, run it on the production
-classes the task changed, as `yusaburi-mutation` says: a survivor is code
-no red asked for, or a test that asserts too little. Never per cycle.
+Then, when the project has a mutation tool (PIT in the build), load the
+`yusaburi-mutation` skill and run it on the production classes the task
+changed, by its rules: a survivor is code no red asked for, or a test that
+asserts too little, and each one needs the verdict that skill defines. Never
+per cycle.
 
 ### Delegated run — opt-in
 
