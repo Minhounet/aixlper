@@ -3388,3 +3388,18 @@ command, so with a survivor it would have had no verdict rules. The pointer
 said "as `yusaburi-mutation` says", not "load". Both pointers (`igiari-tdd`,
 `kaizen-refactor`) now say to load the skill, like the existing
 `kaizen-refactor` pointer that does get loaded. Re-run pending.
+
+### Headless run 2, 2026-11-03: skill loaded
+
+Same setup, with the explicit-load pointers. The agent loaded
+`yusaburi-mutation` (after `igiari-tdd` and `kanpeki-fp`), ran PIT once
+after the audit, scoped to the changed class, and reported 2/2 killed,
+100% line coverage, "no survivors and no uncovered lines": that is the
+skill's line-coverage rule being followed. $0.43. It did not open
+`references/pitest.md` and wrote its own bounded command (grep on the
+console, no CSV); fine here, since nothing survived.
+
+Still unproven: the verdict path. Both runs refactored the redundant
+branch away, so nothing survived; a kata that leaves a survivor is needed
+to see verdicts given unprompted. Side note, not this skill: run 2 never
+loaded `kaizen-refactor`, which run 1 did.
