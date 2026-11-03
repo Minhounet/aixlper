@@ -3535,3 +3535,23 @@ TAKE THAT! on a verified AC), with a hedgehog lawyer pointing at the line.
   it, chat only (never in files, commits or reports), none in think or
   direct mode, and "no yell" turns it off. Cost: roughly 400 output tokens a
   banner. Not yet seen in a real run.
+
+## `saiban-orchestrator`: improve mode reminder in the final report
+
+The author asked why improve mode is not the default. Answer: no mode is
+(the start asks, with a recommendation), and improve mode least of all: it
+edits the skills in the clone rather than the project, needs evidence that a
+fresh session doesn't have, and is meant to act on proposals gathered across
+runs, not on one run's noise. What was actually missing was a nudge to run it.
+
+The final report now ends with one line recommending improve mode when the
+evidence repeats: an improvement listed this run already appears in the
+project's decision logs, retros or `process-notes.md`, or a `No skill:` entry
+repeats. One run's friction alone is not enough. It never starts the mode.
+
+For the repeat to be visible, a run's "Improvements" are now also copied into
+its decision log under `Improvements:`; before, they lived only in the chat
+report, and `improve.md` could only use them "if the user saved or pasted
+them". Its evidence list now points at those lines first.
+
+Not run yet.

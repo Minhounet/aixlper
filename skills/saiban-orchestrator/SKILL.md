@@ -360,6 +360,14 @@ Report in a few lines, and always include the last two parts:
    misfired, a rule that was unclear), each with the wording you would change.
    Never edit `saiban-orchestrator` or a skill yourself outside improve mode; the user
    can start improve mode on these. Say "none" if nothing came up.
+   Copy them into the decision log under `Improvements:`, so later runs
+   and improve mode can find them.
+
+   **Improve mode reminder:** end the report with one line recommending
+   improve mode, with the reason, when an improvement you list repeats one
+   already in the project's decision logs, retros or `process-notes.md`, or
+   a `No skill:` entry repeats. A repeat is the signal; one run's friction
+   is not. Never start it yourself.
 
    Also propose **something new** when it is earned, never create it:
 
