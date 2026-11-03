@@ -68,7 +68,10 @@ pass means the AC holds:
 - **Find elements the way a user would:** by role and accessible name, by
   label, by visible text, or by a test id the app provides. Avoid CSS paths
   and XPath tied to layout; they break on any redesign and say nothing
-  about the AC.
+  about the AC. A component's own stable class name is not automatically
+  exempt from this just because it isn't a layout path — decide explicitly
+  whether it functions as a test id here, rather than by precedent from an
+  earlier check.
 - **Web components:** Playwright's locators reach into open shadow roots,
   so locate by role, label or text as above. Never walk a component's
   internal structure to reach an element.

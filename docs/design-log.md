@@ -3445,3 +3445,15 @@ lie" now says this explicitly: when the AC's proof is something rendered
 outside the page (a native tooltip, an OS file/print dialog, browser
 autofill), say so and get a human to confirm once in a real browser, or
 pick an in-page mechanism the check can actually observe instead.
+
+## shoko-playwright: a component's own CSS class isn't automatically a test id
+
+Same real-project improve-mode run as above. The same ticket's
+`kenji-reviewer` reviews twice treated a component's own "stable" CSS class
+name as an acceptable locator under this skill, each time by citing the
+other as precedent — the skill itself draws no such line, so both calls
+were made ad hoc rather than against written text. "Find elements the way
+a user would" now says explicitly: a component's own class isn't exempt
+from the CSS-path rule just because it isn't tied to layout — decide on
+purpose whether it's functioning as a test id, not by precedent from an
+earlier, unrelated check.
