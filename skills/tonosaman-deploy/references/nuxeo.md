@@ -32,9 +32,13 @@ different ways. Know which half a change belongs to before making it.
 - **Studio Designer (Web UI: elements, layouts, pages).** The author keeps a
   local copy of the Studio project, and that folder is synced into the
   container through a Podman volume. A file changed locally is what the
-  server serves. So a Designer change is an ordinary file edit: edit it in
-  the local project, reload the page, run the check. No image rebuild, no
-  restart.
+  server serves — **until the next image rebuild or container recreate,
+  which replaces the volume's contents with whatever the last build
+  produced and silently reverts any edit not yet in that build.** So a
+  Designer change is an ordinary file edit between recreates: edit it in
+  the local project, reload the page, run the check, and re-check it again
+  after any later rebuild/recreate before trusting it is still live. No
+  image rebuild, no restart needed for the edit itself.
 - **Studio Modeler (document types, schemas, vocabularies, automation,
   other configuration).** Its history is owned by Studio itself; there is no
   git you control outside it. So a Modeler change is never made by editing

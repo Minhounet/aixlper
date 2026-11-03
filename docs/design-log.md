@@ -3457,3 +3457,17 @@ a user would" now says explicitly: a component's own class isn't exempt
 from the CSS-path rule just because it isn't tied to layout — decide on
 purpose whether it's functioning as a test id, not by precedent from an
 earlier, unrelated check.
+
+## tonosaman-deploy: the Nuxeo Designer-sync file claim was wrong past the first deploy
+
+Same real-project improve-mode run as above (ticket PROJ-1234).
+`references/nuxeo.md` said flatly that a locally-edited Designer file "is
+what the server serves," no restart needed. True only until the next image
+rebuild or container recreate: that replaces the Podman volume's contents
+with whatever the last build produced, silently reverting any edit the
+build doesn't have. The real project hit exactly this — a previously-
+committed, previously-verified fix went missing from the running container
+after an unrelated recreate, found only when the user manually retested by
+hand days later. The reference now states the revert risk directly and
+says to re-check a Designer edit is still live after any later
+rebuild/recreate, not just once after making it.
