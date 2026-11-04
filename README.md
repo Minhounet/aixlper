@@ -2,479 +2,67 @@
 
 ![aixlper — agent skills for Claude Code, each one named after a courtroom cry](docs/assets/banner.webp)
 
-A repository of generic, reusable AI agent **skills** — written once, usable
-in multiple AI coding assistants (primarily [Claude Code](https://code.claude.com)
-and [Gemini CLI](https://github.com/google-gemini/gemini-cli)).
+Reusable AI agent **skills**, written once and used in both
+[Claude Code](https://code.claude.com) and [Gemini CLI](https://github.com/google-gemini/gemini-cli).
+Each skill is a `SKILL.md` under `skills/<name>/`, following the open
+[Agent Skills](https://code.claude.com/docs/en/skills.md) standard.
 
-Skills follow the open **[Agent Skills](https://code.claude.com/docs/en/skills.md)**
-standard: a `SKILL.md` file with `name`/`description` YAML frontmatter, plus
-optional bundled scripts/references. Both clients read this format natively,
-so each skill is written once under `skills/<name>/` and works in either
-tool — no per-client fork.
-
-## Available skills
+## Skills
 
 | Skill | What it does |
 |---|---|
-| [`igiari-tdd`](skills/igiari-tdd/SKILL.md) | One-test-at-a-time TDD for Java: never more than one failing test at a time, minimal implementation only, a mandatory refactor checkpoint every cycle. |
-| [`chottomatte-archi`](skills/chottomatte-archi/SKILL.md) | Dependency inversion via interfaces and constructor injection for Java: the use case as entry point, depending only on repository/service interfaces. |
-| [`kurae-bash`](skills/kurae-bash/SKILL.md) | Seven hardening patterns for robust, interactive bash CLI tools: `bind -x` keybinding dispatch, annotation-driven command registries, double-load guards, framework-free testing, and more. |
-| [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts composing Documentum DQL + API calls: existence-check-before-create, output-based error detection, safe session lifecycle. |
-| [`objection-conception`](skills/objection-conception/SKILL.md) | Persists a ticket's design conversation and the difficulties hit along the way to disk, so the thinking survives past the current session; checks, traces and proves its acceptance criteria before the ticket can close, and pinpoints discrepancies between the Jira description, the criteria, the design and the built code. |
-| [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java project and runs the fresh artifact in a local Docker or Podman container — plain JDK batch, Spring Boot, or Nuxeo — swapping the artifact in by bind mount instead of rebuilding the image each time. |
-| [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright: one check per criterion, run against the app running the current code, its result kept as evidence. A check that already passes means the criterion is already met. Layout criteria are checked at each viewport size they name. |
-| [`yusaburi-mutation`](skills/yusaburi-mutation/SKILL.md) | Mutation testing for Java with PIT: checks the tests catch a change, not just run the code. Scoped to the code a task touches, at the end of a TDD run and before relying on existing tests to change existing code; a verdict for every surviving mutant, no score to chase. |
-| [`tantei-debug`](skills/tantei-debug/SKILL.md) | Finds where a Java bug is when nobody knows yet, in a webservice or a batch, local or remote: logs first, then bisection with a JPDA debugger (`jdb`, driven one command at a time by a bundled script). Every split goes into an investigation note with a Resume block, so an interrupted session picks up where it stopped. Ends at the cause, handed to a characterization test and a TDD fix. |
-| [`saiban-orchestrator`](skills/saiban-orchestrator/SKILL.md) | **Claude Code only.** Runs a known development process for you: six modes (fix, build, ui, think, improve, direct), the right skills in the right order, stops only at real decisions, logs every decision. Used by the `saiban-orchestrator` agent, or as `/saiban-orchestrator` in a plain session. |
+| [`igiari-tdd`](skills/igiari-tdd/SKILL.md) | Strict one-test-at-a-time TDD for Java, with a refactor step every cycle. |
+| [`kanpeki-fp`](skills/kanpeki-fp/SKILL.md) | Functional style for Java with Vavr: pure guards, Either/Option, named pipelines. |
+| [`chottomatte-archi`](skills/chottomatte-archi/SKILL.md) | Dependency inversion for Java: use cases depend only on interfaces. |
+| [`kaizen-refactor`](skills/kaizen-refactor/SKILL.md) | Safe refactoring of existing Java code, driven by IDE inspection findings. |
+| [`yusaburi-mutation`](skills/yusaburi-mutation/SKILL.md) | PIT mutation testing: checks that tests catch a change, not just run the code. |
+| [`tantei-debug`](skills/tantei-debug/SKILL.md) | Finds where a Java bug is by bisection with a debugger, with a resumable note. |
+| [`tonosaman-deploy`](skills/tonosaman-deploy/SKILL.md) | Builds a Java app and runs it in a local Docker or Podman container. |
+| [`shoko-playwright`](skills/shoko-playwright/SKILL.md) | Validates a web UI change against its acceptance criteria with Playwright. |
+| [`objection-conception`](skills/objection-conception/SKILL.md) | Keeps a ticket's design and acceptance criteria on disk, and traces them to the code. |
+| [`mujitsu-documentum`](skills/mujitsu-documentum/SKILL.md) | Idempotent bash scripts for Documentum DQL/API work. *Unverified: not yet run on a real docbase.* |
+| [`kurae-bash`](skills/kurae-bash/SKILL.md) | Hardening patterns for interactive bash CLI tools. |
+| [`saiban-orchestrator`](skills/saiban-orchestrator/SKILL.md) | **Claude Code only.** Runs a known development process end to end, stopping only at real decisions. |
 
-## Installing
+## Install
 
-### Claude Code — one-line install (works today)
+### Claude Code
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install.sh | bash
 ```
 
-This copies every skill into `~/.claude/skills/` — no manifest, no
-marketplace, nothing to publish first. Re-run the same command any time to
-update to the latest version. To install into a single project instead of
-personally, or to pin a branch/tag:
+Copies every skill into `~/.claude/skills/`. Run it again to update. Use
+`AIXLPER_TARGET=.claude/skills` to install into one project instead.
+
+### Gemini CLI
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install.sh | AIXLPER_TARGET=.claude/skills bash
-curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install.sh | AIXLPER_REF=some-branch bash
+curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install-gemini.sh | bash
 ```
 
-Claude Code picks these up on the next session; each skill is invoked as
-`/igiari-tdd` or `/chottomatte-archi`, or triggers
-automatically based on its `description`.
+Copies the skills into `~/.gemini/skills/` and three helper agents
+(`kenji-reviewer`, `shonin-dev`, `tantei-inspector`; list them with `/agents`)
+into `~/.gemini/agents/`. It leaves out the Claude-only skills listed in
+[`scripts/gemini-exclude.txt`](scripts/gemini-exclude.txt).
 
-### Gemini CLI — one-line install
+Alternative: `gemini extensions install https://github.com/Minhounet/aixlper --auto-update`
+updates itself, but ships every skill, Claude-only ones included. Use one or the other.
 
-```bash
-gemini extensions install https://github.com/Minhounet/aixlper --auto-update
-```
+> Not yet checked against a live Gemini CLI install. If it fails, please open an issue.
 
-This requires `git` on your machine (Gemini CLI's own requirement for
-installing from GitHub) but no manual clone step — Gemini CLI clones it
-internally. `--auto-update` keeps it in sync with the repo.
+## Quick start
 
-> This repo's [`gemini-extension.json`](gemini-extension.json) manifest
-> hasn't been verified against a live Gemini CLI install yet (see
-> [`CLAUDE.md`](CLAUDE.md) — no automated Gemini check runs here). If this
-> command doesn't work as expected, please open an issue.
+1. Install for the client you use (above).
+2. Start a session in a Java project and describe a small change:
+   - Claude Code: `/igiari-tdd add a method that sums a list of ints`
+   - Gemini CLI: describe the same task; Gemini proposes the matching skill from its description and asks you to confirm.
+3. Watch it go one failing test at a time. That is the skill working.
 
-### Global config (personal machines)
+When a process is known and you want it run for you, use the orchestrator:
+[`docs/tutorial-saiban.md`](docs/tutorial-saiban.md) ([Français](docs/tutorial-saiban.fr.md)).
 
-The skills above are for anyone. This part is the repo author's own machine
-setup — global `CLAUDE.md` (plus the `java.md` / `nuxeo.md` it imports), the
-`litellm-budget.py` script that backs the statusline/session-start budget
-display, and a generated `settings.json` wiring both in:
+## More
 
-```bash
-./scripts/install-global.sh            # from a clone
-curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install-global.sh | bash
-```
-
-It is deliberately **separate** from `install.sh` — a skills installer should
-never rewrite a stranger's `CLAUDE.md` or `settings.json`. It also never touches
-`~/.claude/skills/`, so a development machine where those are symlinks back into
-a clone keeps working.
-
-**No secret is stored in this repo.** `global/settings.template.json` carries a
-`@@ENV_BLOCK@@` marker; the API gateway, token and proxy are read at install
-time from `~/.claude/aixlper.env` (gitignored) or the shell environment:
-
-```bash
-cp global/aixlper.env.example ~/.claude/aixlper.env
-chmod 600 ~/.claude/aixlper.env   # then fill it in
-./scripts/install-global.sh
-```
-
-Leave every value empty and the env block collapses to telemetry alone, which
-is what a personal machine with no corporate gateway wants. Existing files are
-backed up to `.bak.<epoch>` before being replaced, re-running changes nothing if
-nothing differs, and `--dry-run` reports without writing.
-
-`settings.template.json` also pins `model` to `opus[1m]`. Re-running the
-installer restores that value, so a temporary model override made outside this
-repo (by hand, or by the client itself) does not survive a re-install — edit
-the template if you want a different default to stick.
-
-### Marketplace distribution (optional, not set up)
-
-Claude Code also supports a plugin-marketplace mechanism
-(`.claude-plugin/marketplace.json` + `plugin.json`, installed with
-`/plugin marketplace add minhounet/aixlper`). It isn't set up in this
-repo — the curl install above already covers "install easily" without
-that extra machinery, which mainly pays off if this ever needs versioned
-releases or install/update/uninstall commands for a wider audience.
-
-## Tutorial: the `saiban-orchestrator` agent
-
-*Version française plus bas : [Tutoriel](#tutoriel--lagent-saiban-orchestrator).*
-
-`saiban-orchestrator` is a **Claude Code agent** (not portable to Gemini CLI) that runs
-the skills above for you, in the right order, and stops only when a decision
-is really yours. It keeps a written trail of every decision, so you can follow
-the work from anywhere, your phone included.
-
-The names follow the skills: an Ace Attorney word, then the role. The words
-come from a trial: *saiban* (the trial) runs the case, *kenji* (the
-prosecutor) reviews each AC and never fixes, *shonin* (the witness) writes the
-code without hearing the test plan, and *tantei* (the detective) investigates
-how the skills were used. They were `iterate`, `iterate-reviewer` and
-`iterate-dev` before; the installers clean up the old names.
-
-| Name | Goal | Why it is a separate agent | Started by | Can edit |
-|---|---|---|---|---|
-| `saiban-orchestrator` | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | It replaces you for a known process, so it must run as the main session to ask you questions | You (`ci`, or `/saiban-orchestrator`) | Yes |
-| `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | Fresh eyes and no write access: it can't fix what it reviews | `saiban-orchestrator`, after each AC | No |
-| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | It must not know what tests come next, so its code can't be biased toward them | `saiban-orchestrator`, each GREEN (fix, build) | Yes |
-| `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | Read-only, and must not know the working session's reasons; its long reading stays out of the main session | `saiban-orchestrator`, improve mode | No |
-
-### 1. Install
-
-```bash
-./scripts/install-global.sh   # copies global/agents/*.md to ~/.claude/agents/
-./scripts/install.sh          # the skills themselves
-```
-
-`install-global.sh` also adds the `ci` alias to `~/.bashrc`, in a block
-marked `# >>> aixlper >>>`. Re-running replaces that block, never duplicates
-it, and touches nothing else (`--no-shell` to skip it). Open a new terminal
-afterwards.
-
-To install only the agents: `cp global/agents/*.md ~/.claude/agents/` (then
-add the alias by hand). Nothing changes in your projects until you ask for
-the agent.
-
-### 2. Start it
-
-From your project folder:
-
-| You want | You type |
-|---|---|
-| Agent mode (`saiban-orchestrator`) | `ci` |
-| The normal assistant | `claude` |
-
-`ci` is `claude --agent saiban-orchestrator --permission-mode acceptEdits`: it edits
-files without asking each time; commands and pushes still ask. It also adds
-`--append-system-prompt-file ~/.claude/skills/saiban-orchestrator/SKILL.md`
-when that file exists, so the skill is in context from the start: the
-agent's `skills:` preload is ignored when the agent is the main session
-(checked).
-
-It only applies to that session: plain `claude` stays the normal assistant,
-though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
-saiban-orchestrator --permission-mode acceptEdits'` lets it edit files without asking
-each time (commands and pushes still ask). The mode has to be on the command
-line: `permissionMode` in the agent file is ignored when the agent is the
-main session (checked). Avoid `"agent": "saiban-orchestrator"` in a settings file unless you want
-every session there to start as `saiban-orchestrator`, since it replaces the default
-system prompt.
-
-Then describe the work in your first message. Two examples:
-
-- **Fix mode** (a clear change to existing code):
-  *"Bug: an account created as `alice` cannot log in as `Alice`. Usernames
-  must be case-insensitive."*
-  It uses `igiari-tdd` + `kanpeki-fp` (+ `kaizen-refactor`), nothing else.
-- **Build mode** (something new):
-  *"Ticket PROJ-8: lock an account after three failed logins. AC1: ...
-  AC2: ..."* It uses `chottomatte-archi` first, then `objection-conception`
-  for the ticket and its acceptance criteria (ACs), then TDD.
-- **UI mode** (a web front end, for example Nuxeo): each AC gets a
-  Playwright check (`shoko-playwright`), run against the app redeployed
-  with Podman. Already passing: the AC is met. Failing: it changes the code
-  until it passes, or, for a change only you can make (Nuxeo Studio
-  Modeler), tells you what to change and waits for your hot reload. One
-  screen at a time, with a pause between screens. No unit-test TDD here.
-  Two tabs can work two different screens at once, in the same folder (not
-  a worktree: the server only sees the folder its volume syncs). Each tab
-  touches and commits only its own screen's files, and asks you before
-  restarting the server, since that breaks the other tab's checks.
-- **Think mode** (thinking and analysis only): `objection-conception`
-  alone; `chottomatte-archi` only if you ask for it (or agree when it
-  proposes it). It reads the code it needs, writes only the design files,
-  never code.
-- **Improve mode** (the skills and agents themselves): *"improve the skills
-  from my last runs"*. `tantei-inspector`, read-only and fresh, reads your
-  decision logs, retros, process notes and session transcripts, and proposes
-  exact wording changes with the evidence. You accept or reject each one;
-  accepted ones are applied and committed in your aixlper clone, never in the
-  project. Needs the skills installed with `./scripts/install.sh --link`,
-  otherwise it only prints the patch.
-- **Direct mode** (anything else): a question, a small edit, a command. It
-  just does it, with no ceremony, so you never need plain `claude`.
-
-It proposes the mode; you confirm. Options you can add to that first
-message:
-
-| Say | Effect |
-|---|---|
-| `pre-approve TDD plans` | No approval per AC plan. |
-| `no pauses` | No stop after each AC. |
-| `no review` | No `kenji-reviewer` after each AC (build mode). |
-| `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
-| `no dev` | The orchestrator writes the GREEN itself instead of `shonin-dev` (on by default in fix and build: the code is written by an agent that only sees the failing test, not the plan). Saves about a third of a build run's cost. |
-
-### Agent or plain session?
-
-- **You know the process** (a ticket, a fix, a UI change, a design): start
-  straight with the agent, `ci`. It is autonomous from the first message.
-- **You don't yet** (exploring, a one-off): plain `claude`.
-- **You can't switch a session** between the two: the prompt is fixed when
-  the conversation starts and stays on resume (checked). Move between them
-  through files instead: a new `ci` session and *"resume PROJ-8"* picks up
-  from the decision log's `Resume` block.
-- **Already in a plain session** and the process turns out known? Type
-  `/saiban-orchestrator`: the same process loads as a skill, with the default assistant
-  around it. The agent and the skill share one text, so nothing drifts.
-
-### 3. What happens
-
-1. **One approval up front** (build mode): the structural plan, the AC check
-   and any contradiction in the ticket, quoted on both sides.
-2. **One TDD run per AC**, true TDD rather than test-first: one test at a
-   time, seen failing, then the least code that passes it, then a refactor;
-   never a batch of tests written ahead. The run ends with the full build
-   and an audit of the git history that proves each test was red first.
-3. **A review per AC** by `kenji-reviewer`, which can read but never edit:
-   is the AC really proven, does the structure hold, nothing extra?
-4. **The AC record is updated** in `docs/ticket/<id>/acceptance.md`, then
-   committed.
-5. **A pause**: *"AC1 done. Continue, or /clear and resume?"*
-
-It asks you only for hard-to-reverse actions, real forks, deviations from
-an approved plan, out-of-scope work, or an unclear AC. Everything else, it
-decides and writes down.
-
-### 4. Follow it and save money
-
-- `docs/decisions/<topic>.md`: every decision, why, and what was rejected.
-  Its `Resume` block always says where the work stands.
-- `docs/ticket/<id>/`: design, ACs with their evidence, difficulties met.
-- Context gets expensive as it grows. At a pause, type `/clear`, then
-  `claude --agent saiban-orchestrator` and *"resume PROJ-8"*: it continues from the
-  `Resume` block instead of re-reading everything.
-
-It commits locally, never pushes, and never writes to Jira unless asked.
-
-**Cost, measured** on a two-AC ticket: about $2.60 on Sonnet, $6.30 on
-Opus without `shonin-dev`; with it (now the default) about half more, about
-$4 on Sonnet. A small fix-mode bug: about $0.30 without it, measured before
-it was the default.
-
-### 5. Improve it
-
-The final report always ends with **Improvements**: friction it hit and the
-exact wording it would change, in the agent or a skill. It never applies
-them itself. Edit `global/agents/saiban-orchestrator.md` (or the skill) and reinstall,
-or symlink `~/.claude/agents/saiban-orchestrator.md` to the repo file so edits apply at
-once.
-
-## Tutoriel : l'agent `saiban-orchestrator`
-
-`saiban-orchestrator` est un **agent Claude Code** (pas portable sur Gemini CLI) qui
-enchaîne les skills ci-dessus à ta place, dans le bon ordre, et ne s'arrête
-que quand une décision t'appartient vraiment. Il garde une trace écrite de
-chaque décision : tu peux suivre le travail de partout, y compris depuis ton
-téléphone.
-
-Les noms suivent ceux des skills : un mot d'Ace Attorney, puis le rôle. Les
-mots viennent d'un procès : *saiban* (le procès) mène l'affaire, *kenji* (le
-procureur) relit chaque CA sans jamais corriger, *shonin* (le témoin) écrit le
-code sans avoir entendu le plan de tests, et *tantei* (le détective) enquête
-sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
-`iterate-dev` avant ; les scripts d'installation nettoient les anciens noms.
-
-| Nom | But | Pourquoi un agent à part | Lancé par | Peut modifier |
-|---|---|---|---|---|
-| `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Il te remplace pour un process connu, donc il tourne en session principale pour pouvoir te poser des questions | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
-| `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | Un regard neuf et aucun droit d'écriture : il ne peut pas corriger ce qu'il relit | `saiban-orchestrator`, après chaque CA | Non |
-| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, à chaque GREEN (fix, build) | Oui |
-| `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, mode improve | Non |
-
-### 1. Installer
-
-```bash
-./scripts/install-global.sh   # copie global/agents/*.md dans ~/.claude/agents/
-./scripts/install.sh          # les skills eux-mêmes
-```
-
-`install-global.sh` ajoute aussi l'alias `ci` à `~/.bashrc`, dans un bloc
-marqué `# >>> aixlper >>>`. Le relancer remplace ce bloc, ne le duplique
-jamais et ne touche à rien d'autre (`--no-shell` pour l'éviter). Ouvre un
-nouveau terminal ensuite.
-
-Pour n'installer que les agents : `cp global/agents/*.md ~/.claude/agents/`
-(puis ajoute l'alias à la main). Rien ne change dans tes projets tant que tu
-ne demandes pas l'agent.
-
-### 2. Le lancer
-
-Depuis le dossier de ton projet :
-
-| Tu veux | Tu tapes |
-|---|---|
-| Le mode agent (`saiban-orchestrator`) | `ci` |
-| L'assistant normal | `claude` |
-
-`ci` vaut `claude --agent saiban-orchestrator --permission-mode acceptEdits` : il modifie
-les fichiers sans demander à chaque fois ; les commandes et les push
-demandent toujours. Il ajoute aussi
-`--append-system-prompt-file ~/.claude/skills/saiban-orchestrator/SKILL.md`
-quand ce fichier existe, pour que le skill soit dans le contexte dès le
-départ : le préchargement `skills:` de l'agent est ignoré quand l'agent est
-la session principale (vérifié).
-
-Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
-normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias
-ci='claude --agent saiban-orchestrator --permission-mode acceptEdits'` le laisse
-modifier les fichiers sans demander à chaque fois (les commandes et les push
-demandent toujours). Le mode doit être sur la ligne de commande :
-`permissionMode` dans le fichier de l'agent est ignoré quand l'agent est la
-session principale (vérifié). Évite `"agent": "saiban-orchestrator"` dans un fichier de
-settings, sauf si tu veux que chaque session y démarre en `saiban-orchestrator`, car il
-remplace le prompt système par défaut.
-
-Puis décris le travail dans ton premier message. Deux exemples :
-
-- **Mode fix** (un changement clair sur du code existant) :
-  *« Bug : un compte créé en `alice` ne peut pas se connecter en `Alice`.
-  Les identifiants doivent être insensibles à la casse. »*
-  Il utilise `igiari-tdd` + `kanpeki-fp` (+ `kaizen-refactor`), rien d'autre.
-- **Mode build** (quelque chose de nouveau) :
-  *« Ticket PROJ-8 : bloquer un compte après trois échecs de connexion.
-  CA1 : ... CA2 : ... »* Il passe d'abord par `chottomatte-archi`, puis
-  `objection-conception` pour le ticket et ses critères d'acceptation (CA),
-  puis le TDD.
-- **Mode ui** (un front web, par exemple Nuxeo) : chaque CA reçoit un
-  contrôle Playwright (`shoko-playwright`), lancé sur l'application
-  redéployée avec Podman. Déjà vert : la CA est remplie. En échec : il
-  modifie le code jusqu'à ce qu'il passe, ou, pour un changement que toi
-  seul peux faire (Nuxeo Studio Modeler), te dit quoi changer et attend ton
-  hot reload. Un écran à la fois, avec une pause entre les écrans. Pas de
-  TDD unitaire ici.
-  Deux onglets peuvent travailler deux écrans différents en même temps, dans
-  le même dossier (pas un worktree : le serveur ne voit que le dossier que son
-  volume synchronise). Chaque onglet ne touche et ne commite que les fichiers
-  de son écran, et te demande avant de redémarrer le serveur, car cela casse
-  les contrôles de l'autre onglet.
-- **Mode think** (réflexion et analyse seules) : `objection-conception`
-  seul ; `chottomatte-archi` seulement si tu le demandes (ou acceptes quand
-  il le propose). Il lit le code dont il a besoin, n'écrit que les fichiers
-  de conception, jamais de code.
-- **Mode improve** (les skills et agents eux-mêmes) : *« améliore les skills
-  à partir de mes derniers runs »*. `tantei-inspector`, en lecture seule et sans
-  contexte, lit tes journaux de décisions, retros, notes de process et
-  transcripts de session, et propose des changements de formulation exacts,
-  preuves à l'appui. Tu acceptes ou refuses chacun ; ceux acceptés sont
-  appliqués et commités dans ton clone aixlper, jamais dans le projet. Il faut
-  les skills installés avec `./scripts/install.sh --link`, sinon il affiche
-  seulement le patch.
-- **Mode direct** (tout le reste) : une question, une petite modif, une
-  commande. Il le fait, sans cérémonie, donc plus besoin de `claude` tout
-  court.
-
-Il propose le mode, tu confirmes. Options à ajouter dans ce premier
-message :
-
-| Dire | Effet |
-|---|---|
-| `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
-| `no pauses` | Pas d'arrêt après chaque CA. |
-| `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
-| `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
-| `no dev` | L'orchestrateur écrit le GREEN lui-même au lieu de `shonin-dev` (activé par défaut en fix et build : le code est écrit par un agent qui ne voit que le test en échec, pas le plan). Économise environ un tiers du coût d'un run build. |
-
-### Agent ou session normale ?
-
-- **Tu connais le processus** (un ticket, un fix, une modif UI, une
-  conception) : démarre directement avec l'agent, `ci`. Il est autonome dès
-  le premier message.
-- **Pas encore** (exploration, cas isolé) : `claude` tout court.
-- **On ne peut pas basculer une session** entre les deux : le prompt est
-  fixé au démarrage de la conversation et le reste à la reprise (vérifié).
-  On passe de l'un à l'autre par les fichiers : une nouvelle session `ci` et
-  *« resume PROJ-8 »* reprend depuis le bloc `Resume` du journal de
-  décisions.
-- **Déjà dans une session normale** et le processus s'avère connu ? Tape
-  `/saiban-orchestrator` : le même processus se charge comme un skill, avec l'assistant
-  par défaut autour. L'agent et le skill partagent un seul texte, donc rien
-  ne diverge.
-
-### 3. Ce qui se passe
-
-1. **Une seule approbation au départ** (mode build) : le plan de structure,
-   la vérification des CA et toute contradiction du ticket, citée des deux
-   côtés.
-2. **Un cycle TDD par CA**, du vrai TDD et pas du « test first » : un test
-   à la fois, vu en échec, puis le minimum de code qui le fait passer, puis
-   un refactoring ; jamais une série de tests écrits à l'avance. Le cycle se
-   termine par le build complet et un audit de l'historique git qui prouve
-   que chaque test a d'abord été rouge.
-3. **Une revue par CA** par `kenji-reviewer`, qui lit mais ne modifie
-   jamais : la CA est-elle vraiment prouvée, la structure tient-elle, rien
-   de plus que demandé ?
-4. **Le suivi de la CA est mis à jour** dans
-   `docs/ticket/<id>/acceptance.md`, puis commité.
-5. **Une pause** : *« AC1 done. Continue, or /clear and resume? »*
-
-Il ne te demande ton avis que pour une action difficile à annuler, un vrai
-choix, un écart par rapport à un plan approuvé, du hors-périmètre ou une CA
-floue. Le reste, il le décide et l'écrit.
-
-### 4. Le suivre et économiser
-
-- `docs/decisions/<sujet>.md` : chaque décision, pourquoi, et ce qui a été
-  écarté. Son bloc `Resume` dit toujours où en est le travail.
-- `docs/ticket/<id>/` : conception, CA avec leurs preuves, difficultés
-  rencontrées.
-- Le contexte coûte de plus en plus cher en grossissant. À une pause, tape
-  `/clear`, puis `claude --agent saiban-orchestrator` et *« resume PROJ-8 »* : il
-  reprend depuis le bloc `Resume` au lieu de tout relire.
-
-Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
-qu'on le lui demande.
-
-**Coût mesuré** sur un ticket à deux CA : environ 2,60 $ avec Sonnet,
-6,30 $ avec Opus sans `shonin-dev` ; avec (le défaut désormais) environ la
-moitié en plus, environ 4 $ avec Sonnet. Un petit bug en mode fix : environ
-0,30 $ sans lui, mesuré avant qu'il soit le défaut.
-
-### 5. L'améliorer
-
-Le rapport final se termine toujours par **Improvements** : les frictions
-rencontrées et la formulation exacte qu'il changerait, dans l'agent ou un
-skill. Il ne les applique jamais lui-même. Modifie
-`global/agents/saiban-orchestrator.md` (ou le skill) et réinstalle, ou crée un lien
-symbolique de `~/.claude/agents/saiban-orchestrator.md` vers le fichier du repo pour que
-les modifications s'appliquent tout de suite.
-
-## Repo layout
-
-```
-skills/<skill-name>/SKILL.md      # one skill per directory
-skills/<skill-name>/references/   # optional supporting files
-skills/<skill-name>/scripts/      # optional scripts the skill runs
-skills/<skill-name>/evals/        # claude plugin eval cases for the skill
-
-global/                           # author's global ~/.claude config
-global/litellm-budget.py          # statusline + SessionStart-hook budget script
-global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # saiban-orchestrator, kenji-reviewer, shonin-dev, tantei-inspector (Claude Code only)
-```
-
-## Contributing / testing
-
-- `make validate` — checks every skill's `SKILL.md` frontmatter is
-  well-formed and limited to the portable subset both clients support.
-- `make eval` — runs `claude plugin eval` for any skill with an `evals/`
-  directory (behavioral testing; costs API usage, run locally/manually).
-- `make ci` — both, in that order. `make validate` alone is wired into
-  CI (`.github/workflows/ci.yml`) and is free to run on every push/PR.
-
-See [`CLAUDE.md`](CLAUDE.md) for the full design rationale and in-progress
-notes on each skill.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): testing, repo layout, Gemini agents, and the author's global config.
+- [`CLAUDE.md`](CLAUDE.md): design rules and the working agreement for maintaining both clients.

@@ -109,6 +109,38 @@ def validate_skill(skill_dir):
     return errors, warnings
 
 
+GEMINI_EXCLUDE = Path(__file__).resolve().parent / "gemini-exclude.txt"
+CLAUDE_ONLY_MARKERS = ("claude code only", "claude-only")
+
+
+def validate_gemini_exclude(skill_dirs):
+    """The exclusion list must name exactly the skills flagged Claude-only."""
+    errors = []
+    listed = set()
+    if GEMINI_EXCLUDE.exists():
+        for line in GEMINI_EXCLUDE.read_text(encoding="utf-8").splitlines():
+            line = line.split("#", 1)[0].strip()
+            if line:
+                listed.add(line.split()[0])
+    names = {p.name for p in skill_dirs}
+    for name in sorted(listed - names):
+        errors.append(f"gemini-exclude.txt: '{name}' is not a skill under skills/")
+    for skill_dir in skill_dirs:
+        try:
+            description = parse_frontmatter(
+                (skill_dir / "SKILL.md").read_text(encoding="utf-8"), skill_dir.name
+            ).get("description", "")
+        except (OSError, ValueError):
+            continue
+        flagged = any(m in str(description).lower() for m in CLAUDE_ONLY_MARKERS)
+        if flagged and skill_dir.name not in listed:
+            errors.append(
+                f"{skill_dir.name}/SKILL.md: description says Claude Code only, "
+                "but the skill is not in scripts/gemini-exclude.txt"
+            )
+    return errors
+
+
 def main():
     skills_dir = Path(sys.argv[1] if len(sys.argv) > 1 else "skills")
     if not skills_dir.is_dir():
@@ -125,6 +157,7 @@ def main():
         errors, warnings = validate_skill(skill_dir)
         all_errors.extend(errors)
         all_warnings.extend(warnings)
+    all_errors.extend(validate_gemini_exclude(skill_dirs))
 
     for w in all_warnings:
         print(f"WARNING: {w}")

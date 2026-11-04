@@ -3607,3 +3607,41 @@ test, then the fix in TDD.
   marked untested, with what to record once it is used.
 
 Not yet used on a real bug.
+
+## Both clients: Gemini CLI copies of the helper agents, lighter README
+
+Gemini CLI added custom subagents (Markdown + YAML frontmatter, in
+`.gemini/agents/` or an extension's `agents/`; announced April 2026). So
+"subagents aren't portable" no longer held for the helper agents.
+
+- **One source, generated copies.** `global/agents/*.md` stays the source.
+  `scripts/gemini_agents.py` writes `agents/*.md` for Gemini, and
+  `make validate` fails if they are stale. The alternative, hand-kept
+  copies, would drift.
+- **The orchestrator is not ported.** It runs as the main session and spawns
+  helpers, which is Claude Code behaviour. A first version of the port kept
+  the Claude descriptions ("saiban-orchestrator spawns it, not for direct
+  use"), so in Gemini nothing would ever call the helpers. Each Gemini copy now
+  has its own description: when the main session should delegate, and what to
+  hand over.
+- **Unverified:** the frontmatter fields, the tool-name mapping (`TOOL_MAP`)
+  and the extension's `agents/` discovery come from the announcement and
+  third-party guides. The Gemini docs site was unreachable from the session.
+  The first live Gemini install should check each one and be logged here.
+- **README** went from 28 KB to about 4 KB: install, quick start, the 12
+  skills. The saiban tutorials (EN, FR) moved to `docs/`; testing, layout and
+  global config to `CONTRIBUTING.md`. The README listed 10 of the 12 skills,
+  and CLAUDE.md's table also missed two.
+
+### Follow-up: an exclusion list for the Gemini install
+
+The extension install ships all of `skills/`, so the Claude-only
+`saiban-orchestrator` skill reached Gemini too. No exclude option could be
+confirmed for the manifest, so the exclusion lives in our own installer:
+`scripts/install-gemini.sh` copies skills into `~/.gemini/skills/` minus
+`scripts/gemini-exclude.txt`, and agents into `~/.gemini/agents/`. It also
+removes an excluded or retired skill already there. `make validate` ties the
+list to the descriptions: a skill flagged "Claude Code only" must be listed,
+and a listed name must exist. Run here into scratch directories (fresh install,
+re-run, stale copies of an excluded and a retired skill removed); not run
+against a live Gemini CLI. The extension stays as the alternative.
