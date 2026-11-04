@@ -1,7 +1,12 @@
-.PHONY: validate eval eval-chain ci
+.PHONY: validate eval eval-chain ci gemini-agents
 
 validate:
 	python3 scripts/validate_skills.py skills
+	python3 scripts/gemini_agents.py --check
+
+# Regenerates agents/*.md (Gemini CLI copies) from global/agents/*.md.
+gemini-agents:
+	python3 scripts/gemini_agents.py
 
 # Runs claude plugin eval for every skill that has its own evals/ directory
 # (skills/<name>/evals/case.yaml or prompt.md + graders/*.md).
