@@ -56,7 +56,11 @@ pass means the AC holds:
 - **Assert on what the user sees**, with assertions that wait by themselves
   for the condition (visible, has text, has count, has URL). Never a fixed
   sleep: it is either too short (flaky) or too long (slow), and it hides
-  the real condition.
+  the real condition. This applies to every check kept as evidence
+  (committed, reused as a regression check) — a script called a "probe" or
+  "reconnaissance" script is not exempt once it is kept and rerun, and an
+  earlier acceptance of the same pattern on a different check is not a
+  waiver for the next one.
 - **Some things the user sees can't be asserted on at all**: a native
   `title` tooltip, an OS file/print dialog, browser autofill are rendered
   by the browser chrome, not the page, so Playwright can't locate them or
@@ -121,7 +125,11 @@ come from the project (its config, its existing specs, the user). Read the
 existing Playwright config and specs first and follow their conventions.
 Never guess credentials and never write a real password into a check:
 read it from the environment or the project's existing mechanism, and ask
-if there is none.
+if there is none. If the project already runs its checks as standalone
+Node/Playwright scripts rather than `npx playwright test` spec files,
+follow that existing convention instead of introducing the formal
+spec-file format — the per-AC discipline in this skill (one check per AC,
+checks that don't lie, evidence recorded) still applies either way.
 
 | When | Read |
 |---|---|

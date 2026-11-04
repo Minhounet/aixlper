@@ -3608,6 +3608,64 @@ test, then the fix in TDD.
 
 Not yet used on a real bug.
 
+## `saiban-orchestrator` / `objection-conception`: the ".claude/ is write-protected" claim was false
+
+Improve-mode pass (`tantei-inspector`) on `hydro_nuxeo_addons` / DDMCGEDCONCERTO-11878
+evidence: the decision log (834 lines) and the ticket folder's `retro.md`/`acceptance.md`
+were written and appended to across many sessions and screens, all under
+`.claude/decisions/` and `.claude/ticket/`, with zero write failures. Both
+skills claimed Claude Code itself prevents this ("not under `.claude/`,
+which Claude Code write-protects"). It doesn't — what the project actually
+has is a personal `.git/info/exclude` entry (`/.claude/`) keeping those
+files out of shared git history, a deliberate project convention the rule
+never accounted for. It pushed every project toward `docs/decisions/` /
+`docs/ticket/` on a premise that doesn't hold.
+
+- `saiban-orchestrator`'s Decision log section and `objection-conception`'s
+  "Read what's already there" section both now say: keep the `docs/`
+  location by default, but follow the project's own `.claude/` convention
+  when one is already established (naming `.git/info/exclude` as the
+  concrete mechanism to recognize it by). `objection-conception` keeps its
+  existing "offer to move an older folder, never silently" behavior for the
+  genuine one-off/legacy case, now conditioned on the project not already
+  using `.claude/` on purpose.
+- Verified independently by the inspector against the file evidence (not
+  taken on the dispatching session's word, though that session flagged it
+  first).
+
+## `shoko-playwright`: two gaps found against a real multi-session ticket
+
+Same improve-mode pass as above, two separate findings against the same
+evidence (DDMCGEDCONCERTO-11878, `hydro_nuxeo_addons`):
+
+- **The no-fixed-sleep rule had an informal, repeated exemption.** The
+  ticket's decision log shows `waitForTimeout` calls waved through run
+  after run by citing "prior acceptance" on an earlier screen — including
+  inside scripts that are themselves the kept regression check for an AC
+  (`ca10-regression-*.js`), which the skill's own "Keep every check" rule
+  says become "the regression suite." The rule had no stated exception, so
+  each review invented one informally instead of enforcing or amending it.
+  Fixed by stating directly, next to the no-fixed-sleep rule: it applies to
+  every check kept as evidence, a script labeled "probe" or
+  "reconnaissance" isn't exempt once it's kept and rerun, and an earlier
+  acceptance of the same pattern elsewhere isn't a waiver for the next one.
+- **The skill only documented `npx playwright test` as how to run a
+  check**, but this entire ticket (every screen, four-plus runs) used
+  standalone Node/Playwright scripts under `.claude/testing-tools/`
+  instead — a consistent, successful, already-established project
+  convention the skill gave no permission to follow. "Project specifics"
+  now says explicitly: if the project already runs checks as standalone
+  scripts rather than spec files, follow that instead of introducing the
+  formal format — the per-AC discipline (one check per AC, checks that
+  don't lie, evidence recorded) still applies either way.
+- Checked and **not** changed from the same evidence: a `hydro-release`
+  tool-hardening lesson ("don't guess 'latest' on shared state," "dry-run
+  once, not reflexively") was real but is project-local tooling used once,
+  with no second instance of the same gap in either skill's text — doesn't
+  meet the "same gap twice" bar. A claim about over-creating git worktrees
+  from branch names didn't hold up against the actual retro.md/decision-log
+  evidence and was left unverified, not acted on.
+
 ## Both clients: Gemini CLI copies of the helper agents, lighter README
 
 Gemini CLI added custom subagents (Markdown + YAML frontmatter, in

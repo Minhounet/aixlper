@@ -29,10 +29,13 @@ doing anything else.
 
 ## Read what's already there before saying anything
 
-Look in `docs/ticket/<ticketId>/` before starting any design discussion. (The folder lives under `docs/`, not
-`.claude/`, because Claude Code write-protects `.claude/`. If an older
-`.claude/ticket/<ticketId>/` exists instead, read it, and offer to move it with
-`git mv`; never move it silently.)
+Look in `docs/ticket/<ticketId>/` before starting any design discussion. (The
+folder lives under `docs/` by default. If an older `.claude/ticket/<ticketId>/`
+exists instead, read it, and offer to move it with `git mv` — unless the
+project already keeps its own ticket/process files under `.claude/` on
+purpose, for example to exclude them from shared git history via
+`.git/info/exclude`, in which case follow that convention instead and never
+move it; never move either case silently.)
 
 What to look for:
 

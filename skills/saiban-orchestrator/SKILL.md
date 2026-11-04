@@ -331,8 +331,10 @@ go on. Skip the pauses only if the user said "no pauses" at the start.
 
 ## Decision log
 
-Keep `docs/decisions/<topic>.md` (not under `.claude/`, which Claude Code
-write-protects). It starts with a `Resume` block, kept current, which a fresh
+Keep `docs/decisions/<topic>.md` by default; if the project already keeps
+its own ticket/process files under `.claude/` (for example to exclude them
+from shared git history via `.git/info/exclude`), follow that convention
+instead. It starts with a `Resume` block, kept current, which a fresh
 session reads to continue:
 
 ```
