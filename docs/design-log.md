@@ -3555,3 +3555,55 @@ report, and `improve.md` could only use them "if the user saved or pasted
 them". Its evidence list now points at those lines first.
 
 Not run yet.
+
+## tantei-debug: a skill for finding where a bug is
+
+The author asked whether investigating "what is not working" suits an agent,
+and whether the assistant can do JPDA debugging. Their own method: step
+through and inspect values, split the path in two (dichotomy) until the
+problem is pinpointed, note where it is; on legacy code, a characterization
+test, then the fix in TDD.
+
+- **A skill, not an agent.** Investigation is a known, repeated process,
+  so by this repo's rule it is a skill, used as the first step of
+  `saiban-orchestrator`'s fix mode when the cause isn't known (fix mode
+  assumed it was: "a clear change"). It stays inline because the author
+  wants to follow each split. No helper agent yet; reading huge logs out of
+  the main context (criterion 3) is the only candidate, not needed so far.
+- **Bisection by breakpoint, not by step.** Each debugger step is a round
+  trip for an assistant, so the author's dichotomy is kept but applied to
+  breakpoints, and line-by-line stepping only once the window is a few lines.
+  The expected value is written before reading, so the reading can't be
+  rationalized afterwards.
+- **The note is written after every split**, with a `Resume` block like the
+  orchestrator's decision log: the author asked that an interrupted session
+  can pick up where it stopped. Its `Found` block is the fix's input.
+- **The second half already existed.** Characterization tests are
+  `kaizen-refactor`'s rule, the fix is `igiari-tdd`'s; the skill hands over
+  and points at them, without restating them. For a bug, the behavior at
+  the cause is not pinned as it is: the RED asserts the expected value.
+- **Logs work on remote servers too**: the limit is where the assistant
+  runs (a local session has the user's SSH, VPN, kubectl; a cloud session
+  has none), not whether the server is local. A debugger only on a JVM you
+  control, never production (a breakpoint stops threads; JDWP has no
+  authentication); remote through an SSH tunnel.
+- **One debugger per JVM.** IntelliJ's Debug holds the JDWP connection, so
+  `jdb` attaches to a program started with **Run** plus the JDWP agent in its
+  VM options (the author's question).
+- **`scripts/jdb_session.py`.** A first test piped commands into `jdb` and
+  raced: `print` ran before the breakpoint was hit. The script keeps one
+  `jdb` attached in the background and sends one command at a time. Run
+  here against a toy webservice (`com.sun.net.httpserver`) and a toy batch,
+  which surfaced three fixes: `stop thread at` (needed so a webservice keeps
+  serving) leaves no current thread, so `locals` and `cont` fail, and the
+  script now selects the stopped thread; a breakpoint hit arriving between
+  two commands was lost, and is now returned with the next reply; `jdb`
+  sometimes answers without a fresh prompt, so 2s of silence ends a reply.
+  It listens on a random localhost port with a token rather than a Unix
+  socket, so it also runs where the author's IntelliJ does (Windows, not run
+  there yet). Also seen: with `stop thread at`, every request reaching the
+  line stops, not only the first.
+- **IntelliJ through MCP** (third-party debugger plugins) is a reference
+  marked untested, with what to record once it is used.
+
+Not yet used on a real bug.
