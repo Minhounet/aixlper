@@ -30,6 +30,30 @@ TOOL_MAP = {
     "Edit": "replace",
     "Write": "write_file",
 }
+# The Claude descriptions say "saiban-orchestrator spawns it, not for direct
+# use". The orchestrator is not ported, so in Gemini CLI the main session is
+# the caller: each description says when to delegate and what to hand over.
+GEMINI_DESCRIPTIONS = {
+    "kenji-reviewer": (
+        "Reviewer (kenji = the prosecutor). Read-only. Delegate to it after the TDD run for one "
+        "acceptance criterion, before calling that criterion done. Give it the criterion verbatim, "
+        "the commit range, the approved structural plan, the ticket folder and the test command. "
+        "It checks the run against the aixlper skills as written and reports findings; it never fixes."
+    ),
+    "shonin-dev": (
+        "Implementer (shonin = the witness). Delegate to it the GREEN step of a TDD cycle (igiari-tdd) "
+        "so the code is not biased by what comes next. Give it only the failing test, the test command, "
+        "the production files in play and the approved structural plan - never the test plan, the "
+        "ticket or the acceptance criteria. It writes the least code that passes and never commits."
+    ),
+    "tantei-inspector": (
+        "Inspector of the aixlper skills (tantei = the detective). Read-only. Delegate to it to review "
+        "how the aixlper skills and agents were used. Give it the path of "
+        "skills/saiban-orchestrator/references/improve.md (its checklist), the aixlper clone path, the "
+        "scope and the evidence paths (decision logs, retros, process notes). It proposes exact wording "
+        "changes with the evidence; it never edits."
+    ),
+}
 # Skills are not a tool in Gemini CLI; they are loaded by name, so the Skill
 # tool is dropped and the body says "by name" instead.
 DROPPED = {"Skill", "NotebookEdit"}
@@ -49,7 +73,7 @@ def render(name):
         if t in disallowed or t in DROPPED:
             continue
         tools.append(TOOL_MAP[t])
-    description = meta["description"].replace("Claude Code only. ", "")
+    description = GEMINI_DESCRIPTIONS[name]
     body = body.replace("with the Skill tool", "by name")
     front = [
         "---",

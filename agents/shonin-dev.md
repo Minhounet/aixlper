@@ -1,6 +1,6 @@
 ---
 name: shonin-dev
-description: Implementer (shonin = the witness, kept out of the courtroom). Implementer that saiban-orchestrator spawns for the GREEN step of every TDD cycle in fix and build modes, unless the user said "no dev". It does the GREEN exactly as saiban-orchestrator would, with the same skills; the only difference is a fresh context that never sees the test plan, the ticket or the ACs. Not for direct use.
+description: Implementer (shonin = the witness). Delegate to it the GREEN step of a TDD cycle (igiari-tdd) so the code is not biased by what comes next. Give it only the failing test, the test command, the production files in play and the approved structural plan - never the test plan, the ticket or the acceptance criteria. It writes the least code that passes and never commits.
 tools:
   - read_file
   - grep_search

@@ -313,7 +313,12 @@ change is checked against both as part of the change itself:
   are stale. The tool-name mapping in `scripts/gemini_agents.py` (`TOOL_MAP`)
   is unverified: check each name on a live Gemini install and fix it there.
 - **`saiban-orchestrator`**: Claude-only. It runs as the main session and
-  spawns helpers. Do not port it. Its description says so.
+  spawns helpers. Do not port it. Its description says so. Without it, the
+  Gemini main session is the helpers' caller, so their Gemini descriptions
+  (`GEMINI_DESCRIPTIONS` in the generator) say when to delegate and what to
+  hand over; keep them in step with the Claude bodies' "You are given" lines.
+  Known limitation: the extension still ships the `saiban-orchestrator`
+  skill, since it ships all of `skills/`.
 - **Docs**: `README.md`, `CONTRIBUTING.md` and the tutorials under `docs/`
   describe both clients. A change to behaviour or install for either client
   updates them in the same commit.

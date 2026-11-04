@@ -28,10 +28,18 @@ The helper agents (`kenji-reviewer`, `shonin-dev`, `tantei-inspector`) exist
 for both clients. Edit only `global/agents/<name>.md`, then run
 `make gemini-agents` and commit the regenerated `agents/*.md` with it.
 `make validate` fails if they are out of date. `saiban-orchestrator` is
-Claude Code only and is not ported.
+Claude Code only and is not ported, so in Gemini CLI the main session
+delegates to the helpers directly; their Gemini descriptions (in
+`scripts/gemini_agents.py`) say when and with what.
+
+## Maintainer install
+
+```bash
+./scripts/install.sh --link     # symlink skills and agents into ~/.claude, so repo edits are live
+AIXLPER_REF=some-branch ./scripts/install.sh   # install from a branch or tag
+```
 
 ## Author's global config (personal machines)
-
 
 This is the repo author's own machine
 setup — global `CLAUDE.md` (plus the `java.md` / `nuxeo.md` it imports), the

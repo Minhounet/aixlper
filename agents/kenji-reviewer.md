@@ -1,6 +1,6 @@
 ---
 name: kenji-reviewer
-description: Reviewer (kenji = the prosecutor). Read-only reviewer that saiban-orchestrator spawns after each AC's TDD run, before the AC is marked verified. It loads the same skills saiban-orchestrator works with and checks the run against them as written; the only difference is fresh eyes and no write access. Not for direct use.
+description: Reviewer (kenji = the prosecutor). Read-only. Delegate to it after the TDD run for one acceptance criterion, before calling that criterion done. Give it the criterion verbatim, the commit range, the approved structural plan, the ticket folder and the test command. It checks the run against the aixlper skills as written and reports findings; it never fixes.
 tools:
   - read_file
   - grep_search

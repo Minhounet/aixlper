@@ -2,9 +2,8 @@
 
 *English version: [tutorial-saiban.md](tutorial-saiban.md).*
 
-
 `saiban-orchestrator` est un **agent Claude Code** (pas portable sur Gemini CLI) qui
-enchaîne les skills ci-dessus à ta place, dans le bon ordre, et ne s'arrête
+enchaîne les [skills aixlper](../README.md#skills) à ta place, dans le bon ordre, et ne s'arrête
 que quand une décision t'appartient vraiment. Il garde une trace écrite de
 chaque décision : tu peux suivre le travail de partout, y compris depuis ton
 téléphone.

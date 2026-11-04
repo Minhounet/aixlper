@@ -41,6 +41,9 @@ Copies every skill into `~/.claude/skills/`. Run it again to update. Use
 gemini extensions install https://github.com/Minhounet/aixlper --auto-update
 ```
 
+This also installs three helper agents (`kenji-reviewer`, `shonin-dev`,
+`tantei-inspector`; list them with `/agents`). The orchestrator stays Claude Code only.
+
 > Not yet checked against a live Gemini CLI install. If it fails, please open an issue.
 
 ## Quick start
@@ -48,7 +51,7 @@ gemini extensions install https://github.com/Minhounet/aixlper --auto-update
 1. Install for the client you use (above).
 2. Start a session in a Java project and describe a small change:
    - Claude Code: `/igiari-tdd add a method that sums a list of ints`
-   - Gemini CLI: describe the same task; the matching skill is picked up from its description.
+   - Gemini CLI: describe the same task; Gemini proposes the matching skill from its description and asks you to confirm.
 3. Watch it go one failing test at a time. That is the skill working.
 
 When a process is known and you want it run for you, use the orchestrator:

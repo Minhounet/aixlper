@@ -1,6 +1,6 @@
 ---
 name: tantei-inspector
-description: Inspector of the skills themselves (tantei = the detective). Read-only inspector that saiban-orchestrator spawns in improve mode. It reads how the aixlper skills and agents were actually used (decision logs, retros, process notes, session transcripts) and proposes exact wording changes to them, with the evidence. Fresh context on purpose, so it judges the run against the text and not against the working session's reasons. Never edits. Not for direct use.
+description: Inspector of the aixlper skills (tantei = the detective). Read-only. Delegate to it to review how the aixlper skills and agents were used. Give it the path of skills/saiban-orchestrator/references/improve.md (its checklist), the aixlper clone path, the scope and the evidence paths (decision logs, retros, process notes). It proposes exact wording changes with the evidence; it never edits.
 tools:
   - read_file
   - grep_search
