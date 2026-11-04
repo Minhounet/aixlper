@@ -146,6 +146,10 @@ decides and writes down.
 - Context gets expensive as it grows. At a pause, type `/clear`, then
   `claude --agent saiban-orchestrator` and *"resume PROJ-8"*: it continues from the
   `Resume` block instead of re-reading everything.
+- Forgot the topic? Start `ci` with no topic (or ask *"where were we?"*): it
+  lists the open decision logs, one line each with mode and next step, and
+  asks which to resume. A log marked `Status: done` at the finish is no
+  longer listed.
 
 It commits locally, never pushes, and never writes to Jira unless asked.
 

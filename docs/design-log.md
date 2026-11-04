@@ -3645,3 +3645,29 @@ list to the descriptions: a skill flagged "Claude Code only" must be listed,
 and a listed name must exist. Run here into scratch directories (fresh install,
 re-run, stale copies of an excluded and a retired skill removed); not run
 against a live Gemini CLI. The extension stays as the alternative.
+
+## `saiban-orchestrator`: a recap at launch
+
+Asked by the author: a recap when starting `ci`. The Start section already
+resumed from a `Resume` block, but only once the user named the topic; a bare
+`ci` knew nothing of the work in flight, and the pause line ("say: resume
+<topic>") assumed the user remembered it.
+
+- **Rule, not hook.** The recap is a paragraph of the skill's Start section,
+  so it also runs with `/saiban-orchestrator` in a plain session. A
+  `SessionStart` hook or a step in `ci` would be more deterministic but would
+  add context to every launch, including sessions that don't use the
+  orchestrator.
+- **Bounded.** Only the `Resume` blocks are read, one line per open log
+  (topic, mode, `Next`), at most 10, plus branch and uncommitted file count.
+  Whole logs are never read for it (token self-audit).
+- **Open vs. done.** Nothing marked a finished log, so every old topic would
+  have been listed forever. The `Resume` block gains `Status: open | done`;
+  the Finish step sets `done`. Logs written before this have no `Status` and
+  count as open, so older finished work shows until it is marked.
+- **Skipped** when the first message names a topic or is a direct-mode
+  request (same rule as the start questions: skip what the first message
+  already answers), and when there is nothing open and the tree is clean.
+- Not run yet: first real use should check the line format stays readable and
+  that a log with no `Status` doesn't flood the list on a project with old
+  logs.
