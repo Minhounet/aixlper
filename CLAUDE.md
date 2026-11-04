@@ -27,9 +27,10 @@ what's being described instead needs its own isolated context, its own
 tool allowlist or model, or genuinely separate/parallel execution
 (delegated work, not followed instructions) — that's a Claude Code
 **subagent** (`.claude/agents/*.md`), a different mechanism entirely.
-Subagents aren't portable to Gemini CLI, so they never go in `skills/`.
-They are allowed in `global/agents/` as explicitly Claude-only (say so in
-the description), installed user-level to `~/.claude/agents/` by
+Subagents never go in `skills/`. The helper agents also have a Gemini CLI
+copy, generated into `agents/` from `global/agents/` (see "Keeping both
+clients working"). The orchestrator is Claude-only, flagged in its
+description, and installed user-level to `~/.claude/agents/` by
 `scripts/install-global.sh` — e.g. `saiban-orchestrator`, the orchestrator that routes
 between the skills and asks the author at the gates. This repo doesn't run
 them itself. Skills stay portable; agents don't have to. An agent never
@@ -92,7 +93,7 @@ starting, rather than force-fitting it into a `SKILL.md`.
 
 ## Active work: skills still being designed
 
-Ten skills are in active design and are **not** stable. For each, the
+Twelve skills are listed below. Most are in active design and are **not** stable. For each, the
 `SKILL.md` is the source of truth for its current rules, and
 `docs/design-log.md` holds the session-by-session history — every rule
 addition, correction and worked example, with the reasoning behind it.
@@ -100,12 +101,14 @@ Read the `SKILL.md` when you need the rule; read the log when you need the
 *why*. Don't restate either here: this section is a map, not a summary.
 Keep the log updated whenever a skill changes.
 
-For all ten: expect them to keep growing from ongoing conversation with
+For the active ones: expect them to keep growing from ongoing conversation with
 the author. Don't treat any as complete, and **don't remove or "clean up"
 sections without the author asking.**
 
 | Skill | State | Notes |
 |---|---|---|
+| `kanpeki-fp` | Strong in its ablation (1.00 vs 0.00 without the skill) | Vavr functional style for Java. Pure guards, Either/Option, named pipelines. See the ablation in `docs/design-log.md`. |
+| `kurae-bash` | Narrow in its ablation | Bash hardening patterns. Only pattern 1 (`bind -x`) showed a measured effect; patterns 6 and 10 did not. |
 | `igiari-tdd` | Co-designed across many sessions | One-test-per-step TDD framed for an AI: baby steps for *containment*, not design-discovery. Red / Super Green / Refining Refactor. |
 | `chottomatte-archi` | Co-designed across many sessions | Dependency inversion via interfaces; everything else follows from it. |
 | `mujitsu-documentum` | **Unverified** | Written from general DQL/API knowledge, never run against a real docbase. Treat every pattern as a draft; don't cite it as settled. Known-weak spot: pattern 4's `get_type_attr_count` is a named placeholder, not confirmed DQL. |
@@ -167,7 +170,9 @@ global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # user-level Claude-only agents (saiban-orchestrator, kenji-reviewer, shonin-dev, tantei-inspector)
+global/agents/                    # Claude Code agents: source of truth (saiban-orchestrator Claude-only; the 3 helpers are also ported)
+agents/                           # Gemini CLI copies of the 3 helper agents, GENERATED: edit global/agents/, then make gemini-agents
+scripts/gemini_agents.py          # generates agents/ from global/agents/ (--check runs in make validate)
 scripts/retired-names.txt         # names a rename retired; both installers remove them
 
 docs/design-log.md                # session-by-session history for active-work skills
@@ -270,14 +275,12 @@ grader, not as confirmation the skill is right.
 
 - **Claude Code**: skills can be exercised live in a Claude Code session,
   or scored with `make eval` (see above).
-- **Gemini CLI**: no automated check here — since Gemini CLI isn't
-  available to script against in this environment, we rely on the
-  portability rules above (shared frontmatter subset, tool-agnostic
-  instructions) instead of an automated cross-check. A skill that follows
-  those rules and passes `make validate` is assumed to work in Gemini CLI
-  too, since the content itself (e.g. "how to cook a chicken") doesn't
-  depend on which client is reading it — only genuinely Claude-specific
-  steps need a manual Gemini check.
+- **Gemini CLI**: no live check here, since Gemini CLI can't be run from
+  this environment. `make validate` covers the portable frontmatter and that
+  `agents/` is up to date. A skill that follows the portability rules is
+  assumed to work in Gemini CLI, but **the Gemini status is unverified until
+  someone runs the extension install and loads the skills and agents**.
+  Record that first live run in `docs/design-log.md`.
 
 ## Distribution
 
@@ -287,10 +290,38 @@ both sourced from this same repo:
   + `plugin.json`), added with `/plugin marketplace add <repo-url>` and
   updated via the marketplace/plugin update flow.
 - **Gemini CLI**: a `gemini-extension.json` extension manifest, installed
-  with `gemini extensions install <repo-url> --auto-update`.
+  with `gemini extensions install <repo-url> --auto-update`. It ships the
+  shared `skills/` and the generated `agents/` (the extension convention
+  for agents is assumed, not verified).
 
-Both manifests point at the shared `skills/` directory — there is one copy
-of each skill, not a fork per client.
+There is one copy of each skill, not a fork per client. The Gemini agents are
+generated, never hand-maintained.
+
+## Keeping both clients working
+
+Claude Code is the reference client; Gemini CLI is kept working too. Every
+change is checked against both as part of the change itself:
+
+- **Skills**: frontmatter stays the portable subset (`make validate`). The
+  body says what to do, not which client's tool to call. A step that really
+  differs per client says so explicitly ("where the client can spawn a
+  subagent, e.g. Claude Code, ... otherwise inline"). A Claude-only skill says
+  so in its description.
+- **Helper agents** (`kenji-reviewer`, `shonin-dev`, `tantei-inspector`): edit
+  only `global/agents/<name>.md`, run `make gemini-agents`, and commit the
+  regenerated `agents/*.md` in the same commit. `make validate` fails if they
+  are stale. The tool-name mapping in `scripts/gemini_agents.py` (`TOOL_MAP`)
+  is unverified: check each name on a live Gemini install and fix it there.
+- **`saiban-orchestrator`**: Claude-only. It runs as the main session and
+  spawns helpers. Do not port it. Its description says so.
+- **Docs**: `README.md`, `CONTRIBUTING.md` and the tutorials under `docs/`
+  describe both clients. A change to behaviour or install for either client
+  updates them in the same commit.
+- **Status**: any claim about Gemini in docs says whether it was verified.
+  Right now, the Gemini install and agent loading are unverified.
+- **New feature check**: before adding one, ask whether it needs a
+  Claude-only mechanism. If yes, say so in the skill description and in the
+  README table; if no, keep it portable.
 
 ## Global config
 
