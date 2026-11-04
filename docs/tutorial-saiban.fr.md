@@ -161,6 +161,10 @@ floue. Le reste, il le décide et l'écrit.
 - Le contexte coûte de plus en plus cher en grossissant. À une pause, tape
   `/clear`, puis `claude --agent saiban-orchestrator` et *« resume PROJ-8 »* : il
   reprend depuis le bloc `Resume` au lieu de tout relire.
+- Sujet oublié ? Lancez `ci` sans sujet (ou demandez *« où en étions-nous ? »*) :
+  il liste les journaux de décision ouverts, une ligne chacun avec le mode et
+  la prochaine étape, et demande lequel reprendre. Un journal marqué
+  `Status: done` à la fin n'est plus listé.
 
 Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
 qu'on le lui demande.

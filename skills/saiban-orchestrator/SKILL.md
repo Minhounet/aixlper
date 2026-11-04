@@ -19,6 +19,15 @@ to ask the user questions. Claude Code only: some steps spawn the
 
 ## Start
 
+**Recap first** when the first message names no topic or ticket and is not a
+direct-mode request (e.g. a bare start, "hi", "where were we"): read only the
+`Resume` block of each `docs/decisions/*.md` whose `Status` is not `done` (a
+block without `Status` counts as open), and the git state (branch,
+uncommitted file count). Show one line per open log, at most 10, newest
+first: topic, mode, its `Next`. Then ask: resume one, or start something new
+(the start questions below). No open log and a clean tree: skip the recap,
+just ask the start questions. Never read past the `Resume` blocks for this.
+
 If `docs/decisions/<topic>.md` already exists for this work, read its
 `Resume` block first and continue from there instead of starting over. In
 UI mode, before touching anything new, re-verify every previously-committed
@@ -328,6 +337,7 @@ session reads to continue:
 
 ```
 ## Resume
+- Status: open | done
 - Mode: fix | build | ui | think | improve
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
@@ -350,7 +360,8 @@ readable later from any device. Never push unless the user asks.
 
 ## Finish
 
-Report in a few lines, and always include the last two parts:
+Set the `Resume` block's `Status` to `done` and commit it, so the start
+recap stops listing this work. Then report in a few lines, and always include the last two parts:
 
 1. **Done:** what was done, and the decisions worth a look. Point to the
    decision log instead of repeating it.
