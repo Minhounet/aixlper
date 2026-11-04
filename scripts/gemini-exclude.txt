@@ -1,0 +1,5 @@
+# Skills install-gemini.sh does not install, one per line: <name>  # reason.
+# make validate requires every skill whose description says "Claude Code
+# only" (or "Claude-only") to be listed here, and every name here to exist.
+
+saiban-orchestrator  # runs as the main session and spawns Claude Code agents

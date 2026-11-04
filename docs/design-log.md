@@ -3632,3 +3632,16 @@ Gemini CLI added custom subagents (Markdown + YAML frontmatter, in
   skills. The saiban tutorials (EN, FR) moved to `docs/`; testing, layout and
   global config to `CONTRIBUTING.md`. The README listed 10 of the 12 skills,
   and CLAUDE.md's table also missed two.
+
+### Follow-up: an exclusion list for the Gemini install
+
+The extension install ships all of `skills/`, so the Claude-only
+`saiban-orchestrator` skill reached Gemini too. No exclude option could be
+confirmed for the manifest, so the exclusion lives in our own installer:
+`scripts/install-gemini.sh` copies skills into `~/.gemini/skills/` minus
+`scripts/gemini-exclude.txt`, and agents into `~/.gemini/agents/`. It also
+removes an excluded or retired skill already there. `make validate` ties the
+list to the descriptions: a skill flagged "Claude Code only" must be listed,
+and a listed name must exist. Run here into scratch directories (fresh install,
+re-run, stale copies of an excluded and a retired skill removed); not run
+against a live Gemini CLI. The extension stays as the alternative.

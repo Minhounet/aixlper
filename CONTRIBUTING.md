@@ -18,7 +18,8 @@ skills/<name>/evals/        # Claude plugin eval cases
 
 global/agents/              # Claude Code agents (source of truth for helper agents)
 agents/                     # Gemini CLI agents, GENERATED from global/agents/ (make gemini-agents)
-scripts/                    # installers, validator, gemini_agents.py generator
+scripts/                    # installers (install.sh, install-gemini.sh), validator, gemini_agents.py generator
+scripts/gemini-exclude.txt  # Claude-only skills the Gemini installer skips
 docs/                       # design log, saiban-orchestrator tutorials (EN, FR)
 ```
 

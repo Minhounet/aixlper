@@ -49,7 +49,8 @@ GEMINI_DESCRIPTIONS = {
     "tantei-inspector": (
         "Inspector of the aixlper skills (tantei = the detective). Read-only. Delegate to it to review "
         "how the aixlper skills and agents were used. Give it the path of "
-        "skills/saiban-orchestrator/references/improve.md (its checklist), the aixlper clone path, the "
+        "skills/saiban-orchestrator/references/improve.md in the aixlper clone (its checklist; that "
+        "skill itself is not installed for Gemini), the aixlper clone path, the "
         "scope and the evidence paths (decision logs, retros, process notes). It proposes exact wording "
         "changes with the evidence; it never edits."
     ),

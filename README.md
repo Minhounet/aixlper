@@ -38,11 +38,16 @@ Copies every skill into `~/.claude/skills/`. Run it again to update. Use
 ### Gemini CLI
 
 ```bash
-gemini extensions install https://github.com/Minhounet/aixlper --auto-update
+curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install-gemini.sh | bash
 ```
 
-This also installs three helper agents (`kenji-reviewer`, `shonin-dev`,
-`tantei-inspector`; list them with `/agents`). The orchestrator stays Claude Code only.
+Copies the skills into `~/.gemini/skills/` and three helper agents
+(`kenji-reviewer`, `shonin-dev`, `tantei-inspector`; list them with `/agents`)
+into `~/.gemini/agents/`. It leaves out the Claude-only skills listed in
+[`scripts/gemini-exclude.txt`](scripts/gemini-exclude.txt).
+
+Alternative: `gemini extensions install https://github.com/Minhounet/aixlper --auto-update`
+updates itself, but ships every skill, Claude-only ones included. Use one or the other.
 
 > Not yet checked against a live Gemini CLI install. If it fails, please open an issue.
 

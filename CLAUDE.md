@@ -173,7 +173,9 @@ global/settings.template.json     # public-safe; secrets injected at install
 global/agents/                    # Claude Code agents: source of truth (saiban-orchestrator Claude-only; the 3 helpers are also ported)
 agents/                           # Gemini CLI copies of the 3 helper agents, GENERATED: edit global/agents/, then make gemini-agents
 scripts/gemini_agents.py          # generates agents/ from global/agents/ (--check runs in make validate)
-scripts/retired-names.txt         # names a rename retired; both installers remove them
+scripts/install-gemini.sh         # Gemini CLI installer: skills (minus gemini-exclude.txt) + agents
+scripts/gemini-exclude.txt        # Claude-only skills install-gemini.sh skips (checked by make validate)
+scripts/retired-names.txt         # names a rename retired; the installers (install-gemini.sh too) remove them
 
 docs/design-log.md                # session-by-session history for active-work skills
 evals/                            # cross-skill evals (scripts/eval_skill_chain.sh, make eval-chain)
@@ -289,10 +291,13 @@ both sourced from this same repo:
 - **Claude Code**: a plugin marketplace (`.claude-plugin/marketplace.json`
   + `plugin.json`), added with `/plugin marketplace add <repo-url>` and
   updated via the marketplace/plugin update flow.
-- **Gemini CLI**: a `gemini-extension.json` extension manifest, installed
-  with `gemini extensions install <repo-url> --auto-update`. It ships the
-  shared `skills/` and the generated `agents/` (the extension convention
-  for agents is assumed, not verified).
+- **Gemini CLI**: `scripts/install-gemini.sh` (curl one-liner or from a
+  clone) copies `skills/` minus `scripts/gemini-exclude.txt` into
+  `~/.gemini/skills/`, and `agents/` into `~/.gemini/agents/`. The
+  alternative is the `gemini-extension.json` manifest
+  (`gemini extensions install <repo-url> --auto-update`), which ships every
+  skill and the generated `agents/` (the extension convention for agents is
+  assumed, not verified).
 
 There is one copy of each skill, not a fork per client. The Gemini agents are
 generated, never hand-maintained.
@@ -317,8 +322,11 @@ change is checked against both as part of the change itself:
   Gemini main session is the helpers' caller, so their Gemini descriptions
   (`GEMINI_DESCRIPTIONS` in the generator) say when to delegate and what to
   hand over; keep them in step with the Claude bodies' "You are given" lines.
-  Known limitation: the extension still ships the `saiban-orchestrator`
-  skill, since it ships all of `skills/`.
+- **Claude-only skills**: listed in `scripts/gemini-exclude.txt`, which
+  `scripts/install-gemini.sh` skips. `make validate` fails if a skill whose
+  description says "Claude Code only" is missing from the list, or the list
+  names a skill that doesn't exist. The extension install can't exclude
+  anything: it ships all of `skills/`.
 - **Docs**: `README.md`, `CONTRIBUTING.md` and the tutorials under `docs/`
   describe both clients. A change to behaviour or install for either client
   updates them in the same commit.
