@@ -92,7 +92,7 @@ starting, rather than force-fitting it into a `SKILL.md`.
 
 ## Active work: skills still being designed
 
-Nine skills are in active design and are **not** stable. For each, the
+Ten skills are in active design and are **not** stable. For each, the
 `SKILL.md` is the source of truth for its current rules, and
 `docs/design-log.md` holds the session-by-session history — every rule
 addition, correction and worked example, with the reasoning behind it.
@@ -100,7 +100,7 @@ Read the `SKILL.md` when you need the rule; read the log when you need the
 *why*. Don't restate either here: this section is a map, not a summary.
 Keep the log updated whenever a skill changes.
 
-For all nine: expect them to keep growing from ongoing conversation with
+For all ten: expect them to keep growing from ongoing conversation with
 the author. Don't treat any as complete, and **don't remove or "clean up"
 sections without the author asking.**
 
@@ -114,6 +114,7 @@ sections without the author asking.**
 | `tonosaman-deploy` | New, partly dogfooded | Build a Java project, then run the fresh artifact in a local container (Docker or Podman): stable image, artifact bind-mounted and swapped, image rebuilt only when the runtime changes. JDK batch and Spring Boot paths checked once with Docker; Podman not run here. `references/nuxeo.md` and `references/nuxeo-podman/` are written from the author's real Podman setup (genericized, not run from this repo), including the Studio half (Designer synced through a Podman volume, Modeler hot-reloaded from Studio). One eval case, `nuxeo-dev-loop` (status in `evals/README.md`). |
 | `shoko-playwright` | New, not dogfooded | Validates a web UI change against its ACs with Playwright: one check per AC, run against the app running the current code, the result kept as evidence. Not TDD: a check that already passes means the AC is already met. Written from general Playwright knowledge. Layout ACs are checked at each viewport they name. Nuxeo specifics (URL, login, test data, breakpoints) come from the project; `references/nuxeo.md` lists the questions for custom Web UI pages, answered from the project each time (no reference setup exists). `saiban-orchestrator`'s UI mode uses it. |
 | `yusaburi-mutation` | New, dogfooded once (Maven) | Mutation testing (PIT), scoped to the code a task touches: end of a TDD run (survivor = code no red asked for) and before relying on existing tests to change existing code (survivor = hole in the safety net). Never per cycle, never a score. Verdict per survivor; "equivalent" ones checked by `kenji-reviewer`. Maven path of `references/pitest.md` run once on two katas; Gradle not run. |
+| `tantei-debug` | New, partly dogfooded | Finds *where* a Java bug is when the cause is unknown (webservice or batch, local or remote): logs first, then bisection with a JPDA debugger, every split written to an investigation note with a `Resume` block; ends at a `Found` block handed to a characterization test and a TDD fix. `scripts/jdb_session.py` (keeps one `jdb` attached across shell calls) was run here against a toy webservice and batch; the method itself not yet used on a real bug. `references/intellij-mcp.md` is untested. Fix mode of `saiban-orchestrator` starts with it when the cause isn't known. |
 | `saiban-orchestrator` | New, partly dogfooded | **Claude-only.** The known-process runner: six modes (fix, build, ui, think, improve, direct), a fixed skill pipeline per mode, gates, decision log with a `Resume` block, per-AC review by `kenji-reviewer`, `shonin-dev` writing every GREEN by default ("no dev" turns it off); improve mode has `tantei-inspector` inspect how the skills were used and applies the approved changes in the aixlper clone. The `saiban-orchestrator` agent in `global/agents/` is a thin shell that loads it. UI mode works one screen at a time with a pause between screens; a change only the user can make (Studio Modeler) is a gate. Work started in a plain session can be taken over. Build and fix modes ran headless several times; think and direct ran once each; ui mode ran a full multi-screen pass on a real Nuxeo project (several fixes shipped and reviewed); improve mode ran once on that same project's evidence, 6 proposals, see `docs/design-log.md`. |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one

@@ -52,7 +52,9 @@ loop until scope and mode are clear.
 change, nothing new in the structure. Skills: `igiari-tdd` with `kanpeki-fp`,
 and `kaizen-refactor`, all three loaded together before the first test (not
 at the first refactor, which gets skipped). No `chottomatte-archi`, no
-`objection-conception`.
+`objection-conception`. When the cause of a bug isn't known yet, start with
+`tantei-debug` to find it; the TDD run starts from its note's `Found`
+block, and the decision log points to that note.
 
 **Build mode.** Something new: a feature, a class, a module, a collaborator,
 a boundary. Start with `chottomatte-archi` for the structural plan. Use
@@ -157,6 +159,7 @@ condition holds, in this order, within that mode.
 |---|---|---|
 | Build mode: the step adds something new | `chottomatte-archi` | The structural plan, first, before any test is written |
 | Build mode with a ticket or ACs | `objection-conception` | Trace, ACs checked against the plan, the done-gate |
+| Fix mode: the cause of the bug is not known yet | `tantei-debug` | Finding where it goes wrong (bisection, logs, debugger), the investigation note, the `Found` block the fix starts from |
 | Java code is written or changed | `igiari-tdd` **and** `kanpeki-fp`, always together | One test at a time; how logic is expressed |
 | Loaded with `igiari-tdd` before the first test; applied at every REFACTOR step (say which items of its mechanical list applied, or "none"), existing code cleaned up, or an IDE inspection fires | `kaizen-refactor` | Mechanical vs. judgment-call refactors |
 | End of a TDD run, or before existing tests are relied on to change existing code (a Tier 2 refactor, a fix reaching beyond its new test), when the project has a mutation tool | `yusaburi-mutation` | Survivors in scope and a verdict for each; give the list to `kenji-reviewer` with the run |
