@@ -187,6 +187,8 @@ the other two files.
 ```markdown
 # TICKET-123: acceptance criteria
 
+Order: AC2, AC1, AC3 (AC1 needs AC2's <type/endpoint/data>; AC3 independent)
+
 ## AC1: <short name>
 - Source: "<the ticket's own wording, verbatim>"
 - Interpretation: <the observable outcome that means it's met>
@@ -232,8 +234,9 @@ ahead of it. The order is:
 2. Phases 1 and 2 below run against that draft: check the ticket and its ACs,
    then trace each AC to the plan's decisions. Read "design" in them as "the
    structural plan".
-3. Both go to the author in **one** approval: the plan, the AC trace, any
-   `unclear` AC and any discrepancy. This adds no pause of its own.
+3. Both go to the author in **one** approval: the plan, the AC trace, the
+   AC order, any `unclear` AC and any discrepancy. This adds no pause of
+   its own.
 
 The plan may show that an AC has to change (it asks for something the
 structure rules out, or misses a case the structure exposes). Log that as a
@@ -305,6 +308,25 @@ Before treating the design as complete, show the trace both ways:
 Also read each decision against the ticket's **description**, not only its
 ACs: a decision that satisfies every AC yet contradicts the description is
 a `ticket-vs-design` discrepancy. Log it; don't decide it silently.
+
+**Then order the ACs** for implementation, from the trace: an AC goes after
+every AC whose code, data or state it needs (a type it reads, an endpoint
+it calls, a document another AC creates). Write the result as the `Order`
+line of `acceptance.md`, with the dependency behind each move away from
+ticket order.
+
+- **Decide it yourself when it is forced:** the dependencies leave only one
+  order, or there are none (keep ticket order). Show it in the approval as
+  information, not as a question.
+- **Ask only when it is a real choice:** several orders fit the
+  dependencies and they differ in something the design doesn't show (risk
+  first, what to demo first). Recommend one.
+- **A cycle** (AC1 needs AC2 and AC2 needs AC1) means the ACs are not
+  separable as written: raise it as an `AC-vs-AC` discrepancy and propose a
+  split or a merge.
+
+If building an AC shows a dependency the trace missed, move the order and
+log the change in `retro.md`.
 
 ### With a TDD skill: tag the plan, update once at the end
 

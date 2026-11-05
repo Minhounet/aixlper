@@ -3729,3 +3729,38 @@ resumed from a `Resume` block, but only once the user named the topic; a bare
 - Not run yet: first real use should check the line format stays readable and
   that a log with no `Status` doesn't flood the list on a project with old
   logs.
+
+## `objection-conception` / `saiban-orchestrator`: AC order and carry-forward; Nuxeo Designer sync as the way
+
+Asked by the author, after a question on whether the orchestrator can chain
+all ACs and use one AC's result as context for the next. It already chained
+them (build mode, one TDD run per AC, pauses skippable with "no pauses"), and
+the next AC already starts from disk (code, `[ACn]` tests, `acceptance.md`,
+the decision log), so a `/clear` between ACs loses nothing. Two gaps:
+
+- **Order was blind.** "Move to the next AC" meant the next number.
+  `objection-conception` now orders the ACs from the trace (an AC after any AC
+  whose code, data or state it needs) and writes an `Order` line in
+  `acceptance.md`. The author's rule: when the order is forced (one order
+  fits, or no dependencies, so ticket order), decide it without asking and
+  show it as information; ask only for a real choice (several valid orders
+  differing in risk or demo value). A cycle is an `AC-vs-AC` discrepancy.
+  The order goes in the same single approval as plan and trace, so no new
+  pause.
+- **Nothing carried forward explicitly.** Each AC's decision-log entry now
+  ends with `Carry forward`: what later ACs can reuse, a later AC this run
+  seems to already meet (still needs its own evidence, never inherited), a
+  later AC this run puts in question (re-check before its plan; a conflict
+  goes through the discrepancy ledger). Step 1 of the loop reads it.
+
+Also from the author: in UI mode on Nuxeo, a git clone of the Studio project
+synced into the container through a Podman volume proved very effective, and
+is now *the* way for Designer changes (`tonosaman-deploy`'s
+`references/nuxeo.md`, pointed to from `saiban-orchestrator`'s UI mode and
+`shoko-playwright`'s `references/nuxeo.md`): propose setting it up if the
+project lacks it, rather than rebuilding per change. The recreate caveat and
+"which folder the volume maps" stay as written.
+
+Not run yet: the first build-mode ticket with dependent ACs should check the
+order is forced often enough that the no-question path is the common one, and
+that `Carry forward` stays one or two lines.
