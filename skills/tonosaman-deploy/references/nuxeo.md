@@ -29,10 +29,14 @@ per-developer config, and the human setup guide.
 A Studio project has two halves, and they reach the running server in two
 different ways. Know which half a change belongs to before making it.
 
-- **Studio Designer (Web UI: elements, layouts, pages).** The author keeps a
-  local copy of the Studio project, and that folder is synced into the
-  container through a Podman volume. A file changed locally is what the
-  server serves — **until the next image rebuild or container recreate,
+- **Studio Designer (Web UI: elements, layouts, pages).** The way to work:
+  a git clone of the Studio project, synced into the container through a
+  Podman volume. The author found this very effective in real UI work:
+  each edit is live after a page reload, and git gives the history and the
+  per-file commits that Studio's own editor doesn't. Prefer it to any
+  rebuild-per-change loop; if the project has no such sync yet, propose
+  setting it up before the first check rather than working around it. A
+  file changed locally is what the server serves — **until the next image rebuild or container recreate,
   which replaces the volume's contents with whatever the last build
   produced and silently reverts any edit not yet in that build.** So a
   Designer change is an ordinary file edit between recreates: edit it in

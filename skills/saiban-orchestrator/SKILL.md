@@ -79,6 +79,10 @@ browser checks, not unit tests. Skills: `shoko-playwright` for each AC,
 `tonosaman-deploy` to run the current code (Podman when the project uses
 it), and `objection-conception` when there is a ticket. No `igiari-tdd`:
 a check that already passes means its AC is already met.
+On Nuxeo, Web UI (Studio Designer) changes go through the Studio project's
+git clone synced into the container by a Podman volume, as
+`tonosaman-deploy`'s `references/nuxeo.md` describes: that is the loop, not
+a rebuild per change.
 Work **one screen at a time**: the scope of a run is one screen (one page or
 view) and the ACs about it. When the ticket spans several screens, agree the
 order with the user at the start, finish and commit one screen before
@@ -186,9 +190,12 @@ can be found again.
 ## Loop
 
 In build mode, the structural plan and the AC trace are approved once, up
-front. Then each AC is its own TDD run:
+front, with the AC order `objection-conception` sets (decided without asking
+when the dependencies force it). Work the ACs in that order, not by number.
+Then each AC is its own TDD run:
 
-1. Write one `igiari-tdd` plan for that AC only, its tests tagged `[ACn]` as
+1. Read the previous AC's `Carry forward` (step 5). Write one `igiari-tdd`
+   plan for that AC only, its tests tagged `[ACn]` as
    `objection-conception` asks, and relay its approval gate (the user may
    pre-approve the plans).
 2. Run the cycles, then the full build and the TDD audit that end the run.
@@ -204,8 +211,14 @@ front. Then each AC is its own TDD run:
    of the next AC: never fold two ACs' updates into one commit.
    Log any difficulty hit during the run (a blocked tool, a plan change, a
    surprise) in `retro.md`, as `objection-conception` asks.
-5. Append one entry to the decision log (below).
-6. Move to the next AC, unless a gate applies.
+5. Append one entry to the decision log (below), ending with a
+   `Carry forward` line for the next ACs: what they can reuse (a seam, a
+   fixture, a type), any later AC this run already seems to meet (it still
+   needs its own evidence, never this AC's), and any later AC this run
+   puts in question (re-check it before its plan; a real conflict is a
+   discrepancy, through `objection-conception`). Write `none` if nothing
+   applies.
+6. Move to the next AC in the order, unless a gate applies.
 
 A full build per AC costs more than one at the end; that is the price of an
 AC record that is always current.
@@ -355,6 +368,7 @@ Then one entry per decision:
 - Why: ...
 - Rejected: ...
 - Asked user: yes/no
+- Carry forward: ... (after an AC's run only)
 ```
 
 Create the file on the first decision. Commit it with the work so it is
