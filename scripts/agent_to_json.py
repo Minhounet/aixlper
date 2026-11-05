@@ -17,5 +17,7 @@ for path in sys.argv[1:]:
     for key, field in (('tools', 'tools'), ('disallowedTools', 'disallowedTools')):
         if key in meta:
             agent[field] = [t.strip() for t in meta[key].split(',')]
+    if 'model' in meta:
+        agent['model'] = meta['model'].strip()
     agents[meta['name']] = agent
 json.dump(agents, sys.stdout)

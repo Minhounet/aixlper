@@ -3814,3 +3814,26 @@ slip no-dev made once in 7. One in 6 can't separate the dev's memory of the
 run's earlier tests from the model knowing the kata. Per-green dev: 0 in 7.
 Details in `katas/igiari-tdd/README.md`. Still not measured: the per-run
 rule's thresholds, and any bias effect on a multi-AC build ticket.
+
+## Helper agents pinned to Sonnet
+
+The author asked to cut tokens by choosing the model per task. The helpers are
+where that is free: prompt caches are tied to one model, so a model switch in
+the main session throws its cache away, but a spawned helper starts with an
+empty context anyway. Until now every helper inherited the session's model
+(the template pins `opus[1m]`), about 2× Sonnet's price.
+
+All three now carry `model: sonnet` (criterion 2). The evidence, all from
+earlier entries: Sonnet and Opus were level on `igiari-tdd`, including
+`triangulate-before-generalizing`, which is what `shonin-dev` follows; both
+helper-agent evals ran on Sonnet (reviewer 4/4 planted defects and no false
+alarm, inspector 4/4 and nothing from the decoys); the one-dev-per-run kata
+pass ran wholly on Sonnet. The orchestrator stays on the session's model:
+Opus was ahead on `chottomatte-archi`'s judgment cases. The author's earlier
+decision against a cheaper implementer model (split-mode entry) is reversed
+by the author here, on that evidence. Haiku not considered: never measured.
+
+`scripts/agent_to_json.py` now passes `model` through, so headless runs use
+it. The Gemini generator writes its own frontmatter and drops the field, so
+Gemini agents keep Gemini's default model (unverified, like the rest of the
+Gemini agent setup).

@@ -61,6 +61,8 @@ below makes it an agent rather than a step the orchestrator follows inline:
 | `shonin-dev` | Writes one GREEN from the failing test alone, so the code isn't biased by the plan | 5 (never sees the test plan, ticket or ACs) | The orchestrator, the GREENs of a large TDD run in fix and build (one dev per run) |
 | `tantei-inspector` | Reads how the skills were used and proposes exact changes to them | 1 (read-only), 3 (long reading kept out), 5 (not the working session's reasons) | The orchestrator, improve mode |
 
+The three helpers pin `model: sonnet` (criterion 2; the orchestrator uses
+the session's model). Gemini copies drop the field and use Gemini's default.
 Each is evaluated on a fixture with a known answer (`evals/agents/`), except
 `shonin-dev`, measured on katas (`katas/igiari-tdd/README.md`).
 

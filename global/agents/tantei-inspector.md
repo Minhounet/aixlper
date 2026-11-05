@@ -1,6 +1,7 @@
 ---
 name: tantei-inspector
 description: Inspector of the skills themselves (tantei = the detective). Claude Code only. Read-only inspector that saiban-orchestrator spawns in improve mode. It reads how the aixlper skills and agents were actually used (decision logs, retros, process notes, session transcripts) and proposes exact wording changes to them, with the evidence. Fresh context on purpose, so it judges the run against the text and not against the working session's reasons. Never edits. Not for direct use.
+model: sonnet
 tools: Read, Grep, Glob, Bash, Skill
 disallowedTools: Edit, Write, NotebookEdit
 ---

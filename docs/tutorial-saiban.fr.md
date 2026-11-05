@@ -22,6 +22,12 @@ sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
 | `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, les GREEN d'une grosse exécution TDD, un dev par exécution (fix, build) | Oui |
 | `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, mode improve | Non |
 
+Les trois agents d'aide tournent sur Sonnet quel que soit le modèle de la
+session principale (`model: sonnet` dans leur frontmatter) : leur travail
+consiste à suivre des règles écrites, où Sonnet a été mesuré au niveau
+d'Opus. L'orchestrateur utilise le modèle de ta session ; choisis Opus avec
+`/model` quand la planification le demande.
+
 ### 1. Installer
 
 ```bash

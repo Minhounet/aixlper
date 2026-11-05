@@ -1,6 +1,7 @@
 ---
 name: shonin-dev
 description: Implementer (shonin = the witness, kept out of the courtroom). Claude Code only. Implementer that saiban-orchestrator spawns for the GREEN steps of a TDD run in fix and build modes, when the run is large enough (or the user said "with dev"); one dev per run, sent each next failing test in turn. It does the GREEN exactly as saiban-orchestrator would, with the same skills; the only difference is a fresh context that never sees the test plan, the ticket or the ACs. Not for direct use.
+model: sonnet
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 ---
 
