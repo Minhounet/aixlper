@@ -3837,3 +3837,11 @@ by the author here, on that evidence. Haiku not considered: never measured.
 it. The Gemini generator writes its own frontmatter and drops the field, so
 Gemini agents keep Gemini's default model (unverified, like the rest of the
 Gemini agent setup).
+
+**Kata check (Opus orchestrator, Sonnet dev, bowling and string-calculator,
+3 runs each, $9.50):** the pin holds headless (dev transcripts all Sonnet,
+orchestrator Opus). 30 of 30 reds failed, nothing built ahead, no lint left:
+the dev's greens did not suffer from the cheaper model. One refactor flagged
+as adding generality, the orchestrator's own (bowling #1 stored the rolls
+before any test needed them): the plan-aware side, not the dev. The saving is
+not measured (no Opus-dev arm was run); it follows from the price ratio.

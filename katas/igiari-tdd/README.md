@@ -179,3 +179,24 @@ refactor 4) are the orchestrator extracting `parseOperand` and inlining it
 again one refactor later: churn, not a green that left work behind. Every
 audit exits 1 on the orchestrator's decision-log commit (`NOT A STEP
 COMMIT`), the case flagged untested above; the counts are unaffected.
+
+### 2026-11-05, Opus orchestrator with the dev pinned to Sonnet, 3 runs each
+
+Same katas, `--model opus`; `shonin-dev` now carries `model: sonnet`.
+Every dev transcript shows `claude-sonnet-5-5`, every orchestrator
+`claude-opus-5-5`: the pin holds in headless runs.
+
+| | Opus orchestrator, Sonnet dev (6 runs) |
+|---|---|
+| Subagents per run | 1 every run |
+| Planned tests that passed on arrival | 0 (every red failed, 30 of 30) |
+| `ahead` | 0 |
+| Lint left at HEAD | 0 |
+| Refactors flagged "adds generality" | 1 (bowling #1, refactor 2: the orchestrator swapped a running total for a stored roll list, room no test had asked for yet) |
+| Mean cost | $1.58 ($1.43–1.87) |
+
+**The Sonnet dev held under an Opus planner**: cleanest pass so far. The one
+flag is in the orchestrator's own refactor, which knows the plan; the dev
+never refactors. Cost has no Opus-dev arm to compare with, so the saving
+from the pin is not measured here; the dev's share is billed at Sonnet's
+rate instead of Opus's (about half).
