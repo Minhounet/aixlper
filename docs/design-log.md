@@ -3764,3 +3764,44 @@ project lacks it, rather than rebuilding per change. The recreate caveat and
 Not run yet: the first build-mode ticket with dependent ACs should check the
 order is forced often enough that the no-question path is the common one, and
 that `Carry forward` stays one or two lines.
+
+## `shonin-dev`: decided per run, one dev per run
+
+The author found sessions cost more since the agents arrived. The repo's own
+numbers agree: `shonin-dev` on by default cost 2.7× on katas ($1.17 vs
+$0.43 a run) and about half again on a two-AC build ticket, with no measured
+bias benefit yet (1 slip in 7 no-dev runs, 0 in 7 dev runs). Most of it is
+cold starts: each GREEN spawned a fresh dev that reloaded `igiari-tdd`,
+`chottomatte-archi` and `kanpeki-fp` (~98KB, ~25k tokens) every cycle.
+
+Considered first and dropped: have the dev read only the GREEN sections of
+`igiari-tdd`. It saves ~11.5KB of 45KB, about 10–12% per GREEN, breaks
+silently when a heading moves, and selects rules instead of loading the skill
+as written.
+
+Two changes, both asked for by the author:
+
+- **Decided per TDD run, not on by default.** The author asked whether the
+  orchestrator could decide itself; yes, by a stated rule only: on when what
+  it knows ahead of the tests is large (build mode with two or more ACs, or a
+  plan of four or more tests in one run), off otherwise. The decision and its
+  reason go into the plan already put up for approval, so the user overrides
+  it there with no new pause; "with dev" / "no dev" force it for the session.
+  The thresholds are a judgment, not measured: the katas say the bias, if
+  any, grows with what the orchestrator knows ahead, and they are where a
+  multi-AC ticket should show it.
+- **One dev per TDD run, not one per GREEN.** The first GREEN spawns it; each
+  later GREEN of the run is a message to the same agent with the next failing
+  test, telling it to re-read the production files (the orchestrator's
+  REFACTOR changed them). Skills load once per run. It still never sees the
+  plan, ticket or ACs; what it gains is the run's earlier tests (on disk
+  anyway) and its own earlier reasoning, a small anticipation risk. A fresh
+  dev is spawned for a GREEN that goes wrong, or if the client cannot message
+  a spawned agent (Criterion 4 now applies too: the dev is resumed).
+
+`kata_super_green.sh --orchestrator dev` now passes "with dev" explicitly,
+since a 5-test kata in fix mode would be on by the rule anyway but the arm
+must not depend on it. Its `subagents` count should now read 1 per run, not
+5. Not run: the dev arm on bowling and string-calculator (3 runs each, about
+$5) checks both that the greens stay unbiased (no planned test passing on
+arrival, `ahead` 0) and what the per-run dev actually saves.

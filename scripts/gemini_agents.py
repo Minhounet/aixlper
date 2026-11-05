@@ -41,7 +41,7 @@ GEMINI_DESCRIPTIONS = {
         "It checks the run against the aixlper skills as written and reports findings; it never fixes."
     ),
     "shonin-dev": (
-        "Implementer (shonin = the witness). Delegate to it the GREEN step of a TDD cycle (igiari-tdd) "
+        "Implementer (shonin = the witness). Delegate to it the GREEN steps of a TDD run (igiari-tdd), one at a time, "
         "so the code is not biased by what comes next. Give it only the failing test, the test command, "
         "the production files in play and the approved structural plan - never the test plan, the "
         "ticket or the acceptance criteria. It writes the least code that passes and never commits."
