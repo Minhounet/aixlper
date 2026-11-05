@@ -155,7 +155,7 @@ the skill says. There is no IDE attached; use Maven."
   fi
   (cd "$dir/work" && git config user.email kata@example.com && git config user.name kata &&
     claude -p "$prompt" "${plugin_args[@]}" --model "$model" \
-      --allowedTools "Bash Edit Write Read Glob Grep Skill${orch:+ Agent Task}" \
+      --allowedTools "Bash Edit Write Read Glob Grep Skill${orch:+ Agent Task SendMessage}" \
       --max-turns "$max_turns" --max-budget-usd "$budget" \
       --output-format json > "$dir/result.json" 2> "$dir/stderr.txt")
   cost=$(python3 -I -c "import json,sys; print(round(json.load(open(sys.argv[1])).get('total_cost_usd',0),3))" "$dir/result.json" 2>/dev/null || echo "?")
