@@ -3802,6 +3802,15 @@ Two changes, both asked for by the author:
 `kata_super_green.sh --orchestrator dev` now passes "with dev" explicitly,
 since a 5-test kata in fix mode would be on by the rule anyway but the arm
 must not depend on it. Its `subagents` count should now read 1 per run, not
-5. Not run: the dev arm on bowling and string-calculator (3 runs each, about
-$5) checks both that the greens stay unbiased (no planned test passing on
-arrival, `ahead` 0) and what the per-run dev actually saves.
+5. The script also had to allow `SendMessage`, or the orchestrator falls back
+to a fresh dev per green and the arm measures the old behaviour.
+
+**Run (Sonnet, bowling and string-calculator, 3 runs each, $4.81):** one dev
+per run every time (`subagents` 1, was 5). Mean cost $0.80 a run, down 31%
+from $1.17; against the no-dev arm's $0.43 that is 1.9×, was 2.7×. One
+slip: bowling #2's green 4 capped the game at ten frames, so test 5 passed on
+arrival (kept as a guard), the bias the dev is meant to prevent and the same
+slip no-dev made once in 7. One in 6 can't separate the dev's memory of the
+run's earlier tests from the model knowing the kata. Per-green dev: 0 in 7.
+Details in `katas/igiari-tdd/README.md`. Still not measured: the per-run
+rule's thresholds, and any bias effect on a multi-AC build ticket.

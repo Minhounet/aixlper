@@ -147,3 +147,35 @@ what the orchestrator knows is coming: the plan, and in build mode the ACs
 and the ticket. A five-test kata gives little to know ahead, and the model
 knows these katas by heart either way. A multi-AC build-mode ticket is where
 the effect, if there is one, should show; no fixture for that exists yet.
+
+### 2026-11-05, one dev per run: bowling and string-calculator, 3 runs, Sonnet, dev arm only
+
+`shonin-dev` now spawned once per TDD run and messaged each next failing
+test, instead of spawned per green. Same katas and settings as the larger
+pass above; `kata_super_green.sh` now passes "with dev" and allows
+`SendMessage`.
+
+| | dev, one per run (6 runs) | dev, one per green (6 runs, above) | nodev (6 runs, above) |
+|---|---|---|---|
+| Subagents per run | 1 every run | 5 | 0 |
+| Planned tests that passed on arrival | 1 (bowling #2) | 0 | 0 |
+| `ahead` | 0 | 0 | 0 |
+| Lint left at HEAD (`MagicNumber`) | 1 run with 3 | 1 run with 1 | 1 run with 5 |
+| Mean cost | $0.80 ($0.73–0.93) | $1.17 | $0.43 |
+
+**Cost: down 31%**, from 2.7× the no-dev arm to 1.9×. The remaining
+overhead is the one cold start per run plus the messages to it.
+
+**One slip, the kind the dev exists to prevent.** In bowling #2, green 4
+(strike) already capped the game at ten frames (`FRAMES_PER_GAME`), which
+only test 5 (perfect game) needs; test 5 passed on arrival and was kept as
+`guard 5`. `ahead` missed it, as before (the kata allows loops from green 2).
+One run can't say whether the dev's memory of tests 1–4 caused it or the
+model knows the kata by heart; the no-dev arm made the same slip once in 7
+earlier runs. Count so far, dev per run: 1 in 6.
+
+The audit's "possible super-green misses" on string-calculator (refactor 3,
+refactor 4) are the orchestrator extracting `parseOperand` and inlining it
+again one refactor later: churn, not a green that left work behind. Every
+audit exits 1 on the orchestrator's decision-log commit (`NOT A STEP
+COMMIT`), the case flagged untested above; the counts are unaffected.
