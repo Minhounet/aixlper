@@ -3845,3 +3845,156 @@ the dev's greens did not suffer from the cheaper model. One refactor flagged
 as adding generality, the orchestrator's own (bowling #1 stored the rolls
 before any test needed them): the plan-aware side, not the dev. The saving is
 not measured (no Opus-dev arm was run); it follows from the price ratio.
+
+## `mokugeki-tester`: UI mode's checks written blind to the change
+
+The author asked whether a dedicated agent could do UI mode's Playwright
+testing. Checked against the criteria in `CLAUDE.md`: running Playwright is
+not a reason (the main session already does it). The reason is criterion 5,
+from this log's own real-project evidence: the UI-mode failures came from the
+session that made the fix also writing the check that proved it. The native
+`title` tooltip (entry "native/OS-rendered UI can't be proven by a DOM
+check") passed because the session knew it had added the attribute and
+checked for it. A tester that has never seen the diff, the app source or the
+design has only the AC and the running page, so its check follows the AC.
+Criterion 3 also applies (browser output, traces and login trouble stay out
+of the orchestrator). Criterion 1 does **not** hold as an allowlist: the
+agent needs `Edit`/`Write` for its check files, so "check files only" and
+"no app source" are instructions in its body, not enforced by tools.
+
+- **New helper `global/agents/mokugeki-tester.md`** (*mokugeki*, the
+  eyewitness: it only says what it saw). Thin shell: loads
+  `shoko-playwright` and adds only what is its own: what it must not know (app
+  source, git history, decision logs, design; the way to the screen is given
+  by the caller, so `references/nuxeo.md`'s "find the page in the source" is
+  the caller's step), check files only, never change a check after its first
+  run to make it pass, and a report shape with four verdicts: `PASS`,
+  `FAIL`, `ENV`, `HUMAN` (the last for proof the page can't show a check).
+  Sonnet, like the other helpers. Ported to Gemini.
+- **`saiban-orchestrator`:** on by default in UI mode, "no tester" turns it
+  off. One tester per screen, like one `shonin-dev` per run: re-runs go to
+  the same agent so the check doesn't drift. The orchestrator never edits a
+  check the tester wrote; disagreeing with one is a gate. `kenji-reviewer`
+  still reviews each AC afterwards.
+- **Eval fixture `evals/agents/mokugeki-tester/`**, run through
+  `scripts/eval_agent.sh --agent mokugeki-tester`: one static screen, four
+  ACs, three traps where the obvious check passes wrongly (native tooltip →
+  `HUMAN`; Delete button disabled but still seen → `FAIL`; "saved" toast with
+  no new row → `FAIL`) and one control (`PASS`). The page's behaviour was
+  checked with a probe script, and the runner with a stubbed `claude`.
+  Its cost per screen is not measured.
+
+**First real run (Sonnet, 2 runs per arm, $0.48 total):** the agent 4/4
+both runs, clean checks, nothing touched outside `checks/`. The comparison
+arm (`--arm informed`: a plain session with `shoko-playwright`, told the
+diff) **also 4/4**. The fixture measures the skill, whose rules already name
+each trap, not the blindness, so the agent's benefit is **not shown**. The
+real case it targets was a long session that had iterated on its own fix,
+which a fresh session handed a diff doesn't reproduce. Kept on by default in
+UI mode anyway: it costs about the same as the inline check here and keeps
+browser output out of the orchestrator (criterion 3, which holds whatever
+the bias result). Revisit if a real UI run shows otherwise. Also seen, in
+both arms: `toHaveCount(0)` for "does not see" (see the next entry: it was
+right).
+
+## shoko-playwright: what a zero count means depends on the locator
+
+The `mokugeki-tester` eval's AC2 checks asserted
+`getByRole('button', {name: 'Delete'})` `toHaveCount(0)` for "a read-only
+user does not see the Delete button". It was first logged as breaking "not
+shown means not visible, not absent". Checked against Playwright 1.63
+before changing the rule, it doesn't:
+
+| Button | role count | text count | text, visible only |
+|---|---|---|---|
+| `display:none` / `hidden` / `visibility:hidden` | 0 | 1 | 0 |
+| `aria-hidden="true"`, still drawn | 0 | 1 | 1 |
+| shown | 1 | 1 | 1 |
+
+A role locator skips hidden elements, so a zero count there already means
+"none shown". The rule held, but it didn't say this, so the same assertion
+reads as right or wrong depending on the locator. The real traps are the
+other two rows: a zero count on a text or test-id locator means "gone from
+the page" (a CSS-hidden fix fails), and an element hidden from assistive
+technology but still drawn counts 0 for a role locator while the user sees
+it. The rule now says both. It names no API, so it stays readable as Playwright
+evolves; counting only visible matches is `filter({ visible: true })` in
+1.63.
+
+## `mokugeki-tester`: a second fixture, still no separation
+
+The author asked for a fixture that separates the blind tester from a
+session told the change. `evals/agents/mokugeki-tester/anchor/`: each of
+three fixes is right only for the case its decision-log note describes (a
+date sort that compares `dd/mm/yyyy` as text, a search that lowercases the
+titles but not the query, a per-row Delete hidden for readers while "Delete
+selected" still works), with gaps the skill names nowhere and a check from
+the AC alone can see. Both arms got the same faithful reading of each AC;
+only the informed arm got the diff and notes. The old fixture moved to
+`traps/`; the runner reads each case's `prompt.md`, `informed.md` and
+`verdicts.txt` (`--case traps|anchor`).
+
+Result, Sonnet, 3 runs per arm, about $0.85: **both arms 4/4 on every run.**
+The informed arm read the diff as a reviewer would and named each bug from
+the code. So a fresh session is not anchored by a diff it is handed; the
+narrowing seen on the real project needs a session that wrote the fix
+itself. The next experiment, if wanted: one arm implements the ACs from a
+pre-fix page and proves them itself, the other implements and hands the
+checks to `mokugeki-tester`, compared by defects shipped. Not built.
+
+## `mokugeki-tester`: end to end, implement then prove
+
+The author asked for the experiment the two fixtures pointed to: an arm
+that writes the fix itself. `scripts/eval_ui_e2e.sh` gives a session the
+Documents page before any fix and four ACs, each touching list code that
+lives in several places (first render, add, row delete, filter, a Delete-key
+shortcut). `--arm inline` proves them with its own checks; `--arm tester`
+through `mokugeki-tester`, never handing it the change. A hidden oracle
+(`e2e/oracle.js`) judges the page left behind. The oracle was checked
+first: the unfixed page fails all four, a reference fix passes all four, a
+typical partial fix fails exactly on the paths it missed.
+
+Result, Sonnet, 3 runs per arm, about $1.20: **0 defects shipped, 0 false
+proofs, both arms.** Every run, in both arms, rewrote the page around one
+`render()` and hid every delete path for readers: with ~100 lines in view,
+the implementer saw them all. The tester ran once per tester run and cost
+about 1.6× ($0.23 vs $0.15). The orchestrator and the tutorials now give that
+figure in place of "not measured".
+
+Three experiments, no benefit shown. Not concluded either: none reproduced
+what happened on the real project, a long session with the code spread over
+many files. The next step, if any, is the same runner on a page whose update
+paths are split across files, or evidence from a real UI-mode run with the
+tester on.
+
+## `mokugeki-tester`: end to end on a split page, still no separation
+
+The author asked for the variant the single-file run pointed to: the update
+paths out of view. `evals/agents/mokugeki-tester/e2e-split/` is the same
+screen as 13 ES modules (about 350 lines), the delete paths reached by
+indirection (event delegation, a command registry, a keymap naming the
+command), a sixth path (Duplicate) and unrelated features around them. Same
+ACs, same oracle (extended for Duplicate, still passing the single-file
+reference fix); the runner takes `--case single|split`. The oracle was
+checked first: a partial fix in the obvious files fails exactly where the
+keyboard path still deletes for a reader.
+
+Result, Sonnet, 3 runs per arm, about $1.30: **0 defects, 0 false proofs,
+both arms.** Every run guarded the delete command itself, so both the
+toolbar and the keyboard were closed, and fixed count and order in one
+shared place. Tester cost about 1.6× again.
+
+Four experiments, all level. What they show: on an app small enough to read
+whole (up to ~350 lines here), the implementer finds every path, and a
+fresh session handed a diff isn't anchored by it. So the blind tester buys
+nothing measurable at this scale, at 1.6× the cost. What they can't show:
+a real project too large to read whole, worked by a long session. The
+benefit there stays an untested claim. Evidence now has to come from a real
+UI-mode run, not a bigger fixture.
+
+**Decision (author, after the four experiments):** `mokugeki-tester` stays
+on by default in UI mode ("no tester" turns it off). The experiments showed
+no benefit at fixture scale, but the one real failure (the native tooltip)
+was exactly the bias it guards against, in a long session on a large
+project, which no fixture reproduced. About 1.6× the check step's cost is
+taken as insurance. Revisit only with evidence from real UI-mode runs.

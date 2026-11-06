@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "global" / "agents"
 TARGET = ROOT / "agents"
-PORTED = ["kenji-reviewer", "shonin-dev", "tantei-inspector"]
+PORTED = ["kenji-reviewer", "shonin-dev", "mokugeki-tester", "tantei-inspector"]
 
 # Claude Code tool name -> Gemini CLI tool name. Unverified against a live
 # Gemini install: check each name on first use and fix it here.
@@ -45,6 +45,15 @@ GEMINI_DESCRIPTIONS = {
         "so the code is not biased by what comes next. Give it only the failing test, the test command, "
         "the production files in play and the approved structural plan - never the test plan, the "
         "ticket or the acceptance criteria. It writes the least code that passes and never commits."
+    ),
+    "mokugeki-tester": (
+        "UI tester (mokugeki = the eyewitness). Delegate to it the Playwright check of each acceptance "
+        "criterion of one web screen (shoko-playwright), so the check proves what a user sees rather than "
+        "what the code was changed to do. Give it each criterion verbatim, the base URL and the way to the "
+        "screen, the names of the login environment variables, the viewports a layout criterion names and "
+        "where the project's checks live - never the diff, the app source, the decision log or the design. "
+        "Deploy first; after each change, ask it to re-run the same check. It writes only check files, "
+        "never commits, and reports PASS, FAIL, ENV or HUMAN per criterion."
     ),
     "tantei-inspector": (
         "Inspector of the aixlper skills (tantei = the detective). Read-only. Delegate to it to review "

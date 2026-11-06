@@ -1,0 +1,20 @@
+import { applyStrings } from './i18n.js';
+import { initSession } from './session.js';
+import { renderRows } from './list.js';
+import { seedDocuments } from './data.js';
+import { initSearch } from './search.js';
+import { initToolbar } from './toolbar.js';
+import { initRowActions } from './row-actions.js';
+import { initShortcuts } from './shortcuts.js';
+import { initForm } from './form.js';
+import { initPrefs } from './prefs.js';
+
+applyStrings();
+initSession();
+renderRows(seedDocuments());
+initSearch();
+initToolbar();
+initRowActions();
+initShortcuts();
+initForm();
+initPrefs();

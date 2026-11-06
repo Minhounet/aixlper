@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Documents</title>
+<style>
+  body { font-family: sans-serif; margin: 2rem; }
+  table { border-collapse: collapse; margin: .5rem 0; }
+  td, th { border: 1px solid #ccc; padding: .3rem .6rem; text-align: left; }
+  form label { margin-right: .6rem; }
+</style>
+</head>
+<body>
+<h1>Documents</h1>
+<p>Signed in as <span id="who"></span></p>
+<label>Search <input id="search" type="search"></label>
+<button id="delete-selected" type="button">Delete selected</button>
+<p class="tip">Tip: tick documents and press the Delete key to remove them.</p>
+<table>
+  <thead><tr><th>Select</th><th>Title</th><th>Date</th><th>Actions</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<h2>New document</h2>
+<form id="new-doc">
+  <label>Title <input name="title" required></label>
+  <label>Author <input name="author" required></label>
+  <label>Date <input name="date" placeholder="dd/mm/yyyy" required></label>
+  <button type="submit">Save</button>
+</form>
+
+<script>
+  const role = new URLSearchParams(location.search).get('role') || 'editor';
+  document.getElementById('who').textContent = role === 'reader' ? 'a reader (read-only)' : 'an editor';
+  const docs = [
+    { title: 'Quarterly Report', author: 'Ana Lima', date: '05/03/2026' },
+    { title: 'Minutes of the Board', author: 'Bo Chen', date: '12/01/2026' },
+    { title: 'Heating contract', author: 'Cy Diaz', date: '28/02/2026' },
+    { title: 'Budget plan', author: 'Di Eko', date: '19/11/2025' },
+  ];
+  const rows = document.getElementById('rows');
+
+  function rowFor(d) {
+    const tr = document.createElement('tr');
+    const sel = document.createElement('td');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.setAttribute('aria-label', 'Select ' + d.title);
+    sel.append(box);
+    const title = document.createElement('td');
+    title.textContent = d.title;
+    const date = document.createElement('td');
+    date.textContent = d.date;
+    const actions = document.createElement('td');
+    const del = document.createElement('button');
+    del.textContent = 'Delete';
+    del.addEventListener('click', () => tr.remove());
+    actions.append(del);
+    tr.append(sel, title, date, actions);
+    return tr;
+  }
+
+  docs.forEach(d => rows.append(rowFor(d)));
+
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    for (const tr of rows.rows) {
+      tr.hidden = !tr.cells[1].textContent.toLowerCase().includes(q);
+    }
+  });
+
+  function deleteTicked() {
+    rows.querySelectorAll('input:checked').forEach(b => b.closest('tr').remove());
+  }
+  document.getElementById('delete-selected').addEventListener('click', deleteTicked);
+  document.addEventListener('keydown', e => {
+    const typing = e.target.tagName === 'INPUT' && e.target.type !== 'checkbox';
+    if (e.key === 'Delete' && !typing) deleteTicked();
+  });
+
+  document.getElementById('new-doc').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target.elements;
+    rows.append(rowFor({ title: f.title.value, author: f.author.value, date: f.date.value }));
+    e.target.reset();
+  });
+</script>
+</body>
+</html>

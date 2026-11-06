@@ -47,7 +47,7 @@ agent only loads that skill and adds its own working rules, so the same
 process also runs as `/saiban-orchestrator` inside a plain session, with no copy. A newly known,
 repeated process becomes a new **mode** of `saiban-orchestrator` (with its rules in a
 skill), not a new agent. **Helper agents** (`kenji-reviewer`,
-`shonin-dev`) are spawned by `saiban-orchestrator` for a single step, and only when that
+`shonin-dev`, `mokugeki-tester`, `tantei-inspector`) are spawned by `saiban-orchestrator` for a single step, and only when that
 step meets one of the criteria below. Skills hold the processes in both
 cases.
 
@@ -59,12 +59,14 @@ below makes it an agent rather than a step the orchestrator follows inline:
 | `saiban-orchestrator` | Runs a known process for the author, mode by mode, asking only at the gates | The agent that replaces the author (main session, so it can ask) | The author (`ci`) |
 | `kenji-reviewer` | Checks one AC's run against the skills; reports, never fixes | 1 (no Edit/Write), 5 (fresh eyes) | The orchestrator, after each AC |
 | `shonin-dev` | Writes one GREEN from the failing test alone, so the code isn't biased by the plan | 5 (never sees the test plan, ticket or ACs) | The orchestrator, the GREENs of a large TDD run in fix and build (one dev per run) |
+| `mokugeki-tester` | Writes and runs one screen's Playwright checks, one per AC; reports what it saw | 5 (never sees the diff, app source or design, so a check follows the AC, not the code), 3 (browser output kept out) | The orchestrator, UI mode, one tester per screen |
 | `tantei-inspector` | Reads how the skills were used and proposes exact changes to them | 1 (read-only), 3 (long reading kept out), 5 (not the working session's reasons) | The orchestrator, improve mode |
 
-The three helpers pin `model: sonnet` (criterion 2; the orchestrator uses
+The four helpers pin `model: sonnet` (criterion 2; the orchestrator uses
 the session's model). Gemini copies drop the field and use Gemini's default.
 Each is evaluated on a fixture with a known answer (`evals/agents/`), except
 `shonin-dev`, measured on katas (`katas/igiari-tdd/README.md`).
+`mokugeki-tester` scored 4/4 on both its fixtures (`traps`, `anchor`), but so did a session told the change; end to end (`scripts/eval_ui_e2e.sh`, one file and 13 modules) neither arm shipped a defect, the tester costing about 1.6×: its benefit is not shown yet.
 
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to
@@ -120,7 +122,7 @@ sections without the author asking.**
 | `shoko-playwright` | New, not dogfooded | Validates a web UI change against its ACs with Playwright: one check per AC, run against the app running the current code, the result kept as evidence. Not TDD: a check that already passes means the AC is already met. Written from general Playwright knowledge. Layout ACs are checked at each viewport they name. Nuxeo specifics (URL, login, test data, breakpoints) come from the project; `references/nuxeo.md` lists the questions for custom Web UI pages, answered from the project each time (no reference setup exists). `saiban-orchestrator`'s UI mode uses it. |
 | `yusaburi-mutation` | New, dogfooded once (Maven) | Mutation testing (PIT), scoped to the code a task touches: end of a TDD run (survivor = code no red asked for) and before relying on existing tests to change existing code (survivor = hole in the safety net). Never per cycle, never a score. Verdict per survivor; "equivalent" ones checked by `kenji-reviewer`. Maven path of `references/pitest.md` run once on two katas; Gradle not run. |
 | `tantei-debug` | New, partly dogfooded | Finds *where* a Java bug is when the cause is unknown (webservice or batch, local or remote): logs first, then bisection with a JPDA debugger, every split written to an investigation note with a `Resume` block; ends at a `Found` block handed to a characterization test and a TDD fix. `scripts/jdb_session.py` (keeps one `jdb` attached across shell calls) was run here against a toy webservice and batch; the method itself not yet used on a real bug. `references/intellij-mcp.md` is untested. Fix mode of `saiban-orchestrator` starts with it when the cause isn't known. |
-| `saiban-orchestrator` | New, partly dogfooded | **Claude-only.** The known-process runner: six modes (fix, build, ui, think, improve, direct), a fixed skill pipeline per mode, gates, decision log with a `Resume` block, per-AC review by `kenji-reviewer`, `shonin-dev` writing the GREENs of large TDD runs, one dev per run (decided by a stated rule; "with dev"/"no dev" override); improve mode has `tantei-inspector` inspect how the skills were used and applies the approved changes in the aixlper clone. The `saiban-orchestrator` agent in `global/agents/` is a thin shell that loads it. UI mode works one screen at a time with a pause between screens; a change only the user can make (Studio Modeler) is a gate. Work started in a plain session can be taken over. Build and fix modes ran headless several times; think and direct ran once each; ui mode ran a full multi-screen pass on a real Nuxeo project (several fixes shipped and reviewed); improve mode ran once on that same project's evidence, 6 proposals, see `docs/design-log.md`. |
+| `saiban-orchestrator` | New, partly dogfooded | **Claude-only.** The known-process runner: six modes (fix, build, ui, think, improve, direct), a fixed skill pipeline per mode, gates, decision log with a `Resume` block, per-AC review by `kenji-reviewer`, `mokugeki-tester` writing and running UI mode's checks blind to the change (new; its benefit not shown in four experiments), `shonin-dev` writing the GREENs of large TDD runs, one dev per run (decided by a stated rule; "with dev"/"no dev" override); improve mode has `tantei-inspector` inspect how the skills were used and applies the approved changes in the aixlper clone. The `saiban-orchestrator` agent in `global/agents/` is a thin shell that loads it. UI mode works one screen at a time with a pause between screens; a change only the user can make (Studio Modeler) is a gate. Work started in a plain session can be taken over. Build and fix modes ran headless several times; think and direct ran once each; ui mode ran a full multi-screen pass on a real Nuxeo project (several fixes shipped and reviewed); improve mode ran once on that same project's evidence, 6 proposals, see `docs/design-log.md`. |
 
 **Next session:** study `chottomatte-archi` (kata dogfood, contradictions one
 by one with the author, evals checked against the no-skill baseline). The
@@ -172,8 +174,8 @@ global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
 global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
-global/agents/                    # Claude Code agents: source of truth (saiban-orchestrator Claude-only; the 3 helpers are also ported)
-agents/                           # Gemini CLI copies of the 3 helper agents, GENERATED: edit global/agents/, then make gemini-agents
+global/agents/                    # Claude Code agents: source of truth (saiban-orchestrator Claude-only; the 4 helpers are also ported)
+agents/                           # Gemini CLI copies of the 4 helper agents, GENERATED: edit global/agents/, then make gemini-agents
 scripts/gemini_agents.py          # generates agents/ from global/agents/ (--check runs in make validate)
 scripts/install-gemini.sh         # Gemini CLI installer: skills (minus gemini-exclude.txt) + agents
 scripts/gemini-exclude.txt        # Claude-only skills install-gemini.sh skips (checked by make validate)
@@ -314,7 +316,8 @@ change is checked against both as part of the change itself:
   differs per client says so explicitly ("where the client can spawn a
   subagent, e.g. Claude Code, ... otherwise inline"). A Claude-only skill says
   so in its description.
-- **Helper agents** (`kenji-reviewer`, `shonin-dev`, `tantei-inspector`): edit
+- **Helper agents** (`kenji-reviewer`, `shonin-dev`, `mokugeki-tester`,
+  `tantei-inspector`): edit
   only `global/agents/<name>.md`, run `make gemini-agents`, and commit the
   regenerated `agents/*.md` in the same commit. `make validate` fails if they
   are stale. The tool-name mapping in `scripts/gemini_agents.py` (`TOOL_MAP`)

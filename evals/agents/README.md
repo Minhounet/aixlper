@@ -10,6 +10,8 @@ gives keyword hints, and the score comes from reading `answer.md` against
 | Agent | Fixture | What a good run does |
 |---|---|---|
 | `kenji-reviewer` | `make-fixture.sh`: a kata history, `clean` and `defects` (D1–D4 planted) | PASS on `clean`; all four defects `blocking` on `defects`; nothing changed on disk |
+| `mokugeki-tester` | `traps/` and `anchor/`: a static Documents screen served on a local port, four ACs each (three traps, one control) | The verdicts in each case's `verdicts.txt`; no fixed sleeps; nothing changed outside `checks/`. `--arm informed` is the comparison (a plain session told the change) |
+| `mokugeki-tester`, end to end | `mokugeki-tester/e2e/` (one file) and `e2e-split/` (13 modules): the page before any fix, a hidden oracle; run with `scripts/eval_ui_e2e.sh --arm inline\|tester --case single\|split` | The arm implements the four ACs and proves them; scored by the oracle on the page left behind: defects shipped, false proofs |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
@@ -62,6 +64,80 @@ read several files at once (`login-lock.md:43` in a 17-line file); within a
 single file they are right. The quotes are exact. The first summary also
 counted both decoys as hits: keyword noise from the "not proposed" lines,
 fixed in the runner (a decoy now counts only when a proposal is about it).
+
+### 2026-11-06, mokugeki-tester, Sonnet, 2 runs per arm
+
+**Blind (the agent): 4/4 both runs** (about $0.13 a run, 7–9 turns). M1
+`HUMAN` with the right reason and no attribute check written; M2 and M3
+`FAIL` on the outcome the AC states, not the disabled state or the toast;
+M4 `PASS`. Role and label locators, waiting assertions, no sleeps, nothing
+changed outside `checks/`. One run said, unasked, that a first exploration
+printed the page's `innerHTML` with its inline script: app source reached
+through the page, though it said it didn't use it.
+
+**Informed (plain session, `shoko-playwright`, told the diff): also 4/4
+both runs** (about $0.11 a run). Same verdicts, same reasons.
+
+So **this fixture does not separate the arms**: it measures
+`shoko-playwright`, whose "Checks that don't lie" names each trap (they came
+from the real incidents). The blindness benefit is not shown. The real
+bias case was a long session that had already iterated on its fix; a fresh
+session told a diff is not that. A fixture that could separate them needs
+traps the skill doesn't name, or the informed arm must be the session that
+made the change.
+
+Seen in both arms, 3 of 4 runs: AC2 asserted
+`getByRole('button', {name: 'Delete'})` `toHaveCount(0)`. First read as a
+broken rule ("gone from the page", not "not visible"); checked with
+Playwright 1.63, it is right: a role locator skips hidden elements
+(`display:none`, `hidden`, `visibility:hidden`), so a CSS-hidden button
+counts 0 too. `shoko-playwright` now says what a zero count means per
+locator kind (see the design log).
+
+### 2026-11-06, mokugeki-tester end to end, split page, Sonnet, 3 runs per arm
+
+The same experiment on the screen spread over 13 modules, the delete paths
+reached through a command registry and a keymap. **Both arms: 0 defects
+shipped, 0 false proofs, every run.** Every run, in both arms, guarded the
+delete command itself in `commands.js` (closing the toolbar and keyboard
+paths at once) and fixed the count and the order in one shared place: at
+about 350 lines the implementer still reads the whole app before changing
+it. Cost: inline $0.17 a run, tester $0.25–0.29, about 1.6× again.
+
+### 2026-11-06, mokugeki-tester end to end, Sonnet, 3 runs per arm
+
+Each arm implemented the four ACs on the unfixed page, then proved them:
+inline with its own checks, or through `mokugeki-tester` (spawned once in
+every tester run). **Both arms: 0 defects shipped and 0 false proofs on
+every run.** Every run rewrote the page around one place that redraws the
+list, so none of the five separate update paths was left behind: on a
+~100-line page with everything in view, the implementer doesn't make the
+mistake the tester is there to catch. Cost: inline $0.14–0.16 a run,
+tester $0.23–0.24, about 1.6×.
+
+So the third experiment doesn't separate the arms either. What it does
+measure is the tester's price on a small screen. A version that could
+separate them needs the update paths out of view (several files, more code,
+as in a real Web UI project), so that the implementer can miss one.
+
+### 2026-11-06, mokugeki-tester `anchor` case, Sonnet, 3 runs per arm
+
+Built so the informed arm's own notes would narrow each AC to the case its
+fix handles (see `mokugeki-tester/expected.md`). **Both arms 4/4 on every
+run** (about $0.13 a run blind, $0.13–0.22 informed). The informed arm was
+not anchored: it read the diff critically and named each bug from the code
+(`localeCompare` on dd/mm dates, the query not lowercased, "Delete
+selected" left for readers), which the blind arm could only describe from
+the page. One informed run went on to fix the page and re-run its checks to
+`PASS`; its first run had failed all three, so it counts as caught. The
+informed reports used bold `**AC1: FAIL**` lines, which the runner's
+summary missed (0/4 shown); the parser now accepts them.
+
+So **two fixtures, no separation**: a fresh session handed a diff is not
+biased by it, and may even catch more by reading the code. The bias the
+agent targets came from a session that had *written* the fix over many
+turns. Measuring that needs an arm that implements the ACs and then proves
+them itself, against one whose checks come from the tester: not built.
 
 ### 2026-11-02, tantei-inspector line numbers
 

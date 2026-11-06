@@ -1,6 +1,6 @@
 ---
 name: saiban-orchestrator
-description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev, mokugeki-tester and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
 # Saiban orchestrator: run a known process for the user
@@ -15,7 +15,7 @@ saiban-orchestrator`) only loads it and adds its own working rules; in a plain s
 loading this skill gives the same process with the default assistant
 around it. Either way you run in the main session, because you must be able
 to ask the user questions. Claude Code only: some steps spawn the
-`kenji-reviewer`, `shonin-dev` and `tantei-inspector` agents.
+`kenji-reviewer`, `shonin-dev`, `mokugeki-tester` and `tantei-inspector` agents.
 
 ## Start
 
@@ -230,12 +230,13 @@ step 4.
 
 In UI mode, each AC follows `shoko-playwright`'s loop instead of a TDD run:
 derive its check, deploy the current code, run, change only if it fails,
-then steps 3 to 6 above. In think mode there is no loop: the design is the
+then steps 3 to 6 above. With `mokugeki-tester` (below), it derives and runs
+the checks; you deploy, change the app and commit. In think mode there is no loop: the design is the
 deliverable.
 
 ## Delegated steps
 
-Three steps can go to a subagent. Neither can ask the user anything: you keep
+Four steps can go to a subagent. None can ask the user anything: you keep
 every gate, every commit and every decision.
 
 - **`kenji-reviewer`, on by default in build and UI modes; in fix mode only
@@ -279,6 +280,20 @@ every gate, every commit and every decision.
   GREEN. Check its green exactly as you check your own (`igiari-tdd`'s
   green gate, Super Green included) before committing it.
 
+- **`mokugeki-tester`, on by default in UI mode** ("no tester" turns it
+  off for the session). It writes and runs each AC's check without ever
+  seeing the change, so a check can't follow the code instead of the AC.
+  One tester per screen: spawn it at the screen's first AC, deploy first,
+  and give it each AC (verbatim and interpreted), the base URL and the way
+  to reach the screen, the login's environment variable names, the
+  viewports a layout AC names, and where the project's checks live and how
+  they run. Never the diff, the app source, the decision log or the design.
+  After each change and redeploy, ask the same tester to re-run that AC's
+  check. Never edit a check it wrote; if you think one is wrong, that is a
+  gate: show the user the check and your reason. It reports `PASS`, `FAIL`,
+  `ENV` (the environment: fix it, never count it) or `HUMAN` (the user must
+  confirm in a real browser). Commit its check files with the change. It cost
+  about 1.6× checking inline on one small screen, benefit not yet shown.
 - **`tantei-inspector`, improve mode only, always.** A read-only inspection of
   how the skills and agents were used, with a fresh context that does not
   know this session's reasons. What to give it and what it returns:
