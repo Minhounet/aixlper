@@ -3894,6 +3894,29 @@ which a fresh session handed a diff doesn't reproduce. Kept on by default in
 UI mode anyway: it costs about the same as the inline check here and keeps
 browser output out of the orchestrator (criterion 3, which holds whatever
 the bias result). Revisit if a real UI run shows otherwise. Also seen, in
-both arms: `toHaveCount(0)` for "does not see", against
-`shoko-playwright`'s "not shown means not visible"; a skill rule missed, not
-changed yet.
+both arms: `toHaveCount(0)` for "does not see" (see the next entry: it was
+right).
+
+## shoko-playwright: what a zero count means depends on the locator
+
+The `mokugeki-tester` eval's AC2 checks asserted
+`getByRole('button', {name: 'Delete'})` `toHaveCount(0)` for "a read-only
+user does not see the Delete button". It was first logged as breaking "not
+shown means not visible, not absent". Checked against Playwright 1.63
+before changing the rule, it doesn't:
+
+| Button | role count | text count | text, visible only |
+|---|---|---|---|
+| `display:none` / `hidden` / `visibility:hidden` | 0 | 1 | 0 |
+| `aria-hidden="true"`, still drawn | 0 | 1 | 1 |
+| shown | 1 | 1 | 1 |
+
+A role locator skips hidden elements, so a zero count there already means
+"none shown". The rule held, but it didn't say this, so the same assertion
+reads as right or wrong depending on the locator. The real traps are the
+other two rows: a zero count on a text or test-id locator means "gone from
+the page" (a CSS-hidden fix fails), and an element hidden from assistive
+technology but still drawn counts 0 for a role locator while the user sees
+it. The rule now says both. It names no API, so it stays readable as Playwright
+evolves; counting only visible matches is `filter({ visible: true })` in
+1.63.

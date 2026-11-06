@@ -86,7 +86,14 @@ pass means the AC holds:
   pass.
 - **"Not shown" means not visible**, not absent: an element can stay in the
   page while hidden. Assert it is hidden (not visible), unless the AC says
-  it must be gone from the page entirely.
+  it must be gone from the page entirely. What a zero count means depends
+  on the locator: a role locator already skips hidden elements, so a count
+  of 0 there means none is shown; a text or test-id locator still counts
+  hidden ones, so a count of 0 there means gone from the page. To say
+  "none shown" with those, count only the visible matches. A role locator
+  also skips an element marked hidden from assistive technology that is
+  still drawn on screen: if such an element could be the one the AC is
+  about, check the visible text too.
 - **Assert the outcome the AC states, not a side detail.** If the AC says
   "the document appears in the list", check the list, not a toast that
   says "saved".

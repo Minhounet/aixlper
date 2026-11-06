@@ -85,10 +85,13 @@ session told a diff is not that. A fixture that could separate them needs
 traps the skill doesn't name, or the informed arm must be the session that
 made the change.
 
-Seen in both arms, 3 of 4 runs: AC2 asserted `toHaveCount(0)` (gone from
-the page) where `shoko-playwright` says "not shown" means not visible. The
-verdict was right here, but a fix that hides the button would still fail.
-A skill rule missed, not an agent issue; not changed yet.
+Seen in both arms, 3 of 4 runs: AC2 asserted
+`getByRole('button', {name: 'Delete'})` `toHaveCount(0)`. First read as a
+broken rule ("gone from the page", not "not visible"); checked with
+Playwright 1.63, it is right: a role locator skips hidden elements
+(`display:none`, `hidden`, `visibility:hidden`), so a CSS-hidden button
+counts 0 too. `shoko-playwright` now says what a zero count means per
+locator kind (see the design log).
 
 ### 2026-11-02, tantei-inspector line numbers
 
