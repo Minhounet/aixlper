@@ -4038,7 +4038,8 @@ recognizable.
   sign), round ears, the dark mask around the eyes (`####`), a striped tail,
   a round belly. The gavel makes it the judge.
 - **Two banners, one drawing.** NOT GUILTY: smile, gavel at rest. GUILTY:
-  frown, gavel striking with the same impact star as OBJECTION!.
+  frown and brows down, gavel striking with the same impact star as
+  OBJECTION!.
 - **Same rules as the yells**: fixed art in `references/verdicts.md`, built
   once by script (lettering from the yells' glyphs plus G, U, Y; widths
   checked, at most 66 columns) and copied verbatim, read only at the verdict,

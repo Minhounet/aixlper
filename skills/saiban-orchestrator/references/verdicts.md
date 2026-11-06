@@ -51,7 +51,7 @@ finding or discrepancy open, the work committed. It smiles; the gavel rests.
 
 ## GUILTY!
 
-Anything else. It frowns; the gavel strikes.
+Anything else. It frowns, brows down; the gavel strikes.
 
 ```
                       ___
@@ -60,7 +60,7 @@ Anything else. It frowns; the gavel strikes.
           .--.        ||       .--.
          / .. \.------''----./ .. \
          \    /              \    /
-          '--/                \--'
+          '--/  \___    ___/  \--'
             |   ####    ####   |
             |  ##(@)#  #(@)##  |
             |   ####    ####   |
