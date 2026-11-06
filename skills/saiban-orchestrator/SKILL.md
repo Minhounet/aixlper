@@ -366,7 +366,8 @@ The judge opens and closes the session, in chat only, like the yells:
   green, no blocking finding or discrepancy is open, and the work is
   committed. Otherwise **GUILTY**, one count per line: what is unproven or
   open, and where. Never soften a verdict to end on a good note: the joke is
-  the frame, the counts are the report.
+  the frame, the counts are the report. Tanuki-saibankan, the judge, gives
+  it: read `references/verdicts.md` then and copy its banner verbatim.
 
 None in think or direct mode. "no court" turns all three off; record it in
 the `Resume` block (the hook has its own switch, `AIXLPER_NO_COURT=1`).

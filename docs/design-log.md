@@ -4026,3 +4026,20 @@ in flight at launch, and at the end says "NOT guilty" or "guilty".
 - **Adjourned** prefixes the pause line: stopping for the day is not a
   verdict. None in think or direct mode; "no court" turns it off, like "no
   yell".
+
+## `saiban-orchestrator`: Tanuki-saibankan, the judge's banner
+
+The author asked for an ASCII judge for the verdict, an animal, and chose a
+tanuki (offered: owl, tortoise, tanuki, cat), asking that it be clearly
+recognizable.
+
+- **What makes it a tanuki**, kept in the art and named in the reference so
+  a later edit doesn't lose it: the leaf on its head (the folklore tanuki's
+  sign), round ears, the dark mask around the eyes (`####`), a striped tail,
+  a round belly. The gavel makes it the judge.
+- **Two banners, one drawing.** NOT GUILTY: smile, gavel at rest. GUILTY:
+  frown, gavel striking with the same impact star as OBJECTION!.
+- **Same rules as the yells**: fixed art in `references/verdicts.md`, built
+  once by script (lettering from the yells' glyphs plus G, U, Y; widths
+  checked, at most 66 columns) and copied verbatim, read only at the verdict,
+  chat only. Not yet seen in a real run.
