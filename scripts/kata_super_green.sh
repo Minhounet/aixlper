@@ -14,7 +14,7 @@
 #                 the comparison arm (run dirs are named <kata>-base-<n>)
 #   --orchestrator  run through saiban-orchestrator in fix mode (plan
 #                 pre-approved, no review, no pauses) instead of igiari-tdd
-#                 alone. `dev`: its default, shonin-dev writes each green;
+#                 alone. `dev`: "with dev", shonin-dev writes the greens;
 #                 `nodev`: the same with "no dev". The pair measures the dev
 #                 agent and nothing else (run dirs <kata>-dev-<n>, -nodev-<n>).
 #                 The summary adds `subagents`, counted from the session's
@@ -128,7 +128,7 @@ approval, then run mvn verify. There is no IDE attached; use Maven."
     plugin_args=()
   elif [ -n "$orch" ]; then
     opts="no review, no pauses, plan pre-approved"
-    [ "$orch" = nodev ] && opts="$opts, no dev"
+    if [ "$orch" = nodev ]; then opts="$opts, no dev"; else opts="$opts, with dev"; fi
     prompt="Use the saiban-orchestrator skill in fix mode ($opts) to implement
 this kata in Java, in the Maven project in the current directory. JUnit 5 and
 Vavr are already in the pom. Scope: this kata only; nothing outside this
@@ -155,7 +155,7 @@ the skill says. There is no IDE attached; use Maven."
   fi
   (cd "$dir/work" && git config user.email kata@example.com && git config user.name kata &&
     claude -p "$prompt" "${plugin_args[@]}" --model "$model" \
-      --allowedTools "Bash Edit Write Read Glob Grep Skill${orch:+ Agent Task}" \
+      --allowedTools "Bash Edit Write Read Glob Grep Skill${orch:+ Agent Task SendMessage}" \
       --max-turns "$max_turns" --max-budget-usd "$budget" \
       --output-format json > "$dir/result.json" 2> "$dir/stderr.txt")
   cost=$(python3 -I -c "import json,sys; print(round(json.load(open(sys.argv[1])).get('total_cost_usd',0),3))" "$dir/result.json" 2>/dev/null || echo "?")

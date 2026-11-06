@@ -251,16 +251,32 @@ every gate, every commit and every decision.
   `shoko-playwright` as its skills, and give it the check command. Skip it only if the user
   said "no review". In fix mode, give it the fix request instead of an AC;
   with no structural plan or ticket, those checks simply do not apply.
-- **`shonin-dev`, on by default in fix and build modes** (wherever a TDD
-  run writes code). Only the user turns it off ("no dev"); never skip it on
-  your own judgment. You write the tests (RED) and do the REFACTOR; it writes
-  the code that makes each test pass, so the code is not biased by what you
-  know of the tests still to come. It does the GREEN exactly as you would, with the same skills
-  (`igiari-tdd`, `kanpeki-fp`, `chottomatte-archi`); the only difference is a
-  fresh context that cannot build ahead of the tests. For each GREEN step,
-  spawn it with the failing test, the test command, the production files in
-  play and the approved structural plan: never the test plan, the ticket or
-  the ACs. Check its green exactly as you check your own (`igiari-tdd`'s
+- **`shonin-dev`, decided per TDD run in fix and build modes** (wherever a
+  TDD run writes code). You write the tests (RED) and do the REFACTOR; it
+  writes the code that makes each test pass, so the code is not biased by
+  what you know of the tests still to come. It does the GREEN exactly as you
+  would, with the same skills (`igiari-tdd`, `kanpeki-fp`,
+  `chottomatte-archi`); the only difference is a context that has never seen
+  the test plan, the ticket or the ACs.
+
+  **When.** "with dev" turns it on and "no dev" off, for the whole session.
+  Otherwise decide per TDD run, by this rule only: on when what you know
+  ahead of the tests is large, that is in build mode on a ticket with two or
+  more ACs, or a TDD plan of four or more tests in one run; off otherwise.
+  It costs about 2.7× a run without it (measured on katas), and its benefit
+  is not yet measured, so a small run does not pay for it. State the
+  decision with its reason in the plan you put up for approval ("dev: on,
+  3 ACs"), so the user can override it at that gate, and log it.
+
+  **How: one dev per TDD run, not one per GREEN.** At the run's first
+  GREEN, spawn it with the failing test, the test command, the production
+  files in play and the approved structural plan: never the test plan, the
+  ticket or the ACs. For each later GREEN of the same run, send that same
+  agent the next failing test and ask it to re-read the production files
+  first (your REFACTOR changed them since). Its skills load once instead of
+  every cycle. A new run (the next AC) gets a fresh dev. If its green goes
+  wrong, or you cannot message a spawned agent, spawn a fresh one for that
+  GREEN. Check its green exactly as you check your own (`igiari-tdd`'s
   green gate, Super Green included) before committing it.
 
 - **`tantei-inspector`, improve mode only, always.** A read-only inspection of

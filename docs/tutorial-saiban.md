@@ -18,8 +18,13 @@ how the skills were used. They were `iterate`, `iterate-reviewer` and
 |---|---|---|---|---|
 | `saiban-orchestrator` | Orchestrator: picks the mode and the skills, runs the loop, asks you at the gates | It replaces you for a known process, so it must run as the main session to ask you questions | You (`ci`, or `/saiban-orchestrator`) | Yes |
 | `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | Fresh eyes and no write access: it can't fix what it reviews | `saiban-orchestrator`, after each AC | No |
-| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | It must not know what tests come next, so its code can't be biased toward them | `saiban-orchestrator`, each GREEN (fix, build) | Yes |
+| `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | It must not know what tests come next, so its code can't be biased toward them | `saiban-orchestrator`, the GREENs of a large TDD run, one dev per run (fix, build) | Yes |
 | `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | Read-only, and must not know the working session's reasons; its long reading stays out of the main session | `saiban-orchestrator`, improve mode | No |
+
+The three helpers run on Sonnet whatever model the main session uses
+(`model: sonnet` in their frontmatter): their work is following written
+rules, where Sonnet measured level with Opus. The orchestrator uses your
+session's model; pick Opus with `/model` when the planning needs it.
 
 ### 1. Install
 
@@ -105,7 +110,7 @@ message:
 | `no pauses` | No stop after each AC. |
 | `no review` | No `kenji-reviewer` after each AC (build mode). |
 | `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
-| `no dev` | The orchestrator writes the GREEN itself instead of `shonin-dev` (on by default in fix and build: the code is written by an agent that only sees the failing test, not the plan). Saves about a third of a build run's cost. |
+| `with dev` / `no dev` | Force `shonin-dev` on or off. Without either, the orchestrator decides per TDD run: on for a build ticket with two or more ACs or a plan of four or more tests, off otherwise, and says so in the plan you approve. With it, the code is written by one agent per run that only sees the failing tests, not the plan; it costs about 2.7× on katas, benefit not yet measured. |
 
 ### Agent or plain session?
 
@@ -154,8 +159,8 @@ decides and writes down.
 It commits locally, never pushes, and never writes to Jira unless asked.
 
 **Cost, measured** on a two-AC ticket: about $2.60 on Sonnet, $6.30 on
-Opus without `shonin-dev`; with it (now the default) about half more, about
-$4 on Sonnet. A small fix-mode bug: about $0.30 without it, measured before
+Opus without `shonin-dev`; with it (one spawn per GREEN, before it became
+one per run) about half more, about $4 on Sonnet. A small fix-mode bug: about $0.30 without it, measured before
 it was the default.
 
 ### 5. Improve it

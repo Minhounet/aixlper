@@ -19,8 +19,14 @@ sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
 |---|---|---|---|---|
 | `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Il te remplace pour un process connu, donc il tourne en session principale pour pouvoir te poser des questions | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
 | `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | Un regard neuf et aucun droit d'écriture : il ne peut pas corriger ce qu'il relit | `saiban-orchestrator`, après chaque CA | Non |
-| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, à chaque GREEN (fix, build) | Oui |
+| `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, les GREEN d'une grosse exécution TDD, un dev par exécution (fix, build) | Oui |
 | `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, mode improve | Non |
+
+Les trois agents d'aide tournent sur Sonnet quel que soit le modèle de la
+session principale (`model: sonnet` dans leur frontmatter) : leur travail
+consiste à suivre des règles écrites, où Sonnet a été mesuré au niveau
+d'Opus. L'orchestrateur utilise le modèle de ta session ; choisis Opus avec
+`/model` quand la planification le demande.
 
 ### 1. Installer
 
@@ -113,7 +119,7 @@ message :
 | `no pauses` | Pas d'arrêt après chaque CA. |
 | `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
 | `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
-| `no dev` | L'orchestrateur écrit le GREEN lui-même au lieu de `shonin-dev` (activé par défaut en fix et build : le code est écrit par un agent qui ne voit que le test en échec, pas le plan). Économise environ un tiers du coût d'un run build. |
+| `with dev` / `no dev` | Force `shonin-dev` activé ou désactivé. Sans l'un ni l'autre, l'orchestrateur décide pour chaque exécution TDD : activé pour un ticket build à deux CA ou plus, ou un plan de quatre tests ou plus, désactivé sinon, et il l'annonce dans le plan que vous approuvez. Activé, le code est écrit par un seul agent par exécution, qui ne voit que les tests en échec, pas le plan ; environ 2,7× le coût sur les katas, bénéfice pas encore mesuré. |
 
 ### Agent ou session normale ?
 
@@ -170,7 +176,7 @@ Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
 qu'on le lui demande.
 
 **Coût mesuré** sur un ticket à deux CA : environ 2,60 $ avec Sonnet,
-6,30 $ avec Opus sans `shonin-dev` ; avec (le défaut désormais) environ la
+6,30 $ avec Opus sans `shonin-dev` ; avec (un lancement par GREEN, avant le passage à un par exécution) environ la
 moitié en plus, environ 4 $ avec Sonnet. Un petit bug en mode fix : environ
 0,30 $ sans lui, mesuré avant qu'il soit le défaut.
 

@@ -3764,3 +3764,84 @@ project lacks it, rather than rebuilding per change. The recreate caveat and
 Not run yet: the first build-mode ticket with dependent ACs should check the
 order is forced often enough that the no-question path is the common one, and
 that `Carry forward` stays one or two lines.
+
+## `shonin-dev`: decided per run, one dev per run
+
+The author found sessions cost more since the agents arrived. The repo's own
+numbers agree: `shonin-dev` on by default cost 2.7× on katas ($1.17 vs
+$0.43 a run) and about half again on a two-AC build ticket, with no measured
+bias benefit yet (1 slip in 7 no-dev runs, 0 in 7 dev runs). Most of it is
+cold starts: each GREEN spawned a fresh dev that reloaded `igiari-tdd`,
+`chottomatte-archi` and `kanpeki-fp` (~98KB, ~25k tokens) every cycle.
+
+Considered first and dropped: have the dev read only the GREEN sections of
+`igiari-tdd`. It saves ~11.5KB of 45KB, about 10–12% per GREEN, breaks
+silently when a heading moves, and selects rules instead of loading the skill
+as written.
+
+Two changes, both asked for by the author:
+
+- **Decided per TDD run, not on by default.** The author asked whether the
+  orchestrator could decide itself; yes, by a stated rule only: on when what
+  it knows ahead of the tests is large (build mode with two or more ACs, or a
+  plan of four or more tests in one run), off otherwise. The decision and its
+  reason go into the plan already put up for approval, so the user overrides
+  it there with no new pause; "with dev" / "no dev" force it for the session.
+  The thresholds are a judgment, not measured: the katas say the bias, if
+  any, grows with what the orchestrator knows ahead, and they are where a
+  multi-AC ticket should show it.
+- **One dev per TDD run, not one per GREEN.** The first GREEN spawns it; each
+  later GREEN of the run is a message to the same agent with the next failing
+  test, telling it to re-read the production files (the orchestrator's
+  REFACTOR changed them). Skills load once per run. It still never sees the
+  plan, ticket or ACs; what it gains is the run's earlier tests (on disk
+  anyway) and its own earlier reasoning, a small anticipation risk. A fresh
+  dev is spawned for a GREEN that goes wrong, or if the client cannot message
+  a spawned agent (Criterion 4 now applies too: the dev is resumed).
+
+`kata_super_green.sh --orchestrator dev` now passes "with dev" explicitly,
+since a 5-test kata in fix mode would be on by the rule anyway but the arm
+must not depend on it. Its `subagents` count should now read 1 per run, not
+5. The script also had to allow `SendMessage`, or the orchestrator falls back
+to a fresh dev per green and the arm measures the old behaviour.
+
+**Run (Sonnet, bowling and string-calculator, 3 runs each, $4.81):** one dev
+per run every time (`subagents` 1, was 5). Mean cost $0.80 a run, down 31%
+from $1.17; against the no-dev arm's $0.43 that is 1.9×, was 2.7×. One
+slip: bowling #2's green 4 capped the game at ten frames, so test 5 passed on
+arrival (kept as a guard), the bias the dev is meant to prevent and the same
+slip no-dev made once in 7. One in 6 can't separate the dev's memory of the
+run's earlier tests from the model knowing the kata. Per-green dev: 0 in 7.
+Details in `katas/igiari-tdd/README.md`. Still not measured: the per-run
+rule's thresholds, and any bias effect on a multi-AC build ticket.
+
+## Helper agents pinned to Sonnet
+
+The author asked to cut tokens by choosing the model per task. The helpers are
+where that is free: prompt caches are tied to one model, so a model switch in
+the main session throws its cache away, but a spawned helper starts with an
+empty context anyway. Until now every helper inherited the session's model
+(the template pins `opus[1m]`), about 2× Sonnet's price.
+
+All three now carry `model: sonnet` (criterion 2). The evidence, all from
+earlier entries: Sonnet and Opus were level on `igiari-tdd`, including
+`triangulate-before-generalizing`, which is what `shonin-dev` follows; both
+helper-agent evals ran on Sonnet (reviewer 4/4 planted defects and no false
+alarm, inspector 4/4 and nothing from the decoys); the one-dev-per-run kata
+pass ran wholly on Sonnet. The orchestrator stays on the session's model:
+Opus was ahead on `chottomatte-archi`'s judgment cases. The author's earlier
+decision against a cheaper implementer model (split-mode entry) is reversed
+by the author here, on that evidence. Haiku not considered: never measured.
+
+`scripts/agent_to_json.py` now passes `model` through, so headless runs use
+it. The Gemini generator writes its own frontmatter and drops the field, so
+Gemini agents keep Gemini's default model (unverified, like the rest of the
+Gemini agent setup).
+
+**Kata check (Opus orchestrator, Sonnet dev, bowling and string-calculator,
+3 runs each, $9.50):** the pin holds headless (dev transcripts all Sonnet,
+orchestrator Opus). 30 of 30 reds failed, nothing built ahead, no lint left:
+the dev's greens did not suffer from the cheaper model. One refactor flagged
+as adding generality, the orchestrator's own (bowling #1 stored the rolls
+before any test needed them): the plan-aware side, not the dev. The saving is
+not measured (no Opus-dev arm was run); it follows from the price ratio.
