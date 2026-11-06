@@ -3882,6 +3882,18 @@ agent needs `Edit`/`Write` for its check files, so "check files only" and
   `HUMAN`; Delete button disabled but still seen → `FAIL`; "saved" toast with
   no new row → `FAIL`) and one control (`PASS`). The page's behaviour was
   checked with a probe script, and the runner with a stubbed `claude`.
-  **Not run against the agent yet**, and the comparison that would show
-  blindness helps (the same ACs with the diff given) is not built. Its cost
-  per screen is not measured either.
+  Its cost per screen is not measured.
+
+**First real run (Sonnet, 2 runs per arm, $0.48 total):** the agent 4/4
+both runs, clean checks, nothing touched outside `checks/`. The comparison
+arm (`--arm informed`: a plain session with `shoko-playwright`, told the
+diff) **also 4/4**. The fixture measures the skill, whose rules already name
+each trap, not the blindness, so the agent's benefit is **not shown**. The
+real case it targets was a long session that had iterated on its own fix,
+which a fresh session handed a diff doesn't reproduce. Kept on by default in
+UI mode anyway: it costs about the same as the inline check here and keeps
+browser output out of the orchestrator (criterion 3, which holds whatever
+the bias result). Revisit if a real UI run shows otherwise. Also seen, in
+both arms: `toHaveCount(0)` for "does not see", against
+`shoko-playwright`'s "not shown means not visible"; a skill rule missed, not
+changed yet.

@@ -10,7 +10,7 @@ gives keyword hints, and the score comes from reading `answer.md` against
 | Agent | Fixture | What a good run does |
 |---|---|---|
 | `kenji-reviewer` | `make-fixture.sh`: a kata history, `clean` and `defects` (D1–D4 planted) | PASS on `clean`; all four defects `blocking` on `defects`; nothing changed on disk |
-| `mokugeki-tester` | `fixture/`: a static Documents screen served on a local port, four ACs (M1–M3 traps, M4 control) | M1 `HUMAN` (native tooltip), M2 and M3 `FAIL`, M4 `PASS`; no fixed sleeps; nothing changed outside `checks/`. Not run yet |
+| `mokugeki-tester` | `fixture/`: a static Documents screen served on a local port, four ACs (M1–M3 traps, M4 control) | M1 `HUMAN` (native tooltip), M2 and M3 `FAIL`, M4 `PASS`; no fixed sleeps; nothing changed outside `checks/`. `--arm informed` is the comparison (a plain session told the change) |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
@@ -63,6 +63,32 @@ read several files at once (`login-lock.md:43` in a 17-line file); within a
 single file they are right. The quotes are exact. The first summary also
 counted both decoys as hits: keyword noise from the "not proposed" lines,
 fixed in the runner (a decoy now counts only when a proposal is about it).
+
+### 2026-11-06, mokugeki-tester, Sonnet, 2 runs per arm
+
+**Blind (the agent): 4/4 both runs** (about $0.13 a run, 7–9 turns). M1
+`HUMAN` with the right reason and no attribute check written; M2 and M3
+`FAIL` on the outcome the AC states, not the disabled state or the toast;
+M4 `PASS`. Role and label locators, waiting assertions, no sleeps, nothing
+changed outside `checks/`. One run said, unasked, that a first exploration
+printed the page's `innerHTML` with its inline script: app source reached
+through the page, though it said it didn't use it.
+
+**Informed (plain session, `shoko-playwright`, told the diff): also 4/4
+both runs** (about $0.11 a run). Same verdicts, same reasons.
+
+So **this fixture does not separate the arms**: it measures
+`shoko-playwright`, whose "Checks that don't lie" names each trap (they came
+from the real incidents). The blindness benefit is not shown. The real
+bias case was a long session that had already iterated on its fix; a fresh
+session told a diff is not that. A fixture that could separate them needs
+traps the skill doesn't name, or the informed arm must be the session that
+made the change.
+
+Seen in both arms, 3 of 4 runs: AC2 asserted `toHaveCount(0)` (gone from
+the page) where `shoko-playwright` says "not shown" means not visible. The
+verdict was right here, but a fix that hides the button would still fail.
+A skill rule missed, not an agent issue; not changed yet.
 
 ### 2026-11-02, tantei-inspector line numbers
 

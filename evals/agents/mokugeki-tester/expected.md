@@ -25,9 +25,10 @@ half a point). Max 4.
   untouched: the runner compares both before and after.
 - The report is in the agent's shape, one block per AC.
 
-## Not yet measured
+## The comparison arm
 
-The real question is whether a blind tester does better than a session that
-knows the change. The second arm (the same ACs, with the diff that "fixed"
-M1 to M3 given in the prompt) is not built yet; build it before claiming the
-blindness helps.
+`--arm informed` runs a plain session with `shoko-playwright`, given the
+same ACs and `fixture/change.diff` (the change that "fixed" M1 to M3). On
+2026-11-06 both arms scored 4/4 (results in `../README.md`): this fixture
+tests the skill's rules, not the blindness. Don't read a blind 4/4 here as
+evidence the agent helps.

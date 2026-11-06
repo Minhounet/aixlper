@@ -66,7 +66,7 @@ The four helpers pin `model: sonnet` (criterion 2; the orchestrator uses
 the session's model). Gemini copies drop the field and use Gemini's default.
 Each is evaluated on a fixture with a known answer (`evals/agents/`), except
 `shonin-dev`, measured on katas (`katas/igiari-tdd/README.md`).
-`mokugeki-tester`'s fixture is built but not yet run.
+`mokugeki-tester` scored 4/4 on its fixture, but so did a session told the change: its benefit is not shown yet.
 
 Most requests are the "recipe" case: the whole thing is a Skill, and the
 decision is per-*step*, not per-skill — does any individual step need to

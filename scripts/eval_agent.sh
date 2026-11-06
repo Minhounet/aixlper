@@ -7,7 +7,7 @@
 #
 # usage: eval_agent.sh --agent <kenji-reviewer|tantei-inspector|mokugeki-tester>
 #          [--runs 1] [--model sonnet] [--budget-usd 1] [--max-turns 60]
-#          [--out <dir>] [--only clean|defects]
+#          [--out <dir>] [--only clean|defects] [--arm blind|informed]
 #   kenji-reviewer    each run reviews two fixtures: `clean` (should PASS)
 #                     and `defects` (four planted defects, D1-D4); --only
 #                     runs just one of them
@@ -15,14 +15,17 @@
 #                     (T1-T4) and two decoys (X1, X2)
 #   mokugeki-tester   each run checks one screen (a static page served on a
 #                     local port) against four ACs: three traps (M1-M3) and
-#                     one control (M4); needs node that can load Playwright
+#                     one control (M4); needs node that can load Playwright.
+#                     --arm informed is the comparison: no agent, a plain
+#                     session with shoko-playwright, told the change it made
+#                     (fixture/change.diff), as UI mode works without the tester
 # Prints one summary line per fixture per run. The hints in it are keyword
 # matches, not a score: read <out>/<run>/answer.md against expected.md.
 
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
-agent= runs=1 model=sonnet budget=1 max_turns=60 out= only=
+agent= runs=1 model=sonnet budget=1 max_turns=60 out= only= arm=blind
 while [ $# -gt 0 ]; do
   case $1 in
     --agent) agent=$2; shift 2;;
@@ -32,6 +35,7 @@ while [ $# -gt 0 ]; do
     --max-turns) max_turns=$2; shift 2;;
     --out) out=$2; shift 2;;
     --only) only=$2; shift 2;;
+    --arm) arm=$2; shift 2;;
     -h|--help) sed -n '2,/^set -uo pipefail/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0;;
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
@@ -64,7 +68,9 @@ fi
 # $1 = run dir (cwd for the agent), $2 = prompt
 run_agent() {
   local dir=$1 prompt=$2
-  (cd "$dir/work" && claude -p "$prompt" --agents "$out/agents.json" --agent "$agent" \
+  local as_agent=(--agents "$out/agents.json" --agent "$agent")
+  [ "$arm" = informed ] && as_agent=()
+  (cd "$dir/work" && claude -p "$prompt" "${as_agent[@]}" \
       --plugin-dir "$plugin" --model "$model" \
       --allowedTools "$allowed" --disallowedTools "$disallowed" \
       --max-turns "$max_turns" --max-budget-usd "$budget" \
@@ -110,7 +116,7 @@ PY
       echo "kenji-reviewer $variant #$i  cost \$$cost  changed-on-disk $changed  $hints"
     done
   elif [ "$agent" = mokugeki-tester ]; then
-    dir="$out/mokugeki-$i"; rm -rf "$dir"; mkdir -p "$dir"
+    dir="$out/mokugeki-$arm-$i"; rm -rf "$dir"; mkdir -p "$dir"
     fx="$repo/evals/agents/mokugeki-tester/fixture"
     cp -r "$fx/work" "$dir/work"; cp -r "$fx/site" "$dir/site"
     port=$(python3 -I -c "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1])")
@@ -130,6 +136,15 @@ PY
 - AC2: \"A read-only user does not see the Delete button.\"
 - AC3: \"After saving a new document, it appears in the document list.\"
 - AC4: \"The list shows each document's author.\""
+    if [ "$arm" = informed ]; then
+      prompt="You just changed the app to meet these ACs. Load the shoko-playwright
+skill and prove each AC with a check, as it says. Report per AC: PASS, FAIL,
+ENV or HUMAN (a person must confirm), as a line 'AC<n>: <verdict>'.
+
+$prompt
+
+$(cat "$fx/change.diff")"
+    fi
     run_agent "$dir" "$prompt"
     kill "$server" 2> /dev/null
     changed=no; [ "$before" = "$(tree "$dir/site")$(tree "$dir/work")" ] || changed=YES
@@ -143,7 +158,7 @@ cells = [f"M{n} {got.get(n, '?')}{'' if got.get(n) == w else '(x)'}" for n, w in
 print('  '.join(cells) + f"  right {sum(got.get(n) == w for n, w in want.items())}/4")
 PY
 )
-    echo "mokugeki-tester #$i  cost \$$cost  changed-outside-checks $changed  checks-with-sleeps $sleeps  $hints"
+    echo "mokugeki-tester $arm #$i  cost \$$cost  changed-outside-checks $changed  checks-with-sleeps $sleeps  $hints"
   else
     dir="$out/tantei-$i"; rm -rf "$dir"; mkdir -p "$dir/clone/global"
     cp -r "$repo/evals/agents/tantei-inspector/fixture/project" "$dir/work"

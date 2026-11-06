@@ -1,0 +1,21 @@
+Change just made to site/index.html, for AC1 to AC3 (the informed arm is told this; the tester never is):
+
+@@ style @@
+-  .doc-title { }
++  .doc-title { display: inline-block; max-width: 12rem; overflow: hidden;
++               text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
++  #toast { position: fixed; bottom: 1rem; right: 1rem; background: #333; color: #fff;
++           padding: .5rem 1rem; }
+@@ body @@
++<div id="toast" role="status" hidden></div>
+@@ render() @@
+       span.textContent = d.title;
++      span.title = d.title;
+@@
+       del.textContent = 'Delete';
++      del.disabled = role === 'reader';
+@@ submit handler @@
+     e.preventDefault();
++    const toast = document.getElementById('toast');
++    setTimeout(() => { toast.textContent = 'Document saved'; toast.hidden = false; }, 300);
+     e.target.reset();
