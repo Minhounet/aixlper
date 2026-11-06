@@ -172,6 +172,7 @@ skills/<skill-name>/evals/        # claude plugin eval cases for the skill
 
 global/                           # author's global ~/.claude config
 global/litellm-budget.py          # statusline + SessionStart-hook budget script
+global/court-session.sh           # SessionStart hook: the judge lists open saiban-orchestrator cases
 global/cycle-cost.py              # tokens + $ of one implementation cycle, from the transcript
 global/settings.template.json     # public-safe; secrets injected at install
 global/agents/                    # Claude Code agents: source of truth (saiban-orchestrator Claude-only; the 4 helpers are also ported)
@@ -346,7 +347,9 @@ change is checked against both as part of the change itself:
 `global/` holds the author's own `~/.claude` config — the global `CLAUDE.md`
 and the `java.md` / `nuxeo.md` it `@`-imports, `litellm-budget.py` (the script
 `settings.template.json` wires into `statusLine` and the `SessionStart` hook
-for the gateway budget display), `cycle-cost.py` (run by hand after an
+for the gateway budget display), `court-session.sh` (a second `SessionStart`
+hook: opens the court with the project's open `docs/decisions/` cases; the
+verdict stays in the `saiban-orchestrator` skill), `cycle-cost.py` (run by hand after an
 implement/fix cycle: reads the session transcript and prices it — see
 `docs/design-log.md`), `agents/` (user-level agents such as `saiban-orchestrator`, started
 per session with `claude --agent saiban-orchestrator`), and `settings.template.json` itself.

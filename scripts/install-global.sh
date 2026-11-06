@@ -52,13 +52,15 @@ DRY_RUN=0
 # installed, since a missing file would leave those pointers dangling.
 # litellm-budget.py is the
 # statusLine/SessionStart-hook script settings.template.json wires in below;
-# cycle-cost.py is run by hand to price an implementation cycle. Both need
+# court-session.sh is the SessionStart hook that opens the court (the open
+# saiban-orchestrator cases); cycle-cost.py is run by hand to price an
+# implementation cycle. The scripts need
 # their executable bit preserved, which the copy loop below handles
 # for any file in this list, not just this one.
 # agents/*.md land in ~/.claude/agents/, which makes them available in
 # every project without being the default anywhere. They are found by glob
 # once the source is known (below), so a new agent can't be forgotten here.
-CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py cycle-cost.py)
+CONFIG_FILES=(CLAUDE.md java.md nuxeo.md litellm-budget.py court-session.sh cycle-cost.py)
 
 while [ $# -gt 0 ]; do
   case "$1" in

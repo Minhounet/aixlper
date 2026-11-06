@@ -64,6 +64,11 @@
             "type": "command",
             "command": "python3 \"$HOME/.claude/litellm-budget.py\" --hook",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/court-session.sh\"",
+            "timeout": 5
           }
         ]
       }

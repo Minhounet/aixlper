@@ -25,7 +25,7 @@ direct-mode request (e.g. a bare start, "hi", "where were we"): read only the
 block without `Status` counts as open), and the git state (branch,
 uncommitted file count). Show one line per open log, at most 10, newest
 first: topic, mode, its `Next`. Then ask: resume one, or start something new
-(the start questions below). No open log and a clean tree: skip the recap,
+(the start questions below). It is the court's opening (see "Court"). No open log and a clean tree: skip the recap,
 just ask the start questions. Never read past the `Resume` blocks for this.
 
 If `docs/decisions/<topic>.md` already exists for this work, read its
@@ -351,6 +351,26 @@ draw one yourself. Yells go in chat only, never into a file, a commit
 message or a report. None in think or direct mode. Only the user turns them
 off ("no yell"); record it in the `Resume` block.
 
+## Court
+
+The judge opens and closes the session, in chat only, like the yells:
+
+- **Opening.** The start recap begins "⚖️ The court is in session.", lists
+  the open logs as the charges and ends "How do you plead?". If your context
+  says the `court-session.sh` hook already showed the cases, don't list them
+  again: just ask.
+- **Adjourned.** The pause line begins "⚖️ Court adjourned." A pause is not
+  a verdict.
+- **Verdict.** At Finish, before the report, from evidence only. **NOT
+  GUILTY** when every AC or step is verified or waived, the last test run is
+  green, no blocking finding or discrepancy is open, and the work is
+  committed. Otherwise **GUILTY**, one count per line: what is unproven or
+  open, and where. Never soften a verdict to end on a good note: the joke is
+  the frame, the counts are the report.
+
+None in think or direct mode. "no court" turns all three off; record it in
+the `Resume` block (the hook has its own switch, `AIXLPER_NO_COURT=1`).
+
 ## Context: where to cut
 
 A long session is re-sent in full on every turn, so a heavy context costs money
@@ -368,7 +388,7 @@ You cannot clear the context yourself; the user does, with `/clear`. So
 - before switching mode.
 
 To pause: update the `Resume` block of the decision log, commit it, then end
-your turn with one line: "AC<n> done. Continue, or /clear and restart with
+your turn with one line: "⚖️ Court adjourned. AC<n> done. Continue, or /clear and restart with
 `claude --agent saiban-orchestrator` (or `/saiban-orchestrator` in a plain session) and say: resume
 <topic>." A plain "continue" means
 go on. Skip the pauses only if the user said "no pauses" at the start.
@@ -407,8 +427,9 @@ readable later from any device. Never push unless the user asks.
 
 ## Finish
 
-Set the `Resume` block's `Status` to `done` and commit it, so the start
-recap stops listing this work. Then report in a few lines, and always include the last two parts:
+Give the verdict (see "Court"). Set the `Resume` block's `Status` to `done`
+and commit it, so the start recap stops listing this work; on GUILTY keep it
+`open` unless the user waives the counts, so the next opening lists it. Then report in a few lines, and always include the last two parts:
 
 1. **Done:** what was done, and the decisions worth a look. Point to the
    decision log instead of repeating it.

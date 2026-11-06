@@ -46,7 +46,9 @@ AIXLPER_REF=some-branch ./scripts/install.sh   # install from a branch or tag
 This is the repo author's own machine
 setup — global `CLAUDE.md` (plus the `java.md` / `nuxeo.md` it imports), the
 `litellm-budget.py` script that backs the statusline/session-start budget
-display, and a generated `settings.json` wiring both in:
+display, `court-session.sh` (a `SessionStart` hook listing the project's open
+`saiban-orchestrator` cases; `AIXLPER_NO_COURT=1` silences it), and a generated
+`settings.json` wiring them in:
 
 ```bash
 ./scripts/install-global.sh            # from a clone

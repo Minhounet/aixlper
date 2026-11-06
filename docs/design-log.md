@@ -3998,3 +3998,31 @@ no benefit at fixture scale, but the one real failure (the native tooltip)
 was exactly the bias it guards against, in a long session on a large
 project, which no fixture reproduced. About 1.6× the check step's cost is
 taken as insurance. Revisit only with evidence from real UI-mode runs.
+
+## `saiban-orchestrator`: the court opens and gives a verdict
+
+Asked by the author: the session as a trial. The judge reminds them what is
+in flight at launch, and at the end says "NOT guilty" or "guilty".
+
+- **Opening in two places.** The skill's start recap is now the court's
+  opening ("The court is in session", the open logs as the charges, "How do
+  you plead?"). A `SessionStart` hook, `global/court-session.sh`, shows the
+  same list in any session, orchestrator or not. This revisits "Rule, not
+  hook" above: the objection there was context added to every launch. The
+  hook shows its text as a `systemMessage` (user only) and adds one short
+  context line only when cases are open, so the orchestrator doesn't list
+  them twice. Silent without `docs/decisions/`, after a compaction, or with
+  `AIXLPER_NO_COURT=1`. Pure bash + `sed`; run here on scratch logs (open,
+  `done`, no `Status`, no directory, compact, off switch) and through
+  `install-global.sh` into a scratch `HOME` (settings valid, script
+  executable). Not yet seen in a live Claude Code launch.
+- **Verdict in the skill, not the hook.** Only the session knows whether the
+  ACs were proven. NOT GUILTY needs every AC or step verified or waived, the
+  last test run green, no blocking finding or discrepancy open, the work
+  committed; otherwise GUILTY with one count per line. Never softened: a
+  cheerful verdict over an unproven AC would be a false report. On GUILTY
+  the log stays `open` unless the user waives the counts, so the next
+  opening lists it.
+- **Adjourned** prefixes the pause line: stopping for the day is not a
+  verdict. None in think or direct mode; "no court" turns it off, like "no
+  yell".
