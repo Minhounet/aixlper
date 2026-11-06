@@ -25,7 +25,8 @@ docs/                       # design log, saiban-orchestrator tutorials (EN, FR)
 
 ## Gemini CLI agents
 
-The helper agents (`kenji-reviewer`, `shonin-dev`, `tantei-inspector`) exist
+The helper agents (`kenji-reviewer`, `shonin-dev`, `mokugeki-tester`,
+`tantei-inspector`) exist
 for both clients. Edit only `global/agents/<name>.md`, then run
 `make gemini-agents` and commit the regenerated `agents/*.md` with it.
 `make validate` fails if they are out of date. `saiban-orchestrator` is

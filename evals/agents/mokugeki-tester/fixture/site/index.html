@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Documents</title>
+<style>
+  body { font-family: sans-serif; margin: 2rem; }
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid #ccc; padding: .3rem .6rem; text-align: left; }
+  .doc-title { display: inline-block; max-width: 12rem; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+  #toast { position: fixed; bottom: 1rem; right: 1rem; background: #333; color: #fff;
+           padding: .5rem 1rem; }
+</style>
+</head>
+<body>
+<h1>Documents</h1>
+<p>Signed in as <span id="who"></span></p>
+<table>
+  <thead><tr><th>Title</th><th>Author</th><th>Actions</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<h2>New document</h2>
+<form id="new-doc">
+  <label>Title <input name="title" required></label>
+  <label>Author <input name="author" required></label>
+  <button type="submit">Save</button>
+</form>
+<div id="toast" role="status" hidden></div>
+
+<script>
+  const role = new URLSearchParams(location.search).get('role') || 'editor';
+  document.getElementById('who').textContent = role === 'reader' ? 'a reader (read-only)' : 'an editor';
+  const docs = [
+    { title: 'Quarterly report', author: 'Ana Lima' },
+    { title: 'Annual maintenance contract for the north building heating system, revision 4', author: 'Bo Chen' },
+    { title: 'Minutes', author: 'Cy Diaz' },
+  ];
+  function render() {
+    const rows = document.getElementById('rows');
+    rows.innerHTML = '';
+    for (const d of docs) {
+      const tr = document.createElement('tr');
+      const title = document.createElement('td');
+      const span = document.createElement('span');
+      span.className = 'doc-title';
+      span.textContent = d.title;
+      span.title = d.title;
+      title.append(span);
+      const author = document.createElement('td');
+      author.textContent = d.author;
+      const actions = document.createElement('td');
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      del.disabled = role === 'reader';
+      actions.append(del);
+      tr.append(title, author, actions);
+      rows.append(tr);
+    }
+  }
+  render();
+  document.getElementById('new-doc').addEventListener('submit', e => {
+    e.preventDefault();
+    const toast = document.getElementById('toast');
+    setTimeout(() => { toast.textContent = 'Document saved'; toast.hidden = false; }, 300);
+    e.target.reset();
+  });
+</script>
+</body>
+</html>

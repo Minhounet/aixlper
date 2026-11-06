@@ -41,8 +41,8 @@ Copies every skill into `~/.claude/skills/`. Run it again to update. Use
 curl -fsSL https://raw.githubusercontent.com/Minhounet/aixlper/main/scripts/install-gemini.sh | bash
 ```
 
-Copies the skills into `~/.gemini/skills/` and three helper agents
-(`kenji-reviewer`, `shonin-dev`, `tantei-inspector`; list them with `/agents`)
+Copies the skills into `~/.gemini/skills/` and four helper agents
+(`kenji-reviewer`, `shonin-dev`, `mokugeki-tester`, `tantei-inspector`; list them with `/agents`)
 into `~/.gemini/agents/`. It leaves out the Claude-only skills listed in
 [`scripts/gemini-exclude.txt`](scripts/gemini-exclude.txt).
 

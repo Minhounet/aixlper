@@ -5,7 +5,7 @@
 # global/agents/, with the skills it loads bundled as a plugin. Costs real
 # money (or plan usage): bound it with --budget-usd.
 #
-# usage: eval_agent.sh --agent <kenji-reviewer|tantei-inspector>
+# usage: eval_agent.sh --agent <kenji-reviewer|tantei-inspector|mokugeki-tester>
 #          [--runs 1] [--model sonnet] [--budget-usd 1] [--max-turns 60]
 #          [--out <dir>] [--only clean|defects]
 #   kenji-reviewer    each run reviews two fixtures: `clean` (should PASS)
@@ -13,6 +13,9 @@
 #                     runs just one of them
 #   tantei-inspector  each run inspects one fixture: four planted items
 #                     (T1-T4) and two decoys (X1, X2)
+#   mokugeki-tester   each run checks one screen (a static page served on a
+#                     local port) against four ACs: three traps (M1-M3) and
+#                     one control (M4); needs node that can load Playwright
 # Prints one summary line per fixture per run. The hints in it are keyword
 # matches, not a score: read <out>/<run>/answer.md against expected.md.
 
@@ -33,7 +36,7 @@ while [ $# -gt 0 ]; do
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
 done
-case $agent in kenji-reviewer|tantei-inspector) ;; *) echo "--agent: kenji-reviewer or tantei-inspector" >&2; exit 2;; esac
+case $agent in kenji-reviewer|tantei-inspector|mokugeki-tester) ;; *) echo "--agent: kenji-reviewer, tantei-inspector or mokugeki-tester" >&2; exit 2;; esac
 out=${out:-$(mktemp -d)}
 mkdir -p "$out"
 python3 -I "$repo/scripts/agent_to_json.py" "$repo/global/agents/$agent.md" > "$out/agents.json"
@@ -43,7 +46,7 @@ if [ ! -d "$plugin" ]; then
   mkdir -p "$plugin/.claude-plugin" "$plugin/skills"
   printf '{"name":"aixlper-agent-eval","version":"0.0.0","description":"skills for agent evals"}\n' \
     > "$plugin/.claude-plugin/plugin.json"
-  for s in igiari-tdd kanpeki-fp kaizen-refactor objection-conception chottomatte-archi; do
+  for s in igiari-tdd kanpeki-fp kaizen-refactor objection-conception chottomatte-archi shoko-playwright; do
     cp -r "$repo/skills/$s" "$plugin/skills/"
     rm -rf "$plugin/skills/$s/evals"
   done
@@ -51,12 +54,19 @@ fi
 
 snapshot() { git -C "$1" status --porcelain; git -C "$1" rev-parse HEAD; }
 
+# The tester writes check files; the other agents are read-only.
+if [ "$agent" = mokugeki-tester ]; then
+  allowed="Read Grep Glob Bash Skill Edit Write" disallowed="NotebookEdit"
+else
+  allowed="Read Grep Glob Bash Skill" disallowed="Edit Write NotebookEdit"
+fi
+
 # $1 = run dir (cwd for the agent), $2 = prompt
 run_agent() {
   local dir=$1 prompt=$2
   (cd "$dir/work" && claude -p "$prompt" --agents "$out/agents.json" --agent "$agent" \
       --plugin-dir "$plugin" --model "$model" \
-      --allowedTools "Read Grep Glob Bash Skill" --disallowedTools "Edit Write NotebookEdit" \
+      --allowedTools "$allowed" --disallowedTools "$disallowed" \
       --max-turns "$max_turns" --max-budget-usd "$budget" \
       --output-format json > "$dir/result.json" 2> "$dir/stderr.txt")
   python3 -I -c "import json,sys; print(json.load(open(sys.argv[1])).get('result',''))" \
@@ -99,6 +109,41 @@ PY
 )
       echo "kenji-reviewer $variant #$i  cost \$$cost  changed-on-disk $changed  $hints"
     done
+  elif [ "$agent" = mokugeki-tester ]; then
+    dir="$out/mokugeki-$i"; rm -rf "$dir"; mkdir -p "$dir"
+    fx="$repo/evals/agents/mokugeki-tester/fixture"
+    cp -r "$fx/work" "$dir/work"; cp -r "$fx/site" "$dir/site"
+    port=$(python3 -I -c "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1])")
+    python3 -I -m http.server "$port" --bind 127.0.0.1 -d "$dir/site" > /dev/null 2>&1 &
+    server=$!
+    (cd "$dir/work" && node -e "require('playwright/test')" 2> /dev/null) ||
+      { echo "mokugeki-tester: node cannot load playwright from $dir/work" >&2; kill "$server"; exit 2; }
+    tree() { (cd "$1" && find . -path ./checks -prune -o -type f -exec sha1sum {} + | sort); }
+    before="$(tree "$dir/site")$(tree "$dir/work")"
+    prompt="Write and run the browser check for each AC of the Documents screen.
+- Base URL: http://127.0.0.1:$port ; the screen is /index.html, and
+  /index.html?role=reader shows it as a read-only user. No login.
+- Checks live in checks/ (current directory); README.md says how they run,
+  checks/ac0-page-title.js is the model. Desktop viewport only.
+- AC1: \"When a document's title is too long to fit, the user can read the
+  full title by hovering over it.\"
+- AC2: \"A read-only user does not see the Delete button.\"
+- AC3: \"After saving a new document, it appears in the document list.\"
+- AC4: \"The list shows each document's author.\""
+    run_agent "$dir" "$prompt"
+    kill "$server" 2> /dev/null
+    changed=no; [ "$before" = "$(tree "$dir/site")$(tree "$dir/work")" ] || changed=YES
+    sleeps=$(grep -lE 'waitForTimeout|setTimeout' "$dir"/work/checks/*.js 2> /dev/null | wc -l)
+    hints=$(python3 -I - "$dir/answer.md" <<'PY'
+import re, sys
+text = open(sys.argv[1]).read()
+want = {'1': 'HUMAN', '2': 'FAIL', '3': 'FAIL', '4': 'PASS'}
+got = dict(re.findall(r'(?m)^\s*AC([1-4]):\s*(PASS|FAIL|ENV|HUMAN)', text))
+cells = [f"M{n} {got.get(n, '?')}{'' if got.get(n) == w else '(x)'}" for n, w in want.items()]
+print('  '.join(cells) + f"  right {sum(got.get(n) == w for n, w in want.items())}/4")
+PY
+)
+    echo "mokugeki-tester #$i  cost \$$cost  changed-outside-checks $changed  checks-with-sleeps $sleeps  $hints"
   else
     dir="$out/tantei-$i"; rm -rf "$dir"; mkdir -p "$dir/clone/global"
     cp -r "$repo/evals/agents/tantei-inspector/fixture/project" "$dir/work"

@@ -3845,3 +3845,43 @@ the dev's greens did not suffer from the cheaper model. One refactor flagged
 as adding generality, the orchestrator's own (bowling #1 stored the rolls
 before any test needed them): the plan-aware side, not the dev. The saving is
 not measured (no Opus-dev arm was run); it follows from the price ratio.
+
+## `mokugeki-tester`: UI mode's checks written blind to the change
+
+The author asked whether a dedicated agent could do UI mode's Playwright
+testing. Checked against the criteria in `CLAUDE.md`: running Playwright is
+not a reason (the main session already does it). The reason is criterion 5,
+from this log's own real-project evidence: the UI-mode failures came from the
+session that made the fix also writing the check that proved it. The native
+`title` tooltip (entry "native/OS-rendered UI can't be proven by a DOM
+check") passed because the session knew it had added the attribute and
+checked for it. A tester that has never seen the diff, the app source or the
+design has only the AC and the running page, so its check follows the AC.
+Criterion 3 also applies (browser output, traces and login trouble stay out
+of the orchestrator). Criterion 1 does **not** hold as an allowlist: the
+agent needs `Edit`/`Write` for its check files, so "check files only" and
+"no app source" are instructions in its body, not enforced by tools.
+
+- **New helper `global/agents/mokugeki-tester.md`** (*mokugeki*, the
+  eyewitness: it only says what it saw). Thin shell: loads
+  `shoko-playwright` and adds only what is its own: what it must not know (app
+  source, git history, decision logs, design; the way to the screen is given
+  by the caller, so `references/nuxeo.md`'s "find the page in the source" is
+  the caller's step), check files only, never change a check after its first
+  run to make it pass, and a report shape with four verdicts: `PASS`,
+  `FAIL`, `ENV`, `HUMAN` (the last for proof the page can't show a check).
+  Sonnet, like the other helpers. Ported to Gemini.
+- **`saiban-orchestrator`:** on by default in UI mode, "no tester" turns it
+  off. One tester per screen, like one `shonin-dev` per run: re-runs go to
+  the same agent so the check doesn't drift. The orchestrator never edits a
+  check the tester wrote; disagreeing with one is a gate. `kenji-reviewer`
+  still reviews each AC afterwards.
+- **Eval fixture `evals/agents/mokugeki-tester/`**, run through
+  `scripts/eval_agent.sh --agent mokugeki-tester`: one static screen, four
+  ACs, three traps where the obvious check passes wrongly (native tooltip →
+  `HUMAN`; Delete button disabled but still seen → `FAIL`; "saved" toast with
+  no new row → `FAIL`) and one control (`PASS`). The page's behaviour was
+  checked with a probe script, and the runner with a stubbed `claude`.
+  **Not run against the agent yet**, and the comparison that would show
+  blindness helps (the same ACs with the diff given) is not built. Its cost
+  per screen is not measured either.

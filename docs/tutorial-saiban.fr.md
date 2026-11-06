@@ -11,7 +11,8 @@ téléphone.
 Les noms suivent ceux des skills : un mot d'Ace Attorney, puis le rôle. Les
 mots viennent d'un procès : *saiban* (le procès) mène l'affaire, *kenji* (le
 procureur) relit chaque CA sans jamais corriger, *shonin* (le témoin) écrit le
-code sans avoir entendu le plan de tests, et *tantei* (le détective) enquête
+code sans avoir entendu le plan de tests, *mokugeki* (le témoin oculaire)
+vérifie un écran sans savoir ce qui a changé, et *tantei* (le détective) enquête
 sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
 `iterate-dev` avant ; les scripts d'installation nettoient les anciens noms.
 
@@ -20,9 +21,10 @@ sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
 | `saiban-orchestrator` | Orchestrateur : choisit le mode et les skills, mène la boucle, te demande aux points de décision | Il te remplace pour un process connu, donc il tourne en session principale pour pouvoir te poser des questions | Toi (`ci`, ou `/saiban-orchestrator`) | Oui |
 | `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | Un regard neuf et aucun droit d'écriture : il ne peut pas corriger ce qu'il relit | `saiban-orchestrator`, après chaque CA | Non |
 | `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, les GREEN d'une grosse exécution TDD, un dev par exécution (fix, build) | Oui |
+| `mokugeki-tester` | Testeur UI : écrit et lance le check Playwright de chaque CA, rapporte ce qu'il a vu | Il ne doit pas connaître le changement (diff, source de l'app, conception), pour que son check suive la CA et non le code | `saiban-orchestrator`, mode UI, un testeur par écran | Fichiers de check seulement |
 | `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, mode improve | Non |
 
-Les trois agents d'aide tournent sur Sonnet quel que soit le modèle de la
+Les quatre agents d'aide tournent sur Sonnet quel que soit le modèle de la
 session principale (`model: sonnet` dans leur frontmatter) : leur travail
 consiste à suivre des règles écrites, où Sonnet a été mesuré au niveau
 d'Opus. L'orchestrateur utilise le modèle de ta session ; choisis Opus avec
@@ -118,6 +120,7 @@ message :
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
 | `no pauses` | Pas d'arrêt après chaque CA. |
 | `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
+| `no tester` | En mode UI, l'orchestrateur écrit et lance les checks lui-même au lieu de `mokugeki-tester` (activé par défaut ; coût pas encore mesuré). |
 | `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
 | `with dev` / `no dev` | Force `shonin-dev` activé ou désactivé. Sans l'un ni l'autre, l'orchestrateur décide pour chaque exécution TDD : activé pour un ticket build à deux CA ou plus, ou un plan de quatre tests ou plus, désactivé sinon, et il l'annonce dans le plan que vous approuvez. Activé, le code est écrit par un seul agent par exécution, qui ne voit que les tests en échec, pas le plan ; environ 2,7× le coût sur les katas, bénéfice pas encore mesuré. |
 

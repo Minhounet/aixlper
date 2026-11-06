@@ -10,6 +10,7 @@ gives keyword hints, and the score comes from reading `answer.md` against
 | Agent | Fixture | What a good run does |
 |---|---|---|
 | `kenji-reviewer` | `make-fixture.sh`: a kata history, `clean` and `defects` (D1–D4 planted) | PASS on `clean`; all four defects `blocking` on `defects`; nothing changed on disk |
+| `mokugeki-tester` | `fixture/`: a static Documents screen served on a local port, four ACs (M1–M3 traps, M4 control) | M1 `HUMAN` (native tooltip), M2 and M3 `FAIL`, M4 `PASS`; no fixed sleeps; nothing changed outside `checks/`. Not run yet |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
