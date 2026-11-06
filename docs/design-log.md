@@ -3941,3 +3941,28 @@ narrowing seen on the real project needs a session that wrote the fix
 itself. The next experiment, if wanted: one arm implements the ACs from a
 pre-fix page and proves them itself, the other implements and hands the
 checks to `mokugeki-tester`, compared by defects shipped. Not built.
+
+## `mokugeki-tester`: end to end, implement then prove
+
+The author asked for the experiment the two fixtures pointed to: an arm
+that writes the fix itself. `scripts/eval_ui_e2e.sh` gives a session the
+Documents page before any fix and four ACs, each touching list code that
+lives in several places (first render, add, row delete, filter, a Delete-key
+shortcut). `--arm inline` proves them with its own checks; `--arm tester`
+through `mokugeki-tester`, never handing it the change. A hidden oracle
+(`e2e/oracle.js`) judges the page left behind. The oracle was checked
+first: the unfixed page fails all four, a reference fix passes all four, a
+typical partial fix fails exactly on the paths it missed.
+
+Result, Sonnet, 3 runs per arm, about $1.20: **0 defects shipped, 0 false
+proofs, both arms.** Every run, in both arms, rewrote the page around one
+`render()` and hid every delete path for readers: with ~100 lines in view,
+the implementer saw them all. The tester ran once per tester run and cost
+about 1.6× ($0.23 vs $0.15). The orchestrator and the tutorials now give that
+figure in place of "not measured".
+
+Three experiments, no benefit shown. Not concluded either: none reproduced
+what happened on the real project, a long session with the code spread over
+many files. The next step, if any, is the same runner on a page whose update
+paths are split across files, or evidence from a real UI-mode run with the
+tester on.

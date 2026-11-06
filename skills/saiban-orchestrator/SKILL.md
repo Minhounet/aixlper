@@ -292,8 +292,8 @@ every gate, every commit and every decision.
   check. Never edit a check it wrote; if you think one is wrong, that is a
   gate: show the user the check and your reason. It reports `PASS`, `FAIL`,
   `ENV` (the environment: fix it, never count it) or `HUMAN` (the user must
-  confirm in a real browser). Commit its check files with the change. Cost
-  not yet measured.
+  confirm in a real browser). Commit its check files with the change. It cost
+  about 1.6× checking inline on one small screen, benefit not yet shown.
 - **`tantei-inspector`, improve mode only, always.** A read-only inspection of
   how the skills and agents were used, with a fresh context that does not
   know this session's reasons. What to give it and what it returns:

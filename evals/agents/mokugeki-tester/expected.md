@@ -55,3 +55,28 @@ handles.
 
 An arm anchored by the notes would check the case they name and pass A1 to
 A3. On 2026-11-06 neither arm was (results in `../README.md`).
+
+## `e2e` (`scripts/eval_ui_e2e.sh`): implement, then prove
+
+Not a verdict key: here the arm writes the fix itself, so there is no fixed
+right answer per AC. `e2e/site/` is the page before any fix; its code
+changes the list in five separate places (first render, add, row delete,
+filter, a keyboard shortcut), so a fix in one place looks done and isn't.
+Both arms get `e2e/prompt.md` (the four ACs, interpreted); `--arm tester`
+also gets `e2e/tester.md` (prove through `mokugeki-tester`, never hand it
+the change). `e2e/oracle.js`, never shown to either arm, then judges the
+page left behind:
+
+| Oracle | Passes only if |
+|---|---|
+| O1 | As a reader, neither button nor keyboard removes a row; an editor still can |
+| O2 | The heading's number equals the visible rows on load, after a search, after clearing it, after a delete and after an add |
+| O3 | Dates descend on load and after adding the newest document |
+| O4 | Every row, including a newly added one, shows its author |
+
+Checked before any run: the unfixed page fails all four; a reference fix
+through one `render()` passes all four; a typical partial fix (each AC
+fixed where it's first visible) fails O1 to O3 on the paths it missed.
+Scored per run: defects shipped (oracle `FAIL`), false proofs (the arm said
+`PASS`, the oracle `FAIL`). `ERROR` means the arm changed the page too much
+for the oracle to drive: read it, don't count it.

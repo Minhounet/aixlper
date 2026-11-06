@@ -120,7 +120,7 @@ message :
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
 | `no pauses` | Pas d'arrêt après chaque CA. |
 | `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
-| `no tester` | En mode UI, l'orchestrateur écrit et lance les checks lui-même au lieu de `mokugeki-tester` (activé par défaut ; coût pas encore mesuré). |
+| `no tester` | En mode UI, l'orchestrateur écrit et lance les checks lui-même au lieu de `mokugeki-tester` (activé par défaut ; environ 1,6× le coût sur un petit écran, bénéfice pas encore démontré). |
 | `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
 | `with dev` / `no dev` | Force `shonin-dev` activé ou désactivé. Sans l'un ni l'autre, l'orchestrateur décide pour chaque exécution TDD : activé pour un ticket build à deux CA ou plus, ou un plan de quatre tests ou plus, désactivé sinon, et il l'annonce dans le plan que vous approuvez. Activé, le code est écrit par un seul agent par exécution, qui ne voit que les tests en échec, pas le plan ; environ 2,7× le coût sur les katas, bénéfice pas encore mesuré. |
 

@@ -11,6 +11,7 @@ gives keyword hints, and the score comes from reading `answer.md` against
 |---|---|---|
 | `kenji-reviewer` | `make-fixture.sh`: a kata history, `clean` and `defects` (D1–D4 planted) | PASS on `clean`; all four defects `blocking` on `defects`; nothing changed on disk |
 | `mokugeki-tester` | `traps/` and `anchor/`: a static Documents screen served on a local port, four ACs each (three traps, one control) | The verdicts in each case's `verdicts.txt`; no fixed sleeps; nothing changed outside `checks/`. `--arm informed` is the comparison (a plain session told the change) |
+| `mokugeki-tester`, end to end | `mokugeki-tester/e2e/`: the page before any fix, a hidden oracle; run with `scripts/eval_ui_e2e.sh --arm inline\|tester` | The arm implements the four ACs and proves them; scored by the oracle on the page left behind: defects shipped, false proofs |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
@@ -92,6 +93,22 @@ Playwright 1.63, it is right: a role locator skips hidden elements
 (`display:none`, `hidden`, `visibility:hidden`), so a CSS-hidden button
 counts 0 too. `shoko-playwright` now says what a zero count means per
 locator kind (see the design log).
+
+### 2026-11-06, mokugeki-tester end to end, Sonnet, 3 runs per arm
+
+Each arm implemented the four ACs on the unfixed page, then proved them:
+inline with its own checks, or through `mokugeki-tester` (spawned once in
+every tester run). **Both arms: 0 defects shipped and 0 false proofs on
+every run.** Every run rewrote the page around one place that redraws the
+list, so none of the five separate update paths was left behind: on a
+~100-line page with everything in view, the implementer doesn't make the
+mistake the tester is there to catch. Cost: inline $0.14–0.16 a run,
+tester $0.23–0.24, about 1.6×.
+
+So the third experiment doesn't separate the arms either. What it does
+measure is the tester's price on a small screen. A version that could
+separate them needs the update paths out of view (several files, more code,
+as in a real Web UI project), so that the implementer can miss one.
 
 ### 2026-11-06, mokugeki-tester `anchor` case, Sonnet, 3 runs per arm
 
