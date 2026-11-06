@@ -3991,3 +3991,10 @@ nothing measurable at this scale, at 1.6× the cost. What they can't show:
 a real project too large to read whole, worked by a long session. The
 benefit there stays an untested claim. Evidence now has to come from a real
 UI-mode run, not a bigger fixture.
+
+**Decision (author, after the four experiments):** `mokugeki-tester` stays
+on by default in UI mode ("no tester" turns it off). The experiments showed
+no benefit at fixture scale, but the one real failure (the native tooltip)
+was exactly the bias it guards against, in a long session on a large
+project, which no fixture reproduced. About 1.6× the check step's cost is
+taken as insurance. Revisit only with evidence from real UI-mode runs.
