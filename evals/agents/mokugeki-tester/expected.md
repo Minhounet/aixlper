@@ -80,3 +80,20 @@ fixed where it's first visible) fails O1 to O3 on the paths it missed.
 Scored per run: defects shipped (oracle `FAIL`), false proofs (the arm said
 `PASS`, the oracle `FAIL`). `ERROR` means the arm changed the page too much
 for the oracle to drive: read it, don't count it.
+
+### `e2e-split` (`--case split`): the same screen, spread out
+
+The same four ACs and oracle on the screen built as 13 ES modules (about
+350 lines), each list update path in its own file and some reached only by
+indirection: row Delete and Duplicate through event delegation
+(`row-actions.js`), Delete selected through a command registry
+(`toolbar.js` → `commands.js`), the Delete key through a keymap naming that
+command (`shortcuts.js`), additions through `form.js`, with unrelated
+features around them (`export.js`, `prefs.js`, `i18n.js`). Duplicate is a
+sixth path; the oracle exercises it when the button exists.
+
+Checked before any run: the unfixed page fails all four; a partial fix
+(each AC fixed in `list.js`, `toolbar.js` and `index.html`) fails O1 (the
+Delete key still removes a row for a reader), O2 and O3; a reference fix
+(one `refresh()` after every change, the delete command guarded) passes
+all four; the single-file reference fix still passes the extended oracle.

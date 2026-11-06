@@ -3966,3 +3966,28 @@ what happened on the real project, a long session with the code spread over
 many files. The next step, if any, is the same runner on a page whose update
 paths are split across files, or evidence from a real UI-mode run with the
 tester on.
+
+## `mokugeki-tester`: end to end on a split page, still no separation
+
+The author asked for the variant the single-file run pointed to: the update
+paths out of view. `evals/agents/mokugeki-tester/e2e-split/` is the same
+screen as 13 ES modules (about 350 lines), the delete paths reached by
+indirection (event delegation, a command registry, a keymap naming the
+command), a sixth path (Duplicate) and unrelated features around them. Same
+ACs, same oracle (extended for Duplicate, still passing the single-file
+reference fix); the runner takes `--case single|split`. The oracle was
+checked first: a partial fix in the obvious files fails exactly where the
+keyboard path still deletes for a reader.
+
+Result, Sonnet, 3 runs per arm, about $1.30: **0 defects, 0 false proofs,
+both arms.** Every run guarded the delete command itself, so both the
+toolbar and the keyboard were closed, and fixed count and order in one
+shared place. Tester cost about 1.6× again.
+
+Four experiments, all level. What they show: on an app small enough to read
+whole (up to ~350 lines here), the implementer finds every path, and a
+fresh session handed a diff isn't anchored by it. So the blind tester buys
+nothing measurable at this scale, at 1.6× the cost. What they can't show:
+a real project too large to read whole, worked by a long session. The
+benefit there stays an untested claim. Evidence now has to come from a real
+UI-mode run, not a bigger fixture.

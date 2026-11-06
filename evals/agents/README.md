@@ -11,7 +11,7 @@ gives keyword hints, and the score comes from reading `answer.md` against
 |---|---|---|
 | `kenji-reviewer` | `make-fixture.sh`: a kata history, `clean` and `defects` (D1–D4 planted) | PASS on `clean`; all four defects `blocking` on `defects`; nothing changed on disk |
 | `mokugeki-tester` | `traps/` and `anchor/`: a static Documents screen served on a local port, four ACs each (three traps, one control) | The verdicts in each case's `verdicts.txt`; no fixed sleeps; nothing changed outside `checks/`. `--arm informed` is the comparison (a plain session told the change) |
-| `mokugeki-tester`, end to end | `mokugeki-tester/e2e/`: the page before any fix, a hidden oracle; run with `scripts/eval_ui_e2e.sh --arm inline\|tester` | The arm implements the four ACs and proves them; scored by the oracle on the page left behind: defects shipped, false proofs |
+| `mokugeki-tester`, end to end | `mokugeki-tester/e2e/` (one file) and `e2e-split/` (13 modules): the page before any fix, a hidden oracle; run with `scripts/eval_ui_e2e.sh --arm inline\|tester --case single\|split` | The arm implements the four ACs and proves them; scored by the oracle on the page left behind: defects shipped, false proofs |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
@@ -93,6 +93,16 @@ Playwright 1.63, it is right: a role locator skips hidden elements
 (`display:none`, `hidden`, `visibility:hidden`), so a CSS-hidden button
 counts 0 too. `shoko-playwright` now says what a zero count means per
 locator kind (see the design log).
+
+### 2026-11-06, mokugeki-tester end to end, split page, Sonnet, 3 runs per arm
+
+The same experiment on the screen spread over 13 modules, the delete paths
+reached through a command registry and a keymap. **Both arms: 0 defects
+shipped, 0 false proofs, every run.** Every run, in both arms, guarded the
+delete command itself in `commands.js` (closing the toolbar and keyboard
+paths at once) and fixed the count and the order in one shared place: at
+about 350 lines the implementer still reads the whole app before changing
+it. Cost: inline $0.17 a run, tester $0.25–0.29, about 1.6× again.
 
 ### 2026-11-06, mokugeki-tester end to end, Sonnet, 3 runs per arm
 

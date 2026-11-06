@@ -6,8 +6,13 @@
 # oracle.js) then judges the page it left. Costs real money: bound it with
 # --budget-usd (per run, subagents included).
 #
-# usage: eval_ui_e2e.sh --arm inline|tester [--runs 1] [--model sonnet]
-#          [--budget-usd 3] [--max-turns 120] [--out <dir>]
+# usage: eval_ui_e2e.sh --arm inline|tester [--case single|split] [--runs 1]
+#          [--model sonnet] [--budget-usd 3] [--max-turns 120] [--out <dir>]
+#   single  e2e/: the page in one ~100-line file
+#   split   e2e-split/: the same screen as 13 ES modules, each list update
+#           path in its own file, with unrelated features around them
+# A case folder holds site/ and prompt.md; work/, tester.md and oracle.js
+# come from e2e/ unless the case has its own.
 # Prints one line per run: the arm's claim and the oracle's verdict per AC,
 # defects shipped (oracle FAIL), false proofs (claimed PASS, oracle FAIL),
 # and whether the tester was really spawned. ERROR from the oracle means the
@@ -16,11 +21,12 @@
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
-fx="$repo/evals/agents/mokugeki-tester/e2e"
-arm= runs=1 model=sonnet budget=3 max_turns=120 out=
+base="$repo/evals/agents/mokugeki-tester/e2e"
+arm= case=single runs=1 model=sonnet budget=3 max_turns=120 out=
 while [ $# -gt 0 ]; do
   case $1 in
     --arm) arm=$2; shift 2;;
+    --case) case=$2; shift 2;;
     --runs) runs=$2; shift 2;;
     --model) model=$2; shift 2;;
     --budget-usd) budget=$2; shift 2;;
@@ -31,6 +37,8 @@ while [ $# -gt 0 ]; do
   esac
 done
 case $arm in inline|tester) ;; *) echo "--arm: inline or tester" >&2; exit 2;; esac
+case $case in single) fx=$base;; split) fx="$base-split";; *) echo "--case: single or split" >&2; exit 2;; esac
+from() { if [ -e "$fx/$1" ]; then echo "$fx/$1"; else echo "$base/$1"; fi; }
 out=${out:-$(mktemp -d)}
 mkdir -p "$out"
 
@@ -44,8 +52,8 @@ fi
 python3 -I "$repo/scripts/agent_to_json.py" "$repo/global/agents/mokugeki-tester.md" > "$out/agents.json"
 
 for i in $(seq 1 "$runs"); do
-  dir="$out/e2e-$arm-$i"; rm -rf "$dir"; mkdir -p "$dir"
-  cp -r "$fx/work" "$dir/work"; cp -r "$fx/site" "$dir/site"
+  dir="$out/e2e-$case-$arm-$i"; rm -rf "$dir"; mkdir -p "$dir"
+  cp -r "$(from work)" "$dir/work"; cp -r "$fx/site" "$dir/site"
   port=$(python3 -I -c "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1])")
   python3 -I -m http.server "$port" --bind 127.0.0.1 -d "$dir/site" > /dev/null 2>&1 &
   server=$!
@@ -56,7 +64,7 @@ for i in $(seq 1 "$runs"); do
   extra=()
   if [ "$arm" = tester ]; then
     prompt="$prompt
-$(cat "$fx/tester.md")"
+$(cat "$(from tester.md)")"
     tools="$tools Agent Task SendMessage"
     extra=(--agents "$(cat "$out/agents.json")")
   fi
@@ -64,13 +72,13 @@ $(cat "$fx/tester.md")"
       --allowedTools "$tools" --disallowedTools "NotebookEdit" \
       --max-turns "$max_turns" --max-budget-usd "$budget" \
       --output-format stream-json --verbose > "$dir/transcript.jsonl" 2> "$dir/stderr.txt")
-  cp "$fx/oracle.js" "$dir/work/.oracle.js"
+  cp "$(from oracle.js)" "$dir/work/.oracle.js"
   (cd "$dir/work" && node .oracle.js "http://127.0.0.1:$port" > "$dir/oracle.txt" 2>&1)
   rm -f "$dir/work/.oracle.js"
   kill "$server" 2> /dev/null
-  python3 -I - "$dir" "$arm" "$i" <<'PY'
+  python3 -I - "$dir" "$arm" "$i" "$case" <<'PY'
 import json, re, sys
-d, arm, i = sys.argv[1:]
+d, arm, i, case = sys.argv[1:]
 answer, cost, spawned = '', '?', 0
 for line in open(f'{d}/transcript.jsonl'):
     try:
@@ -93,7 +101,7 @@ for n in '1234':
     false_proof += c == 'PASS' and o == 'FAIL'
     cells.append(f'AC{n} {c}/{o}')
 spawn = f'  tester-spawns {spawned}' if arm == 'tester' else ''
-print(f'e2e {arm} #{i}  cost ${cost}  ' + '  '.join(cells) +
+print(f'e2e {case} {arm} #{i}  cost ${cost}  ' + '  '.join(cells) +
       f'  shipped {shipped}  false-proofs {false_proof}{spawn}')
 PY
 done

@@ -18,6 +18,16 @@ async function headingCount(page) {
   const n = h.match(/\d+/);
   return n ? Number(n[0]) : null;
 }
+// Only the split page has a Duplicate action; on pages without one, the
+// duplicate steps are skipped.
+async function duplicateRowOf(page, text) {
+  const row = page.locator('table tbody tr').filter({ visible: true }).filter({ hasText: text }).first();
+  const dup = row.getByRole('button', { name: 'Duplicate' });
+  if (!(await dup.count())) return false;
+  await dup.click();
+  await page.getByText(text + ' (copy)').first().waitFor();
+  return true;
+}
 async function addDoc(page, title, author, date) {
   await page.getByLabel('Title').fill(title);
   await page.getByLabel('Author').fill(author);
@@ -57,6 +67,7 @@ const checks = {
     await page.getByLabel('Search').fill(''); ok = await step('cleared') && ok;
     await page.getByRole('button', { name: 'Delete', exact: true }).first().click(); ok = await step('deleted') && ok;
     await addDoc(page, 'Oracle memo', 'Ed Fox', '01/01/2025'); ok = await step('added') && ok;
+    if (await duplicateRowOf(page, 'Oracle memo')) ok = await step('duplicated') && ok;
     if (!ok) return 'heading/rows: ' + seen.join(', ');
   },
   async O3(page) {
@@ -68,10 +79,15 @@ const checks = {
     await addDoc(page, 'Oracle notice', 'Ed Fox', '30/06/2026');
     ds = await order();
     if (!sorted(ds)) return 'after adding 30/06/2026: ' + ds.join(', ');
+    if (await duplicateRowOf(page, 'Oracle notice')) {
+      ds = await order();
+      if (!sorted(ds)) return 'after duplicating the 30/06/2026 row: ' + ds.join(', ');
+    }
   },
   async O4(page) {
     await page.goto(base);
     await addDoc(page, 'Oracle letter', 'Gi Hart', '02/02/2025');
+    await duplicateRowOf(page, 'Oracle letter');
     const authors = ['Ana Lima', 'Bo Chen', 'Cy Diaz', 'Di Eko', 'Gi Hart'];
     const rows = await bodyRows(page);
     const missing = rows.filter(t => !authors.some(a => t.includes(a)));

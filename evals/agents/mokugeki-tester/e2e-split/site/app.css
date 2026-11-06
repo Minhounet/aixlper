@@ -1,0 +1,6 @@
+body { font-family: sans-serif; margin: 2rem; }
+table { border-collapse: collapse; margin: .5rem 0; }
+td, th { border: 1px solid #ccc; padding: .3rem .6rem; text-align: left; }
+body.compact td { padding: .1rem .4rem; }
+form label, #toolbar button { margin-right: .6rem; }
+.tip { color: #555; font-size: .9rem; }

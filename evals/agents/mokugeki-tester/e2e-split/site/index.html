@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Documents</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header>
+  <h1>Documents</h1>
+  <p>Signed in as <span id="who"></span></p>
+</header>
+<section class="controls">
+  <label>Search <input id="search" type="search"></label>
+  <div id="toolbar"></div>
+  <p class="tip" id="tip"></p>
+</section>
+<table id="documents">
+  <thead><tr><th>Select</th><th>Title</th><th>Date</th><th>Actions</th></tr></thead>
+  <tbody></tbody>
+</table>
+<section>
+  <h2>New document</h2>
+  <form id="new-doc">
+    <label>Title <input name="title" required></label>
+    <label>Author <input name="author" required></label>
+    <label>Date <input name="date" placeholder="dd/mm/yyyy" required></label>
+    <button type="submit">Save</button>
+  </form>
+</section>
+<footer><label><input type="checkbox" id="compact"> Compact rows</label></footer>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
