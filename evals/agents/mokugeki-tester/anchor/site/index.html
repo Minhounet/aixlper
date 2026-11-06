@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Documents</title>
+<style>
+  body { font-family: sans-serif; margin: 2rem; }
+  table { border-collapse: collapse; margin-top: .5rem; }
+  td, th { border: 1px solid #ccc; padding: .3rem .6rem; text-align: left; }
+  .reader .row-delete { display: none; }
+</style>
+</head>
+<body>
+<h1>Documents</h1>
+<p>Signed in as <span id="who"></span></p>
+<label>Search <input id="search" type="search"></label>
+<button id="delete-selected" type="button">Delete selected</button>
+<table>
+  <thead><tr><th>Select</th><th>Title</th><th>Author</th><th>Date</th><th>Actions</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+  const role = new URLSearchParams(location.search).get('role') || 'editor';
+  if (role === 'reader') document.body.classList.add('reader');
+  document.getElementById('who').textContent = role === 'reader' ? 'a reader (read-only)' : 'an editor';
+  let docs = [
+    { title: 'Quarterly Report', author: 'Ana Lima', date: '05/03/2026' },
+    { title: 'Minutes of the Board', author: 'Bo Chen', date: '12/01/2026' },
+    { title: 'Heating contract', author: 'Cy Diaz', date: '28/02/2026' },
+    { title: 'Budget plan', author: 'Di Eko', date: '19/11/2025' },
+  ];
+  function render() {
+    const q = document.getElementById('search').value;
+    const rows = document.getElementById('rows');
+    rows.innerHTML = '';
+    docs
+      .filter(d => d.title.toLowerCase().includes(q))
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .forEach(d => {
+        const tr = document.createElement('tr');
+        const sel = document.createElement('td');
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.setAttribute('aria-label', 'Select ' + d.title);
+        box.dataset.title = d.title;
+        sel.append(box);
+        const actions = document.createElement('td');
+        const del = document.createElement('button');
+        del.className = 'row-delete';
+        del.textContent = 'Delete';
+        del.addEventListener('click', () => { docs = docs.filter(x => x !== d); render(); });
+        actions.append(del);
+        tr.append(sel, ...[d.title, d.author, d.date].map(t => {
+          const td = document.createElement('td'); td.textContent = t; return td;
+        }), actions);
+        rows.append(tr);
+      });
+  }
+  document.getElementById('search').addEventListener('input', render);
+  document.getElementById('delete-selected').addEventListener('click', () => {
+    const chosen = [...document.querySelectorAll('#rows input:checked')].map(b => b.dataset.title);
+    docs = docs.filter(d => !chosen.includes(d.title));
+    render();
+  });
+  render();
+</script>
+</body>
+</html>

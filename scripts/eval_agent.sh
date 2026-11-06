@@ -7,25 +7,28 @@
 #
 # usage: eval_agent.sh --agent <kenji-reviewer|tantei-inspector|mokugeki-tester>
 #          [--runs 1] [--model sonnet] [--budget-usd 1] [--max-turns 60]
-#          [--out <dir>] [--only clean|defects] [--arm blind|informed]
+#          [--out <dir>] [--only clean|defects]
+#          [--case traps|anchor] [--arm blind|informed]
 #   kenji-reviewer    each run reviews two fixtures: `clean` (should PASS)
 #                     and `defects` (four planted defects, D1-D4); --only
 #                     runs just one of them
 #   tantei-inspector  each run inspects one fixture: four planted items
 #                     (T1-T4) and two decoys (X1, X2)
 #   mokugeki-tester   each run checks one screen (a static page served on a
-#                     local port) against four ACs: three traps (M1-M3) and
-#                     one control (M4); needs node that can load Playwright.
-#                     --arm informed is the comparison: no agent, a plain
-#                     session with shoko-playwright, told the change it made
-#                     (fixture/change.diff), as UI mode works without the tester
+#                     local port) against four ACs; needs node that can load
+#                     Playwright. --case traps (default): traps the skill
+#                     names; --case anchor: fixes right only for the case
+#                     their notes describe. --arm informed is the comparison:
+#                     no agent, a plain session with shoko-playwright, told
+#                     the change it made (<case>/informed.md), as UI mode
+#                     works without the tester
 # Prints one summary line per fixture per run. The hints in it are keyword
 # matches, not a score: read <out>/<run>/answer.md against expected.md.
 
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
-agent= runs=1 model=sonnet budget=1 max_turns=60 out= only= arm=blind
+agent= runs=1 model=sonnet budget=1 max_turns=60 out= only= arm=blind case=traps
 while [ $# -gt 0 ]; do
   case $1 in
     --agent) agent=$2; shift 2;;
@@ -36,6 +39,7 @@ while [ $# -gt 0 ]; do
     --out) out=$2; shift 2;;
     --only) only=$2; shift 2;;
     --arm) arm=$2; shift 2;;
+    --case) case=$2; shift 2;;
     -h|--help) sed -n '2,/^set -uo pipefail/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0;;
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
@@ -116,8 +120,9 @@ PY
       echo "kenji-reviewer $variant #$i  cost \$$cost  changed-on-disk $changed  $hints"
     done
   elif [ "$agent" = mokugeki-tester ]; then
-    dir="$out/mokugeki-$arm-$i"; rm -rf "$dir"; mkdir -p "$dir"
-    fx="$repo/evals/agents/mokugeki-tester/fixture"
+    dir="$out/mokugeki-$case-$arm-$i"; rm -rf "$dir"; mkdir -p "$dir"
+    fx="$repo/evals/agents/mokugeki-tester/$case"
+    [ -d "$fx" ] || { echo "--case: traps or anchor" >&2; exit 2; }
     cp -r "$fx/work" "$dir/work"; cp -r "$fx/site" "$dir/site"
     port=$(python3 -I -c "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1])")
     python3 -I -m http.server "$port" --bind 127.0.0.1 -d "$dir/site" > /dev/null 2>&1 &
@@ -126,39 +131,24 @@ PY
       { echo "mokugeki-tester: node cannot load playwright from $dir/work" >&2; kill "$server"; exit 2; }
     tree() { (cd "$1" && find . -path ./checks -prune -o -type f -exec sha1sum {} + | sort); }
     before="$(tree "$dir/site")$(tree "$dir/work")"
-    prompt="Write and run the browser check for each AC of the Documents screen.
-- Base URL: http://127.0.0.1:$port ; the screen is /index.html, and
-  /index.html?role=reader shows it as a read-only user. No login.
-- Checks live in checks/ (current directory); README.md says how they run,
-  checks/ac0-page-title.js is the model. Desktop viewport only.
-- AC1: \"When a document's title is too long to fit, the user can read the
-  full title by hovering over it.\"
-- AC2: \"A read-only user does not see the Delete button.\"
-- AC3: \"After saving a new document, it appears in the document list.\"
-- AC4: \"The list shows each document's author.\""
-    if [ "$arm" = informed ]; then
-      prompt="You just changed the app to meet these ACs. Load the shoko-playwright
-skill and prove each AC with a check, as it says. Report per AC: PASS, FAIL,
-ENV or HUMAN (a person must confirm), as a line 'AC<n>: <verdict>'.
+    prompt=$(sed "s|{{BASE_URL}}|http://127.0.0.1:$port|" "$fx/prompt.md")
+    [ "$arm" = informed ] && prompt="$prompt
 
-$prompt
-
-$(cat "$fx/change.diff")"
-    fi
+$(cat "$fx/informed.md")"
     run_agent "$dir" "$prompt"
     kill "$server" 2> /dev/null
     changed=no; [ "$before" = "$(tree "$dir/site")$(tree "$dir/work")" ] || changed=YES
     sleeps=$(grep -lE 'waitForTimeout|setTimeout' "$dir"/work/checks/*.js 2> /dev/null | wc -l)
-    hints=$(python3 -I - "$dir/answer.md" <<'PY'
+    hints=$(python3 -I - "$dir/answer.md" "$fx/verdicts.txt" <<'PY'
 import re, sys
 text = open(sys.argv[1]).read()
-want = {'1': 'HUMAN', '2': 'FAIL', '3': 'FAIL', '4': 'PASS'}
-got = dict(re.findall(r'(?m)^\s*AC([1-4]):\s*(PASS|FAIL|ENV|HUMAN)', text))
+want = dict(l.split() for l in open(sys.argv[2]) if l.strip())
+got = dict(re.findall(r'(?m)^[\s*#-]*AC([1-4])\b[^:\n]*:\s*\**\s*(PASS|FAIL|ENV|HUMAN)', text))
 cells = [f"M{n} {got.get(n, '?')}{'' if got.get(n) == w else '(x)'}" for n, w in want.items()]
 print('  '.join(cells) + f"  right {sum(got.get(n) == w for n, w in want.items())}/4")
 PY
 )
-    echo "mokugeki-tester $arm #$i  cost \$$cost  changed-outside-checks $changed  checks-with-sleeps $sleeps  $hints"
+    echo "mokugeki-tester $case $arm #$i  cost \$$cost  changed-outside-checks $changed  checks-with-sleeps $sleeps  $hints"
   else
     dir="$out/tantei-$i"; rm -rf "$dir"; mkdir -p "$dir/clone/global"
     cp -r "$repo/evals/agents/tantei-inspector/fixture/project" "$dir/work"

@@ -1,5 +1,5 @@
-Change just made to site/index.html, for AC1 to AC3 (the informed arm is told this; the tester never is):
-
+You just changed site/index.html to meet AC1 to AC3. The change:
+```diff
 @@ style @@
 -  .doc-title { }
 +  .doc-title { display: inline-block; max-width: 12rem; overflow: hidden;
@@ -19,3 +19,8 @@ Change just made to site/index.html, for AC1 to AC3 (the informed arm is told th
 +    const toast = document.getElementById('toast');
 +    setTimeout(() => { toast.textContent = 'Document saved'; toast.hidden = false; }, 300);
      e.target.reset();
+```
+
+Now load the shoko-playwright skill and prove each AC with a check, as it
+says. Report per AC with a line `AC<n>: PASS | FAIL | ENV | HUMAN`, then
+the check, its result line and a note.

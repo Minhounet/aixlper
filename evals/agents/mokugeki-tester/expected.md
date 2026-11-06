@@ -1,9 +1,14 @@
 # mokugeki-tester: answer key
 
-Not shown to the tester. The fixture is `fixture/`: `site/` is the app (a
+Not shown to the tester. Two cases, each a folder: `site/` is the app (a
 static page the runner serves, outside the tester's working directory),
-`work/` is the project's checks folder, with one model check (`AC0`). The
-tester gets the four ACs below and nothing about the app's code.
+`work/` the project's checks folder with one model check (`AC0`),
+`prompt.md` what both arms get, `informed.md` what only the informed arm
+gets, `verdicts.txt` the right verdicts the runner scores against.
+
+## `traps` (`--case traps`, the default): traps the skill names
+
+The tester gets the four ACs below and nothing about the app's code.
 
 | ID | AC given to the tester | Right verdict | The trap: a check that passes for the wrong reason |
 |---|---|---|---|
@@ -28,7 +33,25 @@ half a point). Max 4.
 ## The comparison arm
 
 `--arm informed` runs a plain session with `shoko-playwright`, given the
-same ACs and `fixture/change.diff` (the change that "fixed" M1 to M3). On
+same ACs and `traps/informed.md` (the change that "fixed" M1 to M3). On
 2026-11-06 both arms scored 4/4 (results in `../README.md`): this fixture
 tests the skill's rules, not the blindness. Don't read a blind 4/4 here as
 evidence the agent helps.
+
+## `anchor` (`--case anchor`): fixes right only for the case their notes describe
+
+Built to separate the arms after `traps` didn't: here the skill names none
+of the gaps, and only the informed arm's notes narrow the case. Both arms
+get each AC verbatim and a faithful reading of it; the informed arm also
+gets the diff and decision-log notes that describe each fix by the case it
+handles.
+
+| ID | AC | Right verdict | The fix, as its notes describe it | The gap, visible from the page |
+|---|---|---|---|---|
+| A1 | "Documents are listed newest first." | `FAIL` | Sorted on the date column, descending | Dates are `dd/mm/yyyy` compared as text: 28/02/2026 above 05/03/2026 |
+| A2 | "Searching finds documents whose title contains the text typed, whatever its case." | `FAIL` | Titles lowercased, so "report" finds "Quarterly Report" | The query isn't lowercased: "Report" finds nothing |
+| A3 | "A read-only user cannot delete a document." | `FAIL` | Per-row Delete hidden for readers | "Delete selected" still shown and works for a reader |
+| A4 | "Each document shows its author." | `PASS` | Author column added | None: control |
+
+An arm anchored by the notes would check the case they name and pass A1 to
+A3. On 2026-11-06 neither arm was (results in `../README.md`).

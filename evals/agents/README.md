@@ -10,7 +10,7 @@ gives keyword hints, and the score comes from reading `answer.md` against
 | Agent | Fixture | What a good run does |
 |---|---|---|
 | `kenji-reviewer` | `make-fixture.sh`: a kata history, `clean` and `defects` (D1–D4 planted) | PASS on `clean`; all four defects `blocking` on `defects`; nothing changed on disk |
-| `mokugeki-tester` | `fixture/`: a static Documents screen served on a local port, four ACs (M1–M3 traps, M4 control) | M1 `HUMAN` (native tooltip), M2 and M3 `FAIL`, M4 `PASS`; no fixed sleeps; nothing changed outside `checks/`. `--arm informed` is the comparison (a plain session told the change) |
+| `mokugeki-tester` | `traps/` and `anchor/`: a static Documents screen served on a local port, four ACs each (three traps, one control) | The verdicts in each case's `verdicts.txt`; no fixed sleeps; nothing changed outside `checks/`. `--arm informed` is the comparison (a plain session told the change) |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
@@ -92,6 +92,25 @@ Playwright 1.63, it is right: a role locator skips hidden elements
 (`display:none`, `hidden`, `visibility:hidden`), so a CSS-hidden button
 counts 0 too. `shoko-playwright` now says what a zero count means per
 locator kind (see the design log).
+
+### 2026-11-06, mokugeki-tester `anchor` case, Sonnet, 3 runs per arm
+
+Built so the informed arm's own notes would narrow each AC to the case its
+fix handles (see `mokugeki-tester/expected.md`). **Both arms 4/4 on every
+run** (about $0.13 a run blind, $0.13–0.22 informed). The informed arm was
+not anchored: it read the diff critically and named each bug from the code
+(`localeCompare` on dd/mm dates, the query not lowercased, "Delete
+selected" left for readers), which the blind arm could only describe from
+the page. One informed run went on to fix the page and re-run its checks to
+`PASS`; its first run had failed all three, so it counts as caught. The
+informed reports used bold `**AC1: FAIL**` lines, which the runner's
+summary missed (0/4 shown); the parser now accepts them.
+
+So **two fixtures, no separation**: a fresh session handed a diff is not
+biased by it, and may even catch more by reading the code. The bias the
+agent targets came from a session that had *written* the fix over many
+turns. Measuring that needs an arm that implements the ACs and then proves
+them itself, against one whose checks come from the tester: not built.
 
 ### 2026-11-02, tantei-inspector line numbers
 

@@ -3920,3 +3920,24 @@ technology but still drawn counts 0 for a role locator while the user sees
 it. The rule now says both. It names no API, so it stays readable as Playwright
 evolves; counting only visible matches is `filter({ visible: true })` in
 1.63.
+
+## `mokugeki-tester`: a second fixture, still no separation
+
+The author asked for a fixture that separates the blind tester from a
+session told the change. `evals/agents/mokugeki-tester/anchor/`: each of
+three fixes is right only for the case its decision-log note describes (a
+date sort that compares `dd/mm/yyyy` as text, a search that lowercases the
+titles but not the query, a per-row Delete hidden for readers while "Delete
+selected" still works), with gaps the skill names nowhere and a check from
+the AC alone can see. Both arms got the same faithful reading of each AC;
+only the informed arm got the diff and notes. The old fixture moved to
+`traps/`; the runner reads each case's `prompt.md`, `informed.md` and
+`verdicts.txt` (`--case traps|anchor`).
+
+Result, Sonnet, 3 runs per arm, about $0.85: **both arms 4/4 on every run.**
+The informed arm read the diff as a reviewer would and named each bug from
+the code. So a fresh session is not anchored by a diff it is handed; the
+narrowing seen on the real project needs a session that wrote the fix
+itself. The next experiment, if wanted: one arm implements the ACs from a
+pre-fix page and proves them itself, the other implements and hands the
+checks to `mokugeki-tester`, compared by defects shipped. Not built.
