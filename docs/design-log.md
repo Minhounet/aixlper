@@ -4044,3 +4044,29 @@ recognizable.
   once by script (lettering from the yells' glyphs plus G, U, Y; widths
   checked, at most 66 columns) and copied verbatim, read only at the verdict,
   chat only. Not yet seen in a real run.
+
+## `saiban-orchestrator`: yolo, the orchestrator takes the decisions
+
+The author asked for a "yolo mode, useful for a POC". A first proposal made
+it a throwaway POC mode (skip TDD, review, structure). The author corrected
+it: yolo must keep the good things; it means the orchestrator makes the
+decisions while still using the skills and agents.
+
+- **A switch, not a mode.** What changes is who answers the gates, not the
+  process, so it sits on top of fix, build, UI and think modes, like "no
+  review" or "with dev". Not improve mode: a change to the skills stays the
+  user's. No new skill and no new agent: none of the five criteria applies,
+  and the rules are the orchestrator's own (gates are its job).
+- **Yours vs. never yours.** Skill approval gates, forks, deviations,
+  review fixes and discrepancies are answered with the recommendation and
+  logged `Asked user: no (yolo)`. Hard-to-reverse steps, user-only changes,
+  waivers and scope growth are parked, the run goes on around them, and they
+  are asked together at the end. A blocking finding is never dismissed alone.
+- **Review after, not during.** The report opens with "Decided for you"
+  (reversible first) and "Waiting for you". The verdict is unchanged, so an
+  open parked step is a GUILTY count, not a quiet success.
+- **No pauses by default**, but the `Resume` block is still committed at each
+  break point.
+- Rules in `references/yolo.md` (conditional, read only when on), with a
+  five-line statement in `SKILL.md`, as improve mode does. Not yet run.
+

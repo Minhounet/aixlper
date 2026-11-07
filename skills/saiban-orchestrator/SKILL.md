@@ -1,6 +1,6 @@
 ---
 name: saiban-orchestrator
-description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev, mokugeki-tester and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev, mokugeki-tester and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions (or, on "yolo", taking them itself and stopping only for the hard-to-reverse ones). Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
 # Saiban orchestrator: run a known process for the user
@@ -133,6 +133,12 @@ deviation: stop, say why, and propose the right mode. Never switch silently.
 The user can switch mode at any time by saying so ("think mode", "direct:
 ...", "now build it"). Switch at once, record it in the `Resume` block, and
 load the new mode's skills before its first step.
+
+**Yolo** (the user says "yolo"; "yolo off" ends it): not a mode, a switch on
+any mode but improve. Same skills, same helpers, same proof; you answer the
+gates yourself with your own recommendation and log each one, except the
+hard-to-reverse ones, which you park and ask at the end. Read
+`references/yolo.md` before the next step: it holds which gates are yours.
 
 ## What a step is
 
@@ -406,6 +412,7 @@ session reads to continue:
 ## Resume
 - Status: open | done
 - Mode: fix | build | ui | think | improve
+- Yolo: on (only when on; see references/yolo.md)
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
@@ -432,7 +439,8 @@ Give the verdict (see "Court"). Set the `Resume` block's `Status` to `done`
 and commit it, so the start recap stops listing this work; on GUILTY keep it
 `open` unless the user waives the counts, so the next opening lists it. Then report in a few lines, and always include the last two parts:
 
-1. **Done:** what was done, and the decisions worth a look. Point to the
+1. **Done:** what was done, and the decisions worth a look. In yolo, "Decided for you" and
+   "Waiting for you" come first (`references/yolo.md`). Point to the
    decision log instead of repeating it.
 2. **Open:** anything left unverified or unresolved.
 3. **Next:** suggested next work (remaining ACs, follow-ups, risks). Suggest,
