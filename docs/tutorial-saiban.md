@@ -109,7 +109,7 @@ message:
 | Say | Effect |
 |---|---|
 | `pre-approve TDD plans` | No approval per AC plan. |
-| `yolo` | The orchestrator takes the decisions itself (plans, forks, deviations, review fixes) with the same skills and agents, logs each one, and lists them for you at the end. Pushing, deleting and other hard-to-reverse steps are still asked, all together at the end. No pauses unless you add `with pauses`. `yolo off` ends it. |
+| `yolo` | The orchestrator takes the decisions itself (plans, forks, deviations, review fixes) with the same skills and agents, logs each one, pushes to a feature branch (never the default branch, never force, no pull request), and lists them for you at the end. Other pushes, deleting and other hard-to-reverse steps are still asked, all together at the end. No pauses unless you add `with pauses`. `yolo off` ends it. |
 | `no pauses` | No stop after each AC. |
 | `no review` | No `kenji-reviewer` after each AC (build mode). |
 | `no tester` | In UI mode, the orchestrator writes and runs the checks itself instead of `mokugeki-tester` (on by default; about 1.6× the cost on a small screen, benefit not yet shown). |

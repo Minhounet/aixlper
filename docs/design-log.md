@@ -4069,4 +4069,9 @@ decisions while still using the skills and agents.
   break point.
 - Rules in `references/yolo.md` (conditional, read only when on), with a
   five-line statement in `SKILL.md`, as improve mode does. Not yet run.
-
+- **Feature-branch push (author's follow-up).** Yolo may push to a feature
+  branch: saying "yolo" counts as the user asking, lifting the agent's "never
+  push without being asked" for that case only. Never the default branch or
+  someone else's branch (a feature branch is created first if needed), plain
+  push after each verified AC, never force, no pull request; a refused push
+  is parked.

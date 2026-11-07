@@ -24,8 +24,18 @@ user's. Direct mode has no gates, so it changes nothing there.
   from yolo.
 - **The proof.** Every AC is verified with evidence, the green gate and Super
   Green still apply, the verdict is given from evidence as always.
-- **The agent's working rules** (no push, no force-push, no secret, ask
-  before anything destructive): yolo does not lift them.
+- **The agent's working rules** (no force-push, no secret, ask before
+  anything destructive): yolo does not lift them, with one exception below.
+
+## Pushing: a feature branch only
+
+Saying "yolo" is the user asking you to push, to a **feature branch** only:
+the branch you work on, never the default branch (`main`, `master`,
+`develop`) or a branch someone else works on. If you are on one of those,
+create a feature branch first (named after the topic or ticket) and log it.
+Push after each verified AC or step is committed, with a plain push: never
+force, never rewrite history already pushed, never open or merge a pull
+request. A push the remote refuses is parked, not retried another way.
 
 ## Gates you answer yourself
 
@@ -51,7 +61,8 @@ You do not stop the run for these: **park** the step, go on with every step
 that does not depend on it, and ask them all together at the next pause or
 at Finish.
 
-- **Hard to reverse or outward-facing:** pushing, deleting, a schema or
+- **Hard to reverse or outward-facing:** any push other than the
+  feature-branch push above, a pull request, deleting, a schema or
   public API change, a shared or remote system. If a reversible way reaches
   the same result, take it instead and log why.
 - **A change only the user can make** (a vendor designer, Studio Modeler).

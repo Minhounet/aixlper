@@ -118,7 +118,7 @@ message :
 | Dire | Effet |
 |---|---|
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
-| `yolo` | L'orchestrateur prend les décisions lui-même (plans, choix, déviations, corrections de revue) avec les mêmes skills et agents, journalise chacune et vous les liste à la fin. Pousser, supprimer et toute action difficile à défaire restent demandés, tous ensemble à la fin. Pas de pause sauf avec `with pauses`. `yolo off` l'arrête. |
+| `yolo` | L'orchestrateur prend les décisions lui-même (plans, choix, déviations, corrections de revue) avec les mêmes skills et agents, journalise chacune, pousse sur une branche de fonctionnalité (jamais la branche par défaut, jamais en force, pas de pull request) et vous les liste à la fin. Les autres push, supprimer et toute action difficile à défaire restent demandés, tous ensemble à la fin. Pas de pause sauf avec `with pauses`. `yolo off` l'arrête. |
 | `no pauses` | Pas d'arrêt après chaque CA. |
 | `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
 | `no tester` | En mode UI, l'orchestrateur écrit et lance les checks lui-même au lieu de `mokugeki-tester` (activé par défaut ; environ 1,6× le coût sur un petit écran, bénéfice pas encore démontré). |
