@@ -37,6 +37,29 @@ Push after each verified AC or step is committed, with a plain push: never
 force, never rewrite history already pushed, never open or merge a pull
 request. A push the remote refuses is parked, not retried another way.
 
+## Runnable: the user can launch it in minutes
+
+Yolo work is handed over to be tried, so it must be launchable by the user
+quickly, whatever it is: a mobile app, a web app, a service, a batch, a CLI.
+
+- **One launch command, decided at the start.** Before the first step, choose
+  how the user will launch it, using the project's own convention when it has
+  one (`npm start`, `./gradlew installDebug`, `make run`, a compose file), and
+  log it. For a Java service or batch, use `tonosaman-deploy`. For anything
+  else no skill covers yet, do it inline and log a `No skill:` entry.
+- **Runnable at every push.** Each pushed commit builds and launches with that
+  command. A step that breaks the launch is not done.
+- **Launched, not assumed.** Before each push, run the launch command here
+  and see it start (the server answers, the app opens in an emulator, the CLI
+  prints its help). Where the platform cannot run here (no emulator, no
+  device, a missing SDK), build the artifact the user will launch (an APK, a
+  bundle, an image), say exactly what was not launched, and count it as `ENV`.
+- **Written in the project.** Keep a short `Run` section in the project's
+  README: prerequisites, the launch command, and for a mobile app how to get
+  it onto a phone or emulator (install the built APK, scan the dev server's
+  QR code, open the simulator). Never publish to a store or a shared
+  distribution channel: that is outward-facing, so it is parked.
+
 ## Gates you answer yourself
 
 Take the option you would have recommended, the one most faithful to the
@@ -83,11 +106,14 @@ each break point, so a crash or a `/clear` loses nothing.
 - The `Resume` block carries `- Yolo: on`.
 - Every gate you answered gets its normal log entry with
   `Asked user: no (yolo)`, so they can all be found with one search.
-- At Finish, before **Done**, add **Decided for you:** one line per gate you
+- At Finish, first add **Run it:** the launch command and the README's
+  `Run` section in two or three lines, what was launched here and what was
+  not. Then, before **Done**, add **Decided for you:** one line per gate you
   answered (the decision and its log entry), the reversible decisions first
   to undo. Then **Waiting for you:** every parked question, with the options
   and your recommendation, short enough to answer from a phone.
 - The verdict is unchanged: an open discrepancy, an unverified AC or a parked
-  step is a count, and GUILTY is the honest answer.
+  step is a count, and GUILTY is the honest answer. So is a last push that
+  does not launch.
 
 "yolo off" returns to normal gates at once; record it in the `Resume` block.

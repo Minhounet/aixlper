@@ -4075,3 +4075,13 @@ decisions while still using the skills and agents.
   someone else's branch (a feature branch is created first if needed), plain
   push after each verified AC, never force, no pull request; a refused push
   is parked.
+- **Runnable (author's follow-up).** "It must be runnable quickly: if it is
+  a mobile application, I must be able to launch it." Yolo picks one launch
+  command at the start (the project's convention; `tonosaman-deploy` for a
+  Java service or batch; inline plus a `No skill:` entry otherwise), launches
+  it before every push, and keeps a `Run` section in the project's README
+  (how to get a mobile app onto a phone or emulator). Where the platform
+  can't run here, the artifact is built and the gap is an `ENV`. Store or
+  shared distribution stays parked. The report opens with "Run it", and a
+  last push that doesn't launch is a GUILTY count. Mobile has no skill yet;
+  repeated `No skill:` entries are the existing signal to propose one.

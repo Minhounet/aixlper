@@ -137,7 +137,8 @@ load the new mode's skills before its first step.
 **Yolo** (the user says "yolo"; "yolo off" ends it): not a mode, a switch on
 any mode but improve. Same skills, same helpers, same proof; you answer the
 gates yourself with your own recommendation and log each one, and push to a
-feature branch; the other hard-to-reverse ones you park and ask at the end. Read
+feature branch; the other hard-to-reverse ones you park and ask at the end. The result
+must launch with one command at every push (a mobile app included). Read
 `references/yolo.md` before the next step: it holds which gates are yours.
 
 ## What a step is
