@@ -59,6 +59,48 @@ quickly, whatever it is: a mobile app, a web app, a service, a batch, a CLI.
   it onto a phone or emulator (install the built APK, scan the dev server's
   QR code, open the simulator). Never publish to a store or a shared
   distribution channel: that is outward-facing, so it is parked.
+- **Mobile: Expo by default.** A new mobile app is Expo (React Native,
+  TypeScript) unless the project already chose otherwise. The user may have
+  only a phone, so a QR code on a terminal is no launch. Launch path, first
+  that works: EAS Update on a channel named after the feature branch (the
+  link opens it in Expo Go; private to the user's Expo account, allowed like
+  the feature-branch push, never the production channel), when the
+  environment reaches Expo and holds the user's token; else the web build
+  (`expo export --platform web`) published where the user can open it from
+  the phone, privately. An APK (EAS Build) only when Expo Go lacks a native
+  module the app needs; say which. The web build is also what the
+  Playwright checks run against.
+
+## The user adds features
+
+A yolo run stays open: the user can add a feature or a forgotten detail at
+any time. Add it as a new step with the same rules (launchable, reviewed,
+logged), and record it in the `Resume` block. Only you are held to the scope
+agreed at the start; what the user adds is in scope.
+
+## Learn here, keep the good ideas properly
+
+Yolo is where ideas are tried fast; what proves good is made properly later.
+
+- **Where the work lives.** A quick spike may sit in a folder of the user's
+  playground repo; anything to launch or keep gets its own repository.
+  Suggest the move when a spike grows; creating a repository is the user's.
+- **`Keep:` notes.** When something looks reusable beyond this app (a
+  client, a flow, a widget, a deploy setup), log `Keep: <what>, <why it is
+  generic>, <where it lives>`, and add it to the user's candidate catalog
+  (one markdown file in the playground repo, or the lib's README once a lib
+  exists). Do not polish or extract it now.
+- **Second use makes a component.** A candidate becomes a component when a
+  second project needs it, or the user says so. It is then rebuilt in build
+  mode, not yolo, in a component lib repository, one per stack, from the
+  `Keep:` note and what the app taught; the app's code is the reference,
+  never copied in. Propose it at Finish; the lib repository is the user's to
+  create.
+- **The lib first.** At the start, read the catalog and the stack's lib, and
+  use an existing component as a dependency pinned to a version, never a
+  copy. A component that needs a change is never edited in yolo (other apps
+  depend on it): work around it here and log `Change: <component>, <what>`
+  for build mode in the lib. Publishing a lib version is parked.
 
 ## Gates you answer yourself
 
@@ -90,8 +132,8 @@ at Finish.
   the same result, take it instead and log why.
 - **A change only the user can make** (a vendor designer, Studio Modeler).
 - **Waiving an AC or a blocking finding:** only the user waives.
-- **Out of scope:** never widen the scope agreed at the start; write the
-  extra work under `Next`.
+- **Out of scope:** never widen, on your own, the scope agreed at the start
+  (what the user adds is in scope); write the extra work under `Next`.
 - **A check written by `mokugeki-tester` that you think is wrong:** never
   edit it; log it as open with your reason.
 
@@ -111,7 +153,8 @@ each break point, so a crash or a `/clear` loses nothing.
   not. Then, before **Done**, add **Decided for you:** one line per gate you
   answered (the decision and its log entry), the reversible decisions first
   to undo. Then **Waiting for you:** every parked question, with the options
-  and your recommendation, short enough to answer from a phone.
+  and your recommendation, short enough to answer from a phone. Then
+  **Worth keeping:** the `Keep:` and `Change:` entries of this run.
 - The verdict is unchanged: an open discrepancy, an unverified AC or a parked
   step is a count, and GUILTY is the honest answer. So is a last push that
   does not launch.

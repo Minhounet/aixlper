@@ -4085,3 +4085,18 @@ decisions while still using the skills and agents.
   shared distribution stays parked. The report opens with "Run it", and a
   last push that doesn't launch is a GUILTY count. Mobile has no skill yet;
   repeated `No skill:` entries are the existing signal to propose one.
+- **Open run, kept ideas, mobile path (author's follow-ups).** The user can
+  add features during a yolo run (only the orchestrator is held to the start
+  scope). Yolo is where ideas are learned; reusable ones get a `Keep:` note
+  and a line in a candidate catalog, become a component at their second use,
+  rebuilt in build mode in a lib repository per stack, and later yolo runs
+  use the lib as a pinned dependency and never edit it (`Change:` notes
+  instead). Spikes may live in a playground repo; anything to launch or keep
+  gets its own. The lib repository is created only at the first reuse:
+  before that a catalog is enough. Mobile defaults to Expo: the author uses
+  only an Android phone, so a terminal QR code is no launch; EAS Update on a
+  feature-branch channel opens it in Expo Go (free plan, 1,000 MAU), with a
+  privately published web build as the fallback when the environment does
+  not reach Expo (the first run: the author declined a separate Expo
+  environment), and an APK only for a native module Expo Go lacks.
+

@@ -138,7 +138,8 @@ load the new mode's skills before its first step.
 any mode but improve. Same skills, same helpers, same proof; you answer the
 gates yourself with your own recommendation and log each one, and push to a
 feature branch; the other hard-to-reverse ones you park and ask at the end. The result
-must launch with one command at every push (a mobile app included). Read
+must launch with one command at every push (a mobile app included), the user
+can add features at any time, and reusable ideas are noted to be kept. Read
 `references/yolo.md` before the next step: it holds which gates are yours.
 
 ## What a step is
