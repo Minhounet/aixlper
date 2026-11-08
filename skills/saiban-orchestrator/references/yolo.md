@@ -65,10 +65,14 @@ quickly, whatever it is: a mobile app, a web app, a service, a batch, a CLI.
   that works: EAS Update on a channel named after the feature branch (the
   link opens it in Expo Go; private to the user's Expo account, allowed like
   the feature-branch push, never the production channel), when the
-  environment reaches Expo and holds the user's token; else the web build
+  environment reaches Expo and holds the user's token (ask for the token with
+  a credential request for api.expo.dev; do not propose a new environment
+  for it, and never repeat a request the user declined or told you to
+  stop); else the web build
   (`expo export --platform web`) published where the user can open it from
   the phone, privately. An APK (EAS Build) only when Expo Go lacks a native
-  module the app needs; say which. The web build is also what the
+  module the app needs; say which. The first link you hand over states that
+  Expo Go must be installed on the phone. The web build is also what the
   Playwright checks run against.
 
 ## The user adds features

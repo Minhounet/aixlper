@@ -4100,3 +4100,47 @@ decisions while still using the skills and agents.
   not reach Expo (the first run: the author declined a separate Expo
   environment), and an APK only for a native module Expo Go lacks.
 
+## Improve mode on the first yolo run (PEEK-1, Yolognese)
+
+First run of the yolo switch: an Expo/TypeScript code-breaking game built in
+build mode with yolo, AC1-AC4 verified, AC5 waiting for a phone check.
+`tantei-inspector` read the project's decision log, retro, git history and
+the session transcript; the author accepted all seven proposals.
+
+- **shonin-dev reads the skill files when the Skill tool has none** (P1).
+  In a cloud container with the clone but no install, GREEN 1's dev said
+  "Skills were not loaded as Skill-tool entries. I did not read the SKILL.md
+  files" and overbuilt (scoring and history ahead of tests 2-5). It now
+  reads SKILL.md in full from the given path and stops if `igiari-tdd`
+  cannot be loaded.
+- **A message to the dev names only the failing test** (P2). The
+  orchestrator's later messages hinted at what was coming ("the caught game
+  must be saved", "the sliding window gets its own red next"): GREEN 19
+  saved untested state (kenji, blocking) and criterion 5, the reason the dev
+  exists, was defeated by the caller itself.
+- **Skills without an install are read in full from the clone, and helpers
+  get the path** (P3). The run read `igiari-tdd` and `objection-conception`
+  in slices, skipped `kanpeki-fp`, `kaizen-refactor` and `shoko-playwright`
+  unread, and paraphrased rules into each helper prompt.
+- **`shoko-playwright` loads whenever an AC is proven in the browser** (P4),
+  not only in UI mode: the screen was built inside build mode, the checks
+  were written without the skill, and kenji found a fixed sleep (blocking)
+  and missing cases.
+- **One paragraph says what carries over to non-Java code** (P5): the Java
+  skills ran on TypeScript and the orchestrator re-decided and reworded the
+  carry-over in every helper prompt. `No skill:` entries for TypeScript
+  style and Expo/React Native are the signal for a future skill; not decided.
+- **Expo token by credential request, no repeated declined asks, Expo Go as
+  a stated prerequisite** (P6): the run proposed a separate environment
+  twice (declined twice), then a credential request worked; the author only
+  learned Expo Go was needed after the link did nothing.
+- **The TDD audit reads Jest failures** (P7): every red printed "no failure
+  line found" on Jest. The approved single pattern matched Jest's `FAIL
+  <file>` line first; the author chose a two-line variant (`Expected:` first,
+  then the approved patterns), checked on the Yolognese history: each red
+  now shows its expected value.
+- Not proposed, noted by the inspector: `igiari-tdd/SKILL.md` is 44KB and
+  the run skipped exactly its "Calibrating super green" and "Calibration
+  example proposal" sections; a candidate for `references/` (meta about
+  extending the skill), for the author to decide.
+

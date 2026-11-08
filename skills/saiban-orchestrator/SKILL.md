@@ -170,7 +170,11 @@ Never write to Jira (comments, status) unless the user asks.
 ## Skill pipeline
 
 Invoke each skill by name with the Skill tool; do not paraphrase its rules
-from memory. Installed as a plugin, the names carry a prefix
+from memory. If the skill list does not show it (the container has the
+clone but no install), read its SKILL.md from the clone in full, and name
+the same path to every helper you spawn instead of summarizing what applies.
+A skill you decide does not apply is still read to the end of its
+description and scope, and the decision is logged. Installed as a plugin, the names carry a prefix
 (`aixlper:igiari-tdd`); use whichever form the skill list shows.
 
 The mode decides the core skills. The rows below are mandatory when their
@@ -186,7 +190,7 @@ condition holds, in this order, within that mode.
 | End of a TDD run, or before existing tests are relied on to change existing code (a Tier 2 refactor, a fix reaching beyond its new test), when the project has a mutation tool | `yusaburi-mutation` | Survivors in scope and a verdict for each; give the list to `kenji-reviewer` with the run |
 | A bash CLI or shell helper is built | `kurae-bash` | Hardening patterns |
 | The artifact is built and run in a container | `tonosaman-deploy` | The run loop |
-| UI mode: proving each AC in the browser | `shoko-playwright` | The check per AC, its evidence |
+| UI mode, or any mode where an AC is proven by a browser check (a screen built inside build mode counts), loaded before the first check is written | `shoko-playwright` | The check per AC, its evidence |
 | Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) | DQL patterns |
 | A technical question needs a sourced answer before deciding (Java, Spring, Gradle, Documentum, Nuxeo, devops, Linux) | `dev-research-doc-officielle` (from the user's account, not this repo; may show as `anthropic-skills:dev-research-doc-officielle`) | Answers backed by official docs |
 
@@ -194,6 +198,13 @@ The structural plan comes first and the test plan is written against it, not
 re-derived. If no skill fits, do the step directly and log it as
 `No skill: <kind of work>` (for example `No skill: Nuxeo listener`), so it
 can be found again.
+
+Non-Java code: igiari-tdd and chottomatte-archi apply whole (they are not
+Java-bound beyond syntax). kanpeki-fp and kaizen-refactor's mechanical list
+are Java/Vavr: apply only the intent (pure functions, readonly data,
+failures as values, no mutation) and igiari-tdd rule 6, log `No skill:
+<language> style`, and give the helpers this exact paragraph by path, not in
+your own words.
 
 ## Loop
 
@@ -282,7 +293,11 @@ every gate, every commit and every decision.
   files in play and the approved structural plan: never the test plan, the
   ticket or the ACs. For each later GREEN of the same run, send that same
   agent the next failing test and ask it to re-read the production files
-  first (your REFACTOR changed them since). Its skills load once instead of
+  first (your REFACTOR changed them since). The message names the failing
+  test, the files and the test command, and nothing else about the work: no
+  hint of what the test forces, no behaviour the coming tests will ask for,
+  no praise or critique that names a later step. If the test cannot pass
+  without more information, the dev says so. Its skills load once instead of
   every cycle. A new run (the next AC) gets a fresh dev. If its green goes
   wrong, or you cannot message a spawned agent, spawn a fresh one for that
   GREEN. Check its green exactly as you check your own (`igiari-tdd`'s

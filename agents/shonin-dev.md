@@ -26,7 +26,11 @@ are not a hint of what comes next: make only the current one pass.
 
 Before writing your first code, load these skills (once; they stay loaded
 for the later greens) by name and follow
-them as written:
+them as written. If the Skill tool has no entry for one, read its SKILL.md
+from the path the caller gives (or the aixlper clone's
+skills/<name>/SKILL.md), in full, not selected sections. If you cannot load
+`igiari-tdd` either way, stop before writing code and say so on the first
+line of your report:
 
 - `igiari-tdd`: apply its GREEN step and its rules for it - the least code
   that passes, Super Green (clean on arrival), never touching a test, the
