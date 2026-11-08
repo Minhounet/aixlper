@@ -177,6 +177,8 @@ if [ -n "$test_cmd" ]; then
       reason=$(printf '%s\n' "$out" | grep -m1 -oE 'expected:? ?<[^>]*> but was:? ?<[^>]*>')
       [ -n "$reason" ] || reason=$(printf '%s\n' "$out" |
         grep -m1 -oE '[a-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*\.[A-Z][A-Za-z0-9_]*(Error|Exception)(: [^[:cntrl:]]{0,80})?')
+      [ -n "$reason" ] || reason=$(printf '%s\n' "$out" | grep -m1 -E '^\s*Expected' | head -c 120)
+      [ -n "$reason" ] || reason=$(printf '%s\n' "$out" | grep -m1 -E '^\s*(Received|●.*›)|AssertionError|Assertion failed|FAILED|FAIL ' | head -c 120)
       echo "$step: fails: ${reason:-<no failure line found, read the output>}"
     fi
   done

@@ -1,6 +1,6 @@
 ---
 name: saiban-orchestrator
-description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev, mokugeki-tester and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions. Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev, mokugeki-tester and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions (or, on "yolo", taking them itself and stopping only for the hard-to-reverse ones). Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
 # Saiban orchestrator: run a known process for the user
@@ -134,6 +134,14 @@ The user can switch mode at any time by saying so ("think mode", "direct:
 ...", "now build it"). Switch at once, record it in the `Resume` block, and
 load the new mode's skills before its first step.
 
+**Yolo** (the user says "yolo"; "yolo off" ends it): not a mode, a switch on
+any mode but improve. Same skills, same helpers, same proof; you answer the
+gates yourself with your own recommendation and log each one, and push to a
+feature branch; the other hard-to-reverse ones you park and ask at the end. The result
+must launch with one command at every push (a mobile app included), the user
+can add features at any time, and reusable ideas are noted to be kept. Read
+`references/yolo.md` before the next step: it holds which gates are yours.
+
 ## What a step is
 
 A step is either something the user wants done, or an acceptance criterion
@@ -162,7 +170,11 @@ Never write to Jira (comments, status) unless the user asks.
 ## Skill pipeline
 
 Invoke each skill by name with the Skill tool; do not paraphrase its rules
-from memory. Installed as a plugin, the names carry a prefix
+from memory. If the skill list does not show it (the container has the
+clone but no install), read its SKILL.md from the clone in full, and name
+the same path to every helper you spawn instead of summarizing what applies.
+A skill you decide does not apply is still read to the end of its
+description and scope, and the decision is logged. Installed as a plugin, the names carry a prefix
 (`aixlper:igiari-tdd`); use whichever form the skill list shows.
 
 The mode decides the core skills. The rows below are mandatory when their
@@ -178,7 +190,7 @@ condition holds, in this order, within that mode.
 | End of a TDD run, or before existing tests are relied on to change existing code (a Tier 2 refactor, a fix reaching beyond its new test), when the project has a mutation tool | `yusaburi-mutation` | Survivors in scope and a verdict for each; give the list to `kenji-reviewer` with the run |
 | A bash CLI or shell helper is built | `kurae-bash` | Hardening patterns |
 | The artifact is built and run in a container | `tonosaman-deploy` | The run loop |
-| UI mode: proving each AC in the browser | `shoko-playwright` | The check per AC, its evidence |
+| UI mode, or any mode where an AC is proven by a browser check (a screen built inside build mode counts), loaded before the first check is written | `shoko-playwright` | The check per AC, its evidence |
 | Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) | DQL patterns |
 | A technical question needs a sourced answer before deciding (Java, Spring, Gradle, Documentum, Nuxeo, devops, Linux) | `dev-research-doc-officielle` (from the user's account, not this repo; may show as `anthropic-skills:dev-research-doc-officielle`) | Answers backed by official docs |
 
@@ -186,6 +198,13 @@ The structural plan comes first and the test plan is written against it, not
 re-derived. If no skill fits, do the step directly and log it as
 `No skill: <kind of work>` (for example `No skill: Nuxeo listener`), so it
 can be found again.
+
+Non-Java code: igiari-tdd and chottomatte-archi apply whole (they are not
+Java-bound beyond syntax). kanpeki-fp and kaizen-refactor's mechanical list
+are Java/Vavr: apply only the intent (pure functions, readonly data,
+failures as values, no mutation) and igiari-tdd rule 6, log `No skill:
+<language> style`, and give the helpers this exact paragraph by path, not in
+your own words.
 
 ## Loop
 
@@ -274,7 +293,11 @@ every gate, every commit and every decision.
   files in play and the approved structural plan: never the test plan, the
   ticket or the ACs. For each later GREEN of the same run, send that same
   agent the next failing test and ask it to re-read the production files
-  first (your REFACTOR changed them since). Its skills load once instead of
+  first (your REFACTOR changed them since). The message names the failing
+  test, the files and the test command, and nothing else about the work: no
+  hint of what the test forces, no behaviour the coming tests will ask for,
+  no praise or critique that names a later step. If the test cannot pass
+  without more information, the dev says so. Its skills load once instead of
   every cycle. A new run (the next AC) gets a fresh dev. If its green goes
   wrong, or you cannot message a spawned agent, spawn a fresh one for that
   GREEN. Check its green exactly as you check your own (`igiari-tdd`'s
@@ -406,6 +429,7 @@ session reads to continue:
 ## Resume
 - Status: open | done
 - Mode: fix | build | ui | think | improve
+- Yolo: on (only when on; see references/yolo.md)
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
@@ -432,7 +456,8 @@ Give the verdict (see "Court"). Set the `Resume` block's `Status` to `done`
 and commit it, so the start recap stops listing this work; on GUILTY keep it
 `open` unless the user waives the counts, so the next opening lists it. Then report in a few lines, and always include the last two parts:
 
-1. **Done:** what was done, and the decisions worth a look. Point to the
+1. **Done:** what was done, and the decisions worth a look. In yolo, "Decided for you" and
+   "Waiting for you" come first (`references/yolo.md`). Point to the
    decision log instead of repeating it.
 2. **Open:** anything left unverified or unresolved.
 3. **Next:** suggested next work (remaining ACs, follow-ups, risks). Suggest,

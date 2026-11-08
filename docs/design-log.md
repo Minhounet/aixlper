@@ -4044,3 +4044,103 @@ recognizable.
   once by script (lettering from the yells' glyphs plus G, U, Y; widths
   checked, at most 66 columns) and copied verbatim, read only at the verdict,
   chat only. Not yet seen in a real run.
+
+## `saiban-orchestrator`: yolo, the orchestrator takes the decisions
+
+The author asked for a "yolo mode, useful for a POC". A first proposal made
+it a throwaway POC mode (skip TDD, review, structure). The author corrected
+it: yolo must keep the good things; it means the orchestrator makes the
+decisions while still using the skills and agents.
+
+- **A switch, not a mode.** What changes is who answers the gates, not the
+  process, so it sits on top of fix, build, UI and think modes, like "no
+  review" or "with dev". Not improve mode: a change to the skills stays the
+  user's. No new skill and no new agent: none of the five criteria applies,
+  and the rules are the orchestrator's own (gates are its job).
+- **Yours vs. never yours.** Skill approval gates, forks, deviations,
+  review fixes and discrepancies are answered with the recommendation and
+  logged `Asked user: no (yolo)`. Hard-to-reverse steps, user-only changes,
+  waivers and scope growth are parked, the run goes on around them, and they
+  are asked together at the end. A blocking finding is never dismissed alone.
+- **Review after, not during.** The report opens with "Decided for you"
+  (reversible first) and "Waiting for you". The verdict is unchanged, so an
+  open parked step is a GUILTY count, not a quiet success.
+- **No pauses by default**, but the `Resume` block is still committed at each
+  break point.
+- Rules in `references/yolo.md` (conditional, read only when on), with a
+  five-line statement in `SKILL.md`, as improve mode does. Not yet run.
+- **Feature-branch push (author's follow-up).** Yolo may push to a feature
+  branch: saying "yolo" counts as the user asking, lifting the agent's "never
+  push without being asked" for that case only. Never the default branch or
+  someone else's branch (a feature branch is created first if needed), plain
+  push after each verified AC, never force, no pull request; a refused push
+  is parked.
+- **Runnable (author's follow-up).** "It must be runnable quickly: if it is
+  a mobile application, I must be able to launch it." Yolo picks one launch
+  command at the start (the project's convention; `tonosaman-deploy` for a
+  Java service or batch; inline plus a `No skill:` entry otherwise), launches
+  it before every push, and keeps a `Run` section in the project's README
+  (how to get a mobile app onto a phone or emulator). Where the platform
+  can't run here, the artifact is built and the gap is an `ENV`. Store or
+  shared distribution stays parked. The report opens with "Run it", and a
+  last push that doesn't launch is a GUILTY count. Mobile has no skill yet;
+  repeated `No skill:` entries are the existing signal to propose one.
+- **Open run, kept ideas, mobile path (author's follow-ups).** The user can
+  add features during a yolo run (only the orchestrator is held to the start
+  scope). Yolo is where ideas are learned; reusable ones get a `Keep:` note
+  and a line in a candidate catalog, become a component at their second use,
+  rebuilt in build mode in a lib repository per stack, and later yolo runs
+  use the lib as a pinned dependency and never edit it (`Change:` notes
+  instead). Spikes may live in a playground repo; anything to launch or keep
+  gets its own. The lib repository is created only at the first reuse:
+  before that a catalog is enough. Mobile defaults to Expo: the author uses
+  only an Android phone, so a terminal QR code is no launch; EAS Update on a
+  feature-branch channel opens it in Expo Go (free plan, 1,000 MAU), with a
+  privately published web build as the fallback when the environment does
+  not reach Expo (the first run: the author declined a separate Expo
+  environment), and an APK only for a native module Expo Go lacks.
+
+## Improve mode on the first yolo run (PEEK-1, Yolognese)
+
+First run of the yolo switch: an Expo/TypeScript code-breaking game built in
+build mode with yolo, AC1-AC4 verified, AC5 waiting for a phone check.
+`tantei-inspector` read the project's decision log, retro, git history and
+the session transcript; the author accepted all seven proposals.
+
+- **shonin-dev reads the skill files when the Skill tool has none** (P1).
+  In a cloud container with the clone but no install, GREEN 1's dev said
+  "Skills were not loaded as Skill-tool entries. I did not read the SKILL.md
+  files" and overbuilt (scoring and history ahead of tests 2-5). It now
+  reads SKILL.md in full from the given path and stops if `igiari-tdd`
+  cannot be loaded.
+- **A message to the dev names only the failing test** (P2). The
+  orchestrator's later messages hinted at what was coming ("the caught game
+  must be saved", "the sliding window gets its own red next"): GREEN 19
+  saved untested state (kenji, blocking) and criterion 5, the reason the dev
+  exists, was defeated by the caller itself.
+- **Skills without an install are read in full from the clone, and helpers
+  get the path** (P3). The run read `igiari-tdd` and `objection-conception`
+  in slices, skipped `kanpeki-fp`, `kaizen-refactor` and `shoko-playwright`
+  unread, and paraphrased rules into each helper prompt.
+- **`shoko-playwright` loads whenever an AC is proven in the browser** (P4),
+  not only in UI mode: the screen was built inside build mode, the checks
+  were written without the skill, and kenji found a fixed sleep (blocking)
+  and missing cases.
+- **One paragraph says what carries over to non-Java code** (P5): the Java
+  skills ran on TypeScript and the orchestrator re-decided and reworded the
+  carry-over in every helper prompt. `No skill:` entries for TypeScript
+  style and Expo/React Native are the signal for a future skill; not decided.
+- **Expo token by credential request, no repeated declined asks, Expo Go as
+  a stated prerequisite** (P6): the run proposed a separate environment
+  twice (declined twice), then a credential request worked; the author only
+  learned Expo Go was needed after the link did nothing.
+- **The TDD audit reads Jest failures** (P7): every red printed "no failure
+  line found" on Jest. The approved single pattern matched Jest's `FAIL
+  <file>` line first; the author chose a two-line variant (`Expected:` first,
+  then the approved patterns), checked on the Yolognese history: each red
+  now shows its expected value.
+- Not proposed, noted by the inspector: `igiari-tdd/SKILL.md` is 44KB and
+  the run skipped exactly its "Calibrating super green" and "Calibration
+  example proposal" sections; a candidate for `references/` (meta about
+  extending the skill), for the author to decide.
+
