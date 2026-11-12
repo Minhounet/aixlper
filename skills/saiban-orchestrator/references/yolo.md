@@ -106,10 +106,33 @@ Yolo is where ideas are tried fast; what proves good is made properly later.
   depend on it): work around it here and log `Change: <component>, <what>`
   for build mode in the lib. Publishing a lib version is parked.
 
+## Read the real input before you decide
+
+Nobody will be there to say "that column holds two values". Before the first
+step, and again if the plan leans on data (a CSV, an export, a response, a
+fixture), read a sample of the values the work depends on, not only the
+header: a separator inside a field (`a;b`), case or whitespace variants of
+one value, empty or placeholder values, duplicates. Anything that gives the
+question two answers (count `a;b` once, or once per person) is a fork on
+meaning: it goes to **Gates you never answer yourself**, not to your
+recommendation. A cross-check that counts the same way as the code proves
+nothing: make it read the data independently. (Seen in a trial: a run
+counted `a;b` cells as one author, its own check agreed, and the report
+called the data "clean".)
+
 ## Gates you answer yourself
 
 Take the option you would have recommended, the one most faithful to the
 ticket's text and the approved plan, and log it.
+
+Decide alone only when **all** of these hold; if one fails, park it:
+the approved plan is unchanged; it stays inside the agreed scope; it adds
+no public surface (API, schema, CLI flag); it changes no AC's meaning; it
+adds no dependency the user did not grant; it is reversible locally; the
+checks still pass. A check still failing after two fix attempts is always
+parked, never a third try, and a stated cost or turn budget overrides
+retries. Judging your own decision tends to rate it easy, so when unsure,
+park.
 
 - **A skill's own approval gate** (structural plan, AC trace, TDD plan, a
   re-approved deviation): run the skill's checks, then approve it yourself.
@@ -156,7 +179,8 @@ each break point, so a crash or a `/clear` loses nothing.
   `Run` section in two or three lines, what was launched here and what was
   not. Then, before **Done**, add **Decided for you:** one line per gate you
   answered (the decision and its log entry), the reversible decisions first
-  to undo. Then **Waiting for you:** every parked question, with the options
+  to undo. If the work is a throwaway spike or PoC, add **Debt:** every shortcut taken, so
+  keeping the code is a decision, not an accident. Then **Waiting for you:** every parked question, with the options
   and your recommendation, short enough to answer from a phone. Then
   **Worth keeping:** the `Keep:` and `Change:` entries of this run.
 - The verdict is unchanged: an open discrepancy, an unverified AC or a parked
