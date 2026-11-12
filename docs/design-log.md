@@ -4144,3 +4144,27 @@ the session transcript; the author accepted all seven proposals.
   example proposal" sections; a candidate for `references/` (meta about
   extending the skill), for the author to decide.
 
+
+### Yolo: ideas ported from the retired `shogun-orchestrate` experiment
+
+`shogun-orchestrate` (an unmerged branch, `claude/autonomous-agents-skills-xw86pm`,
+last commit `9dc1b19`, Oct 2026) was an earlier autonomous mode: one brief
+approved up front, then no questions. `saiban-orchestrator`'s yolo covers the
+same ground, so the skill was not kept; its experiment log (two headless
+trials, a planted-trap trial, three eval cases) is the evidence behind what
+was ported into `references/yolo.md`:
+
+- **Read the real input first.** The trap trial: 5,903 of 100k rows held
+  `a;b` in one cell; the run never looked, counted per cell, its "independent"
+  check counted the same way, and the report said "clean". Ambiguity found by
+  sampling goes to the user as a fork on meaning.
+- **Decide alone only if seven conditions all hold**, otherwise park; a check
+  failing after two fixes and a budget cap always park. An agent judging its
+  own decisions rates them easy, hence default to park.
+- **Debt list** in the report for spikes and PoCs.
+
+Not ported: shadow mode (tag each decision TRIVIAL / NEEDS YOU and measure
+agreement before trusting the run), the up-front brief with a checkable
+`success` command, and the `shogun-run/` fallback folder (decision logs
+already have a home). None of it was run beyond those trials. Yolo itself has
+not been run on this wording.
