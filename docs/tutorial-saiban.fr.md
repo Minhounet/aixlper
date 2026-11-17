@@ -175,6 +175,16 @@ floue. Le reste, il le décide et l'écrit.
   il liste les journaux de décision ouverts, une ligne chacun avec le mode et
   la prochaine étape, et demande lequel reprendre. Un journal marqué
   `Status: done` à la fin n'est plus listé.
+- Deux tâches en même temps ? Le serveur local ne fait tourner qu'une
+  version du code à la fois. Garde la première tâche dans le dossier que
+  sert le serveur ; donne à la seconde sa propre branche (et, hors mode UI,
+  un worktree git) pour le code et les tests unitaires. Chaque CA terminée
+  loin du serveur est listée en `Not on server` dans son bloc `Resume` et
+  comptée dans le récapitulatif : impossible de l'oublier. Pour la vérifier,
+  l'orchestrateur prête le serveur à la seconde tâche (redéploie ses jars,
+  ou extrait sa branche dans le dossier servi pour Studio Designer), lance
+  les vérifications, puis remet la première, en disant à chaque fois quelle
+  branche tourne sur le serveur.
 
 Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
 qu'on le lui demande.

@@ -4168,3 +4168,28 @@ agreement before trusting the run), the up-front brief with a checkable
 `success` command, and the `shogun-run/` fallback folder (decision logs
 already have a home). None of it was run beyond those trials. Yolo itself has
 not been run on this wording.
+
+## `saiban-orchestrator` and `tonosaman-deploy`: two tasks, one server
+
+The author asked what to do when a second task runs in parallel with the
+first: a worktree keeps the code apart, but two risks remain, forgetting the
+second task, and not being able to test it locally since the server serves
+one folder. Both come from the same fact: the local server runs one version
+of the code at a time. Changes:
+
+- `tonosaman-deploy` section 6: a deploy reports which code it runs (branch,
+  commit, folder when not the main checkout). A worktree build deploys like
+  any other when the artifact is copied or mounted from its build folder; a
+  volume-synced source folder only serves itself.
+- `saiban-orchestrator`: a `Not on server` line in the `Resume` block (ACs
+  done and unit-tested away from the server, removed only when a check ran
+  against their deployed code), its count shown in the start recap, and a
+  short "Two tasks, one server" section pointing to the new
+  `references/parallel.md` (where each task lives, and the test slot: commit
+  A, deploy B the way its change reaches the server, confirm what runs,
+  check, give the server back to A). Put in a reference since it applies
+  only when two tasks are open, and `SKILL.md` is already about 30KB.
+- Studio Modeler is one project shared by both tasks: the reference asks the
+  user before a hot reload rather than guessing whether the changes conflict.
+
+Not run yet.

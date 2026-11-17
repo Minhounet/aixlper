@@ -159,6 +159,15 @@ decides and writes down.
   lists the open decision logs, one line each with mode and next step, and
   asks which to resume. A log marked `Status: done` at the finish is no
   longer listed.
+- Two tasks at once? Your local server runs one version of the code at a
+  time. Keep the first task in the folder the server serves; give the
+  second its own branch (and, outside UI mode, a git worktree) for code
+  and unit tests. Each AC finished away from the server is listed as
+  `Not on server` in its `Resume` block and counted in the recap, so it
+  isn't forgotten. To check it, the orchestrator lends the server to the
+  second task (redeploys its jars, or checks out its branch in the served
+  folder for Studio Designer), runs the checks, then puts the first task
+  back, saying each time which branch the server runs.
 
 It commits locally, never pushes, and never writes to Jira unless asked.
 
