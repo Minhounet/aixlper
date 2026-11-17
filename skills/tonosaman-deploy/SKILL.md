@@ -114,7 +114,13 @@ may need.
   look harmless. Bounding the output must not hide it: `cmd | tail` returns
   `tail`'s code, always 0 — use `set -o pipefail` or `${PIPESTATUS[0]}`.
 
-Show the URL or port to use when it worked.
+Show the URL or port to use when it worked, and **which code it runs**: the
+branch and commit (and the folder, when it isn't the main checkout) the
+artifact was built from. The server holds one version at a time; with two
+branches or a git worktree in play, a check against the wrong one passes or
+fails for nothing. A build from a worktree deploys like any other when the
+artifact is copied or mounted from its build folder; a volume that syncs a
+source folder only ever serves that folder.
 
 ## 7. Engines and the Docker API
 

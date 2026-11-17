@@ -24,7 +24,8 @@ direct-mode request (e.g. a bare start, "hi", "where were we"): read only the
 `Resume` block of each `docs/decisions/*.md` whose `Status` is not `done` (a
 block without `Status` counts as open), and the git state (branch,
 uncommitted file count). Show one line per open log, at most 10, newest
-first: topic, mode, its `Next`. Then ask: resume one, or start something new
+first: topic, mode, its `Next`, and the count of its `Not on server` ACs
+when not zero. Then ask: resume one, or start something new
 (the start questions below). It is the court's opening (see "Court"). No open log and a clean tree: skip the recap,
 just ask the start questions. Never read past the `Resume` blocks for this.
 
@@ -409,6 +410,16 @@ The judge opens and closes the session, in chat only, like the yells:
 None in think or direct mode. "no court" turns all three off; record it in
 the `Resume` block (the hook has its own switch, `AIXLPER_NO_COURT=1`).
 
+## Two tasks, one server
+
+The local server runs one version of the code at a time. When the user works
+a second task while another is open, or resumes a log with `Not on server`
+entries, read `references/parallel.md` before the next step: it holds where
+each task lives and how to lend the server to one and give it back. Two rules
+hold everywhere: before trusting a check, confirm which branch or commit the
+server runs; and an AC done away from the server stays in `Not on server`
+until a check has run against its deployed code.
+
 ## Context: where to cut
 
 A long session is re-sent in full on every turn, so a heavy context costs money
@@ -452,6 +463,7 @@ continue:
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
+- Not on server: ACs done and unit-tested, never checked on the running app (omit when none)
 - Files: the plan, the ticket files, the classes in play
 ```
 
