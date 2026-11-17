@@ -4287,3 +4287,11 @@ when A was pushed (force push), merge offered instead; a `Based on` line in
 the `Resume` block holds B's commit, which `git rebase --onto` needs once B
 reaches the main branch (squash merge, or B's branch deleted); A's ACs go
 back to `Not on server` until checked again on the rebased code. Not run yet.
+
+First eval case for `saiban-orchestrator`: `evals/parallel-tasks` (five
+graders: worktree vs. volume, server given back, stale checks after the
+rebase, pushed branch, squash merge with `--onto`). Written in a session
+with no Claude credentials, so not run. Aimed at the traps a model without
+the skill is likely to miss; the pushed-branch grader is expected to pass
+without it. `make eval` now runs it too (it runs every skill with an
+`evals/` directory).

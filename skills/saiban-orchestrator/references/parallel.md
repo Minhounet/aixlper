@@ -37,6 +37,8 @@ The recap at start shows the count, so it cannot be forgotten.
      which folder the build came from.
    - **Volume-synced files** (Studio Designer): a worktree's edits never
      reach the server. Check out B's branch in the main folder instead.
+     Git refuses a branch another worktree holds: check out its commit
+     detached (`git checkout --detach <B>`), or remove B's worktree first.
    - **Studio Modeler**: one Studio project serves both tasks. Ask the user
      whether A's Modeler changes conflict with B's before any hot reload.
    - Something that needs a recreate or restart: ask first if another
