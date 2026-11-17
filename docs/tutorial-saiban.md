@@ -168,6 +168,10 @@ decides and writes down.
   second task (redeploys its jars, or checks out its branch in the served
   folder for Studio Designer), runs the checks, then puts the first task
   back, saying each time which branch the server runs.
+  To test both together, it merges them on a throwaway branch and runs
+  both tasks' checks; fixes go on the task's own branch, never there. To
+  base one on the other (rebase), it asks first if the branch was pushed,
+  notes `Based on` in the `Resume` block, and runs that task's checks again.
 
 It commits locally, never pushes, and never writes to Jira unless asked.
 
