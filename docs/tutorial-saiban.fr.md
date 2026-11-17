@@ -185,6 +185,11 @@ floue. Le reste, il le décide et l'écrit.
   ou extrait sa branche dans le dossier servi pour Studio Designer), lance
   les vérifications, puis remet la première, en disant à chaque fois quelle
   branche tourne sur le serveur.
+  Pour tester les deux ensemble, il les fusionne sur une branche jetable et
+  lance les vérifications des deux tâches ; les corrections vont sur la
+  branche de la tâche, jamais là. Pour baser l'une sur l'autre (rebase), il
+  demande d'abord si la branche a été poussée, note `Based on` dans le bloc
+  `Resume`, et relance les vérifications de cette tâche.
 
 Il commite en local, ne pousse jamais, et n'écrit jamais dans Jira sans
 qu'on le lui demande.

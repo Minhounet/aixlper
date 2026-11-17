@@ -413,8 +413,9 @@ the `Resume` block (the hook has its own switch, `AIXLPER_NO_COURT=1`).
 ## Two tasks, one server
 
 The local server runs one version of the code at a time. When the user works
-a second task while another is open, or resumes a log with `Not on server`
-entries, read `references/parallel.md` before the next step: it holds where
+a second task while another is open, wants two tasks tested together or one
+based on the other, or resumes a log with `Not on server` entries, read
+`references/parallel.md` before the next step: it holds where
 each task lives and how to lend the server to one and give it back. Two rules
 hold everywhere: before trusting a check, confirm which branch or commit the
 server runs; and an AC done away from the server stays in `Not on server`
@@ -464,6 +465,7 @@ continue:
 - Done: ...
 - Next: ...
 - Not on server: ACs done and unit-tested, never checked on the running app (omit when none)
+- Based on: the other task's branch and commit, after a rebase onto it (omit when none)
 - Files: the plan, the ticket files, the classes in play
 ```
 

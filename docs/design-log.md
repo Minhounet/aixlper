@@ -4277,3 +4277,13 @@ of the code at a time. Changes:
   user before a hot reload rather than guessing whether the changes conflict.
 
 Not run yet.
+
+Follow-up, same session: the author asked how to test A with B, and how to
+base A on B. `references/parallel.md` gained two sections. Together: merge
+both on a throwaway branch, run both tasks' checks, fix only on the owning
+branch, record the result with both commits in both logs; it never clears
+`Not on server` ("alone" and "together" are two results). Rebase: asked first
+when A was pushed (force push), merge offered instead; a `Based on` line in
+the `Resume` block holds B's commit, which `git rebase --onto` needs once B
+reaches the main branch (squash merge, or B's branch deleted); A's ACs go
+back to `Not on server` until checked again on the rebased code. Not run yet.
