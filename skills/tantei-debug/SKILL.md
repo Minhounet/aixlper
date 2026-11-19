@@ -76,9 +76,11 @@ before the next action**, not at the end: the session can stop at any
 moment.
 
 Where: `docs/ticket/<id>/debug.md` when there is a ticket folder, otherwise
-`docs/debug/<short-symptom>.md` in the project. Commit it along with the
-project's other design notes or decision logs if those are kept in git;
-otherwise keep it on disk and say where.
+`docs/debug/<short-symptom>.md` in the project. This is a local working
+note, never committed to the project's shared git history, regardless of
+whether the project commits other design notes or decision logs there —
+exclude it via `.gitignore` or `.git/info/exclude` (adding the rule
+yourself if it's missing) and say where it lives.
 
 ```markdown
 # <symptom in one line>
@@ -90,7 +92,7 @@ Reproduce: <exact command / request / input>
 Debug setup: <how the JVM was started with JDWP, port, attached with what>
 Window: <last good point> → <first bad point>
 Next: <the next split: where, which value, what it should be>
-Temporary changes: <log lines added, values set; "none">
+Temporary changes: <log lines added, values set, and any host/network setup needed to attach - a tunnel, a changed network mode, a stopped service; "none">
 
 ## Splits
 1. `OrderService.java:200` `order.total` expected 8, got 3 → wrong: before here
@@ -112,7 +114,8 @@ shows, re-create the debug setup (breakpoints don't survive), then do
 The investigation ends when `Found` is filled: one location, the input, the
 expected and actual values, the cause. Then:
 
-1. **Remove every temporary change** listed in the note.
+1. **Remove every temporary change** listed in the note, including any
+   host/network setup made along the way that isn't still needed.
 2. **Existing code without tests around the cause**: characterization tests
    first, by `kaizen-refactor`'s rule (they pin today's behavior and pass on
    the unchanged code). The behavior at the cause itself is not pinned as it

@@ -4168,3 +4168,58 @@ agreement before trusting the run), the up-front brief with a checkable
 `success` command, and the `shogun-run/` fallback folder (decision logs
 already have a home). None of it was run beyond those trials. Yolo itself has
 not been run on this wording.
+
+## Improve mode on a fix-mode run (Documentum/Concerto attachment ticket)
+
+Fix mode, two unrelated-but-combined fixes on an existing Java plugin (a
+missing guard before a `save()` call, and three sibling config/DQL ORDER BY
+direction flips), review off (not requested), dev off (below the 4-test
+bar). `tantei-inspector` read this run's decision log and investigation
+note, two other tickets' retros, `process-notes.md`, and the session
+transcript; the author accepted all seven proposals (P3 and P4 landed as
+one edit, same paragraph).
+
+- **Investigation notes are local-only, unconditionally** (P1). The skill's
+  own wording — "commit it along with the project's other design notes or
+  decision logs if those are kept in git" — is what caused a real wrong
+  commit of a `tantei-debug` note to a project's shared history this run
+  (caught only by the author, not by any hook). Now: never committed,
+  regardless of what else the project commits.
+- **The decision log checks its own exclusion before the first commit**
+  (P2). The same run also tried to commit the decision log itself, stopped
+  only by a project-specific hook that won't exist everywhere. The skill
+  now says to confirm (and add, if missing) a `.gitignore`/`.git/info/exclude`
+  rule before that first commit, instead of assuming a hook will catch it.
+- **The TDD audit's "one test per red" check now allows a renamed
+  characterization test** (P3). Flipping a wrongly-pinned characterization
+  test's assertion in place (rename + change), instead of adding a new
+  `@Test` method, is a legitimate RED shape the script can't see — it
+  printed "ADDS 0 TESTS, want 1" twice this run on two genuine reds. Now
+  documented as expected, not a violation.
+- **The TDD audit documents a fallback for an unrunnable worktree re-run**
+  (P4, same paragraph as P3). The script's worktree-based re-run can't run
+  at all in a project using `gradle-git-properties`: that plugin's
+  `generateGitProperties` task throws under JGit for any `git worktree`
+  checkout, confirmed independent of this run's own commits. The skill now
+  says to fall back to the live-checkout evidence already shown at each
+  red/green instead.
+- **`tantei-debug`'s "temporary changes" now covers host/network setup**
+  (P5). Two real, unreverted host-level changes this run (a WSL
+  networking-mode edit, a stopped VPN helper service), made to get a JDWP
+  debugger connected to a remote server, were never listed or cleaned up
+  because the note's own template only prompted for in-JVM changes
+  ("log lines added, values set"). Widened to say so explicitly.
+- **`saiban-orchestrator`'s `TAKE THAT!` now names fix-mode items
+  explicitly** (P6). Fix mode's "a requested item follows the same shape as
+  an AC" cross-reference didn't carry through to the Yells section's "when
+  an AC is verified" trigger — no yell fired for any of this run's four
+  verified fix items. Named explicitly now.
+- **`jdb.md` documents the recurring "handshake failed" JDWP symptom** (P7).
+  The exact failure — "handshake failed - connection prematurely closed"
+  against a confirmed-listening server, diagnosed by testing the same
+  attach from a second independent client environment before concluding
+  it's a network-path issue, fixed with an SSH tunnel — was independently
+  re-derived twice (once in the author's own `process-notes.md`, once
+  inside this run's own investigation note). Documented as a known symptom
+  with its diagnosis technique, so it's recognized next time instead of
+  re-derived.

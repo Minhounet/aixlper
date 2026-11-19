@@ -541,6 +541,17 @@ violation. If the task is one of several runs that keep numbering steps
 (one run per acceptance criterion), also pass `--first-n <the run's first
 step number>`. Rule 5 stays your judgment: read the green diffs.
 
+A RED that renames and re-asserts an existing, wrongly-pinned
+characterization test in place, rather than adding a new `@Test` method, is
+expected to print "ADDS 0 TESTS, want 1" — that is not a violation when the
+red output shown at the step was a genuine failure for the stated reason;
+note it as such in the summary instead of treating it as a real flag. If
+the script's own worktree-based re-run fails for a reason unrelated to this
+task's commits — for example a build plugin that only works against a
+regular `.git` directory and errors out under a `git worktree` checkout —
+fall back to the live-checkout evidence already captured at each red and
+green step instead of the sandboxed re-run, and say so in the summary.
+
 The audit also lists every refactor that rewrites production lines its own
 green wrote. That list is evidence, not a verdict. Compare it with your
 "Super-green misses" count: a listed refactor that isn't in your count is

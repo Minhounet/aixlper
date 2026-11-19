@@ -365,7 +365,9 @@ yells at three moments, in your message to the user:
   `objection-conception` records a blocking discrepancy;
 - **HOLD IT!** when the review returns only `minor` findings, or when you
   show `tantei-inspector`'s proposals in improve mode;
-- **TAKE THAT!** when an AC is verified, with its evidence.
+- **TAKE THAT!** when an AC is verified, with its evidence — including a
+  fix-mode requested item that follows the same shape as an AC ("The
+  cycle").
 
 One banner per moment, then the case in one line under it, then your
 message as usual: the joke never replaces the finding. Read
@@ -419,11 +421,15 @@ go on. Skip the pauses only if the user said "no pauses" at the start.
 
 ## Decision log
 
-Keep `docs/decisions/<topic>.md` by default; if the project already keeps
-its own ticket/process files under `.claude/` (for example to exclude them
-from shared git history via `.git/info/exclude`), follow that convention
-instead. It starts with a `Resume` block, kept current, which a fresh
-session reads to continue:
+Keep `docs/decisions/<topic>.md` by default. This file is a local working
+note, like the investigation notes `tantei-debug` keeps: before its first
+commit, confirm the path is actually excluded from the project's shared
+git history (`.gitignore` or `.git/info/exclude`) and add that exclusion
+yourself if it is missing — never rely on a hook to catch it. If the
+project already keeps its own ticket/process files under `.claude/` (or
+another already-excluded directory), follow that convention instead. It
+starts with a `Resume` block, kept current, which a fresh session reads to
+continue:
 
 ```
 ## Resume

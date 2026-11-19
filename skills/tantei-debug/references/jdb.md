@@ -58,6 +58,15 @@ and attach to `localhost:5005` as if it were local. Never open the JDWP
 port in a firewall: it has no authentication. Not on production
 (`SKILL.md`, section 2).
 
+**Known symptom**: a direct attach to a remote JVM fails with something
+like "handshake failed - connection prematurely closed" even though the
+server is confirmed listening with the right JDWP flag. Before assuming a
+client-side networking bug, test the same attach from a second,
+independent client environment (a different OS, a different network path)
+— if it fails identically there too, treat it as a network-path issue
+between client and server rather than chasing a client-specific fix, and
+go straight to the SSH tunnel above instead.
+
 ## Driving jdb: `scripts/jdb_session.py`
 
 `jdb` is interactive: it expects each command after its prompt. Piping a
