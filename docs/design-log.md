@@ -4223,3 +4223,23 @@ one edit, same paragraph).
   inside this run's own investigation note). Documented as a known symptom
   with its diagnosis technique, so it's recognized next time instead of
   re-derived.
+
+## `saiban-orchestrator`: `shonin-dev` switched on reactively
+
+The author asked whether the orchestrator could tell when the dev is worth
+its cost. It cannot predict it: the dev is there for a bias the orchestrator
+cannot see in itself (criterion 5). It can see the bias once it has
+happened, though, because the existing checks already measure it: a planned
+test passing on arrival, the TDD audit's `ahead` count, `kenji-reviewer`
+flagging code no failing test asked for.
+
+Decided with the author, who values the quality over the cost and wants the
+same error not repeated: the upfront rule stays (build ticket with two or
+more ACs, or four or more planned tests), and a second rule is added. Once
+any of those signals catches one of the orchestrator's own GREENs building
+ahead, the dev is on from the next TDD run for the rest of the work,
+whatever the run's size, logged with its evidence and kept in the Resume
+block (`Dev:`). The slip itself is fixed as usual; no new pause. "with dev"
+/ "no dev" still override both. The cost line now quotes 1.9× (one dev per
+run) instead of the older 2.7×. Not run: the reactive trigger has not fired
+in a real or kata run yet.

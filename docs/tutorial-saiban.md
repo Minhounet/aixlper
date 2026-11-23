@@ -114,7 +114,7 @@ message:
 | `no review` | No `kenji-reviewer` after each AC (build mode). |
 | `no tester` | In UI mode, the orchestrator writes and runs the checks itself instead of `mokugeki-tester` (on by default; about 1.6× the cost on a small screen, benefit not yet shown). |
 | `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
-| `with dev` / `no dev` | Force `shonin-dev` on or off. Without either, the orchestrator decides per TDD run: on for a build ticket with two or more ACs or a plan of four or more tests, off otherwise, and says so in the plan you approve. With it, the code is written by one agent per run that only sees the failing tests, not the plan; it costs about 2.7× on katas, benefit not yet measured. |
+| `with dev` / `no dev` | Force `shonin-dev` on or off. Without either, the orchestrator turns it on by itself: for a build ticket with two or more ACs or a plan of four or more tests (said in the plan you approve), and for the rest of the work as soon as one of its own greens is caught building ahead of its test (a planned test passing on arrival, the audit's `ahead` count, or the reviewer). Off otherwise. With it, the code is written by one agent per run that only sees the failing tests, not the plan; it costs about 1.9× on katas, benefit not yet measured. |
 
 ### Agent or plain session?
 
