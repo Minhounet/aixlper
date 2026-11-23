@@ -290,8 +290,8 @@ every gate, every commit and every decision.
     of its test. The signals are a planned test that passes on arrival (not
     one the plan marked as a guard), the TDD audit's `ahead` count above
     zero, or `kenji-reviewer` flagging code no failing test asked for. From
-    the next TDD run on, the dev is on for the rest of the work, whatever
-    the run's size: the same bias would repeat. Fix the slip itself as
+    the next GREEN on, in this run and every later one, the dev writes
+    them, whatever the run's size: the same bias would repeat. Fix the slip itself as
     usual; the switch is not a new pause. Say it in one line at the next
     gate, log the trigger with its evidence, and set `Dev:` in the Resume
     block so a resumed session keeps it.

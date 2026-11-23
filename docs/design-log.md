@@ -4237,7 +4237,7 @@ Decided with the author, who values the quality over the cost and wants the
 same error not repeated: the upfront rule stays (build ticket with two or
 more ACs, or four or more planned tests), and a second rule is added. Once
 any of those signals catches one of the orchestrator's own GREENs building
-ahead, the dev is on from the next TDD run for the rest of the work,
+ahead, the dev writes every GREEN from the next one on, in that run and later ones,
 whatever the run's size, logged with its evidence and kept in the Resume
 block (`Dev:`). The slip itself is fixed as usual; no new pause. "with dev"
 / "no dev" still override both. The cost line now quotes 1.9× (one dev per

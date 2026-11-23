@@ -123,7 +123,7 @@ message :
 | `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
 | `no tester` | En mode UI, l'orchestrateur écrit et lance les checks lui-même au lieu de `mokugeki-tester` (activé par défaut ; environ 1,6× le coût sur un petit écran, bénéfice pas encore démontré). |
 | `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
-| `with dev` / `no dev` | Force `shonin-dev` activé ou désactivé. Sans l'un ni l'autre, l'orchestrateur l'active de lui-même : pour un ticket build à deux CA ou plus, ou un plan de quatre tests ou plus (annoncé dans le plan que vous approuvez), et pour toute la suite du travail dès qu'un de ses propres green est pris à coder en avance sur son test (un test prévu qui passe dès son écriture, le compteur `ahead` de l'audit, ou le reviewer). Désactivé sinon. Activé, le code est écrit par un seul agent par exécution, qui ne voit que les tests en échec, pas le plan ; environ 1,9× le coût sur les katas, bénéfice pas encore mesuré. |
+| `with dev` / `no dev` | Force `shonin-dev` activé ou désactivé. Sans l'un ni l'autre, l'orchestrateur l'active de lui-même : pour un ticket build à deux CA ou plus, ou un plan de quatre tests ou plus (annoncé dans le plan que vous approuvez), et pour tous les green suivants dès qu'un de ses propres green est pris à coder en avance sur son test (un test prévu qui passe dès son écriture, le compteur `ahead` de l'audit, ou le reviewer). Désactivé sinon. Activé, le code est écrit par un seul agent par exécution, qui ne voit que les tests en échec, pas le plan ; environ 1,9× le coût sur les katas, bénéfice pas encore mesuré. |
 
 ### Agent ou session normale ?
 
