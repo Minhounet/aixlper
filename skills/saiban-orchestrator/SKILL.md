@@ -258,6 +258,13 @@ deliverable.
 Four steps can go to a subagent. None can ask the user anything: you keep
 every gate, every commit and every decision.
 
+Run each one in the **foreground**: your next step waits on its answer, and
+every extra turn re-reads your whole context. Where the client starts
+subagents in the background by default, ask for the foreground. If an answer
+can only come back later (a message to a helper already running), wait for
+it in one blocking call: never a `sleep`, a poll or repeated notification
+checks.
+
 - **`kenji-reviewer`, on by default in build and UI modes; in fix mode only
   with "with review"; never in think or direct mode.** Only the user turns it
   off ("no review"); never skip it on your own judgment, however small the

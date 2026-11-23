@@ -4252,3 +4252,38 @@ fix-mode run resumed after a green 1 that built ahead. Reactive rule: dev on
 written inline "because one green was left". The rule changes behaviour as
 intended; it says nothing yet about whether the dev's greens are better
 (details in `evals/agents/README.md`).
+
+## Token use: where a dev run's cost goes, and two cuts
+
+The author asked for angles to cut tokens. Measured on the four dev-switch
+eval transcripts (deduplicated by message: a first pass summed one usage per
+content block and overstated everything ~3×, worth knowing before trusting a
+transcript total):
+
+- Context before any skill is ~40k tokens (the client's own prompt and
+  tools); `saiban-orchestrator` adds ~10k, `igiari-tdd` + `kanpeki-fp` ~24k.
+- The dev itself is ~25–30% of a dev run, ~40k tokens written, about half of
+  it its skills. Trimming `igiari-tdd` for the dev alone would save ~4% of a
+  run: dropped, not worth restructuring a co-designed skill.
+- The orchestrator made 20–21 calls with the dev against 12–13 without, each
+  re-reading ~80k tokens. Three or four of them were polling: the dev was
+  spawned in the background, then `ReadNotifications`, `sleep 45`, `Monitor`.
+
+Two changes:
+
+- **Helpers run in the foreground** (`saiban-orchestrator`'s "Delegated
+  steps"): the next step waits on their answer anyway; a later answer is
+  waited for in one blocking call, never a sleep or repeated checks.
+- **`igiari-tdd` moves three conditional parts to references** (45.3 → 42.1
+  KB, ~800 tokens resident less): the IDE test runner (only with an IDE
+  attached) into `references/build-commands.md`, the opt-in delegated run
+  into `references/delegated-run.md`, the calibration-proposal shape and
+  where proposals are kept into `references/proposals.md` (only when a miss
+  is counted). Each rule's statement stays in SKILL.md, with a pointer naming
+  the condition.
+
+**Re-run (Sonnet, 2 runs, $1.10):** dev switched on 2/2 and logged; no
+polling in either (one `sleep 1` before a `git status`). 17 and 14
+orchestrator calls (was 20–21), $0.60 and $0.50 (was $0.58 and $0.60): fewer
+turns, cost within the noise of two runs. One run finished without the
+`Dev:` line in its (already `done`) Resume block.
