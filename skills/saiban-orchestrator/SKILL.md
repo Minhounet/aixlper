@@ -279,14 +279,26 @@ every gate, every commit and every decision.
   `chottomatte-archi`); the only difference is a context that has never seen
   the test plan, the ticket or the ACs.
 
-  **When.** "with dev" turns it on and "no dev" off, for the whole session.
-  Otherwise decide per TDD run, by this rule only: on when what you know
-  ahead of the tests is large, that is in build mode on a ticket with two or
-  more ACs, or a TDD plan of four or more tests in one run; off otherwise.
-  It costs about 2.7× a run without it (measured on katas), and its benefit
-  is not yet measured, so a small run does not pay for it. State the
-  decision with its reason in the plan you put up for approval ("dev: on,
-  3 ACs"), so the user can override it at that gate, and log it.
+  **When.** "with dev" turns it on and "no dev" off, for the whole session;
+  nothing below overrides them. Otherwise it turns on automatically, by
+  these two rules only, and is off when neither applies:
+  - *Upfront, per TDD run:* what you know ahead of the tests is large, that
+    is build mode on a ticket with two or more ACs, or a TDD plan of four or
+    more tests in one run. State it with its reason in the plan you put up
+    for approval ("dev: on, 3 ACs"), so the user can override it there.
+  - *Reactively, once you have slipped:* one of your own GREENs built ahead
+    of its test. The signals are a planned test that passes on arrival (not
+    one the plan marked as a guard), the TDD audit's `ahead` count above
+    zero, or `kenji-reviewer` flagging code no failing test asked for. From
+    the next GREEN on, in this run and every later one, the dev writes
+    them, whatever the run's size: the same bias would repeat. Fix the slip itself as
+    usual; the switch is not a new pause. Say it in one line at the next
+    gate, log the trigger with its evidence, and set `Dev:` in the Resume
+    block so a resumed session keeps it.
+
+  It costs about 1.9× a run without it (katas, one dev per run), and its
+  benefit is not yet measured; the user pays that wherever the bias is
+  likely or has been seen, not on every small run. Log every decision.
 
   **How: one dev per TDD run, not one per GREEN.** At the run's first
   GREEN, spawn it with the failing test, the test command, the production
@@ -436,6 +448,7 @@ continue:
 - Status: open | done
 - Mode: fix | build | ui | think | improve
 - Yolo: on (only when on; see references/yolo.md)
+- Dev: on, since <trigger> (only when switched on reactively or by "with dev"/"no dev")
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
