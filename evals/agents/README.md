@@ -16,9 +16,27 @@ gives keyword hints, and the score comes from reading `answer.md` against
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
 `scripts/kata_super_green.sh --orchestrator dev|nodev` (results in
-`katas/igiari-tdd/README.md`).
+`katas/igiari-tdd/README.md`). Whether the orchestrator switches it on by
+itself after a slip is a separate case: `scripts/eval_dev_switch.sh` on
+`shonin-dev-switch/make-fixture.sh` (a fix-mode run paused after a green 1
+that already handles test 2; three planned tests, so only the reactive rule
+can turn the dev on). `--skill-rev` runs the control arm on an older
+`SKILL.md`.
 
 ## Results
+
+### 2026-11-23, saiban-orchestrator dev switch, Sonnet, 2 runs per arm
+
+**Reactive rule: dev on 2/2; previous rule: dev on 0/2** ($1.89 in all;
+about $0.59 a run with the dev, $0.35 without). Both new-rule runs logged the
+trigger with its evidence, set `Dev: on, since green 1 built ahead` in the
+Resume block, and spawned one dev for the rest of the run. They handled the
+slip differently: one kept test 2 as a guard (mutation-checked) and gave
+green 3 to the dev; the other backed green 1 out to `return 0` so red 2 could
+fail, and gave greens 2 and 3 to the same dev. Both control runs kept test 2
+as a guard and wrote green 3 themselves ("one green left, a dev would not
+pay"); one of them proposed, unprompted, that the skill should say how the
+dev switch applies after a green built ahead, which is the rule under test.
 
 ### 2026-11-02, Sonnet, 2 runs each
 

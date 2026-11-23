@@ -54,7 +54,7 @@ for i in $(seq 1 "$runs"); do
   cost=$(python3 -I -c "import json,sys; print(round(json.load(open(sys.argv[1])).get('total_cost_usd',0),3))" "$dir/result.json" 2>/dev/null || echo "?")
   # By the run's own project folder: a nested run can inherit the caller's session id.
   proj=$(python3 -I -c "import re,sys; print(re.sub(r'[^A-Za-z0-9]', '-', sys.argv[1]))" "$(cd "$dir/work" && pwd -P)")
-  spawns=$(ls "$HOME/.claude/projects/$proj"/*/subagents/*.jsonl 2>/dev/null | wc -l)
+  spawns=$( (ls "$HOME/.claude/projects/$proj"/*/subagents/*.jsonl 2>/dev/null || true) | wc -l)
   devline=$(grep -m1 -i '^- Dev:' "$dir/work/docs/decisions/string-calculator.md" 2>/dev/null || echo "-")
   commits=$(git -C "$dir/work" log --format=%s | tac | tail -n +4 | paste -sd ';' -)
   echo "$arm #$i  cost \$$cost  subagents $spawns  resume: $devline  commits: $commits"
