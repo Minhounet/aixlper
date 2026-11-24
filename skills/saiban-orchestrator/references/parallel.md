@@ -42,7 +42,7 @@ The recap at start shows the count, so it cannot be forgotten.
    - **Studio Modeler**: one Studio project serves both tasks. Ask the user
      whether A's Modeler changes conflict with B's before any hot reload.
    - Something that needs a recreate or restart: ask first if another
-     session may be checking A (UI mode's rule).
+     session may be checking A (UI mode's rule, `references/ui-mode.md`).
 3. **Confirm what runs** before trusting a check: the branch or commit
    deployed, read from the deploy itself (jar build time, branch of the
    served folder), not from memory.
