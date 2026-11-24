@@ -4287,3 +4287,26 @@ polling in either (one `sleep 1` before a `git status`). 17 and 14
 orchestrator calls (was 20–21), $0.60 and $0.50 (was $0.58 and $0.60): fewer
 turns, cost within the noise of two runs. One run finished without the
 `Dev:` line in its (already `done`) Resume block.
+
+## Token use, continued: UI-only text, `ci` effort and MCP set
+
+- **`saiban-orchestrator`'s UI-only text moves to `references/ui-mode.md`**
+  (31.5 → 30.1 KB): the rules for sharing a running server with other
+  sessions and `mokugeki-tester`'s hand-over, read before UI mode's first
+  screen. The UI mode paragraph and the tester's bullet keep their
+  statements and point there; fix and build runs no longer carry them.
+- **`ci` effort is opt-in** (`AIXLPER_CI_EFFORT`). The plan was `--effort
+  high` by default, after the global CLAUDE.md's "high for routine work
+  where the rules are written down". The dev-switch eval at `--effort high`
+  (Sonnet, 2 runs, $1.37) kept the behaviour (dev on 2/2, `Dev:` in Resume)
+  but cost $0.66 and $0.71 with 21 and 26 orchestrator calls, against $0.50
+  to $0.60 at the client's default: both runs chose the longer fix (back
+  green 1 out, then greens 2 and 3 by the dev). Two runs settle nothing,
+  and nothing showed a saving, so it is not the default. Opus, which `ci`
+  pins, was not run.
+- **`ci` takes an optional MCP allowlist**, `~/.claude/ci-mcp.json`
+  (`--strict-mcp-config`): the eval runs started at ~40k tokens before any
+  skill, the client's prompt and every tool definition, re-sent on every
+  call. Not measured on the author's setup.
+- Next: measure a real `ci` ticket with `global/cycle-cost.py`, the evals
+  being a toy kata at $0.50 a run against a reported ~$100 a day.

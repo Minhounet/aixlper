@@ -60,6 +60,19 @@ when that file exists, so the skill is in context from the start: the
 agent's `skills:` preload is ignored when the agent is the main session
 (checked).
 
+Two opt-in cost settings, both read by `ci` itself:
+
+- `AIXLPER_CI_EFFORT=high` (or any level) adds `--effort` to every `ci`
+  session. Unset, the client's default applies. Not a measured saving: on
+  two Sonnet eval runs, `high` cost more, not less.
+- `~/.claude/ci-mcp.json`, when it exists, limits `ci` sessions to the MCP
+  servers it lists (`--strict-mcp-config`). Every server's tools are re-sent
+  on every call, so list only those the orchestrator uses (an IDE, a ticket
+  tracker). Plain `claude` keeps all of them.
+
+To see where a real ticket's money went, run `~/.claude/cycle-cost.py` in the
+project after the session (or `--all` for the whole session).
+
 It only applies to that session: plain `claude` stays the normal assistant,
 though its direct mode covers questions and quick edits too. Tip: `alias ci='claude --agent
 saiban-orchestrator --permission-mode acceptEdits'` lets it edit files without asking
