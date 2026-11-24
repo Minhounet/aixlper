@@ -89,19 +89,10 @@ view) and the ACs about it. When the ticket spans several screens, agree the
 order with the user at the start, finish and commit one screen before
 touching the next, and pause between them (see "Context: where to cut").
 
-Another session may be working another screen at the same time, against the
-same running server. Assume one may be, and so:
-- **Work in the folder the server serves.** When the stack syncs a local
-  folder into the container (a volume), edits made anywhere else (a git
-  worktree, a copy) never reach the server, and the check tests stale files.
-  Never move the work to a worktree in UI mode.
-- **Touch only your screen's files.** If the change needs a file shared
-  with other screens, say so and ask before editing it.
-- **Ask before a restart or a recreate** of the server or its stack: it
-  breaks every other session's checks while it runs. A change that needs no
-  restart (a file the server already serves live) needs no question.
-- **Commit only your own files**, named one by one, never everything
-  staged or changed: the folder and its git index are shared.
+Another session may be working another screen against the same running
+server: read `references/ui-mode.md` before the first screen, for the rules
+that keep two sessions from breaking each other (and for `mokugeki-tester`'s
+hand-over below).
 
 **Think mode.** Thinking and analysis only, no code. Skill:
 `objection-conception`, alone by default. Add `chottomatte-archi` only if the
@@ -259,6 +250,13 @@ deliverable.
 Four steps can go to a subagent. None can ask the user anything: you keep
 every gate, every commit and every decision.
 
+Run each one in the **foreground**: your next step waits on its answer, and
+every extra turn re-reads your whole context. Where the client starts
+subagents in the background by default, ask for the foreground. If an answer
+can only come back later (a message to a helper already running), wait for
+it in one blocking call: never a `sleep`, a poll or repeated notification
+checks.
+
 - **`kenji-reviewer`, on by default in build and UI modes; in fix mode only
   with "with review"; never in think or direct mode.** Only the user turns it
   off ("no review"); never skip it on your own judgment, however small the
@@ -319,17 +317,8 @@ every gate, every commit and every decision.
 - **`mokugeki-tester`, on by default in UI mode** ("no tester" turns it
   off for the session). It writes and runs each AC's check without ever
   seeing the change, so a check can't follow the code instead of the AC.
-  One tester per screen: spawn it at the screen's first AC, deploy first,
-  and give it each AC (verbatim and interpreted), the base URL and the way
-  to reach the screen, the login's environment variable names, the
-  viewports a layout AC names, and where the project's checks live and how
-  they run. Never the diff, the app source, the decision log or the design.
-  After each change and redeploy, ask the same tester to re-run that AC's
-  check. Never edit a check it wrote; if you think one is wrong, that is a
-  gate: show the user the check and your reason. It reports `PASS`, `FAIL`,
-  `ENV` (the environment: fix it, never count it) or `HUMAN` (the user must
-  confirm in a real browser). Commit its check files with the change. It cost
-  about 1.6× checking inline on one small screen, benefit not yet shown.
+  What to give it, what it never gets, and how its answers are handled:
+  `references/ui-mode.md`.
 - **`tantei-inspector`, improve mode only, always.** A read-only inspection of
   how the skills and agents were used, with a fresh context that does not
   know this session's reasons. What to give it and what it returns:

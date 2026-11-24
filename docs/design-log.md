@@ -4295,3 +4295,61 @@ with no Claude credentials, so not run. Aimed at the traps a model without
 the skill is likely to miss; the pushed-branch grader is expected to pass
 without it. `make eval` now runs it too (it runs every skill with an
 `evals/` directory).
+
+## Token use: where a dev run's cost goes, and two cuts
+
+The author asked for angles to cut tokens. Measured on the four dev-switch
+eval transcripts (deduplicated by message: a first pass summed one usage per
+content block and overstated everything ~3×, worth knowing before trusting a
+transcript total):
+
+- Context before any skill is ~40k tokens (the client's own prompt and
+  tools); `saiban-orchestrator` adds ~10k, `igiari-tdd` + `kanpeki-fp` ~24k.
+- The dev itself is ~25–30% of a dev run, ~40k tokens written, about half of
+  it its skills. Trimming `igiari-tdd` for the dev alone would save ~4% of a
+  run: dropped, not worth restructuring a co-designed skill.
+- The orchestrator made 20–21 calls with the dev against 12–13 without, each
+  re-reading ~80k tokens. Three or four of them were polling: the dev was
+  spawned in the background, then `ReadNotifications`, `sleep 45`, `Monitor`.
+
+Two changes:
+
+- **Helpers run in the foreground** (`saiban-orchestrator`'s "Delegated
+  steps"): the next step waits on their answer anyway; a later answer is
+  waited for in one blocking call, never a sleep or repeated checks.
+- **`igiari-tdd` moves three conditional parts to references** (45.3 → 42.1
+  KB, ~800 tokens resident less): the IDE test runner (only with an IDE
+  attached) into `references/build-commands.md`, the opt-in delegated run
+  into `references/delegated-run.md`, the calibration-proposal shape and
+  where proposals are kept into `references/proposals.md` (only when a miss
+  is counted). Each rule's statement stays in SKILL.md, with a pointer naming
+  the condition.
+
+**Re-run (Sonnet, 2 runs, $1.10):** dev switched on 2/2 and logged; no
+polling in either (one `sleep 1` before a `git status`). 17 and 14
+orchestrator calls (was 20–21), $0.60 and $0.50 (was $0.58 and $0.60): fewer
+turns, cost within the noise of two runs. One run finished without the
+`Dev:` line in its (already `done`) Resume block.
+
+## Token use, continued: UI-only text, `ci` effort and MCP set
+
+- **`saiban-orchestrator`'s UI-only text moves to `references/ui-mode.md`**
+  (31.5 → 30.1 KB): the rules for sharing a running server with other
+  sessions and `mokugeki-tester`'s hand-over, read before UI mode's first
+  screen. The UI mode paragraph and the tester's bullet keep their
+  statements and point there; fix and build runs no longer carry them.
+- **`ci` effort is opt-in** (`AIXLPER_CI_EFFORT`). The plan was `--effort
+  high` by default, after the global CLAUDE.md's "high for routine work
+  where the rules are written down". The dev-switch eval at `--effort high`
+  (Sonnet, 2 runs, $1.37) kept the behaviour (dev on 2/2, `Dev:` in Resume)
+  but cost $0.66 and $0.71 with 21 and 26 orchestrator calls, against $0.50
+  to $0.60 at the client's default: both runs chose the longer fix (back
+  green 1 out, then greens 2 and 3 by the dev). Two runs settle nothing,
+  and nothing showed a saving, so it is not the default. Opus, which `ci`
+  pins, was not run.
+- **`ci` takes an optional MCP allowlist**, `~/.claude/ci-mcp.json`
+  (`--strict-mcp-config`): the eval runs started at ~40k tokens before any
+  skill, the client's prompt and every tool definition, re-sent on every
+  call. Not measured on the author's setup.
+- Next: measure a real `ci` ticket with `global/cycle-cost.py`, the evals
+  being a toy kata at $0.50 a run against a reported ~$100 a day.

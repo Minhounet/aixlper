@@ -180,3 +180,43 @@ order.
    around a broken environment, not a standing option to reach for whenever
    scoped testing feels inconvenient.
 
+
+## IDE test runner
+
+> Read when your client exposes an IDE integration with a test runner, before
+> the first scoped run.
+
+*Unverified — confirm the two checks below against your own setup before
+relying on it.*
+
+If your client exposes an IDE integration (Claude Code: the JetBrains MCP
+server, the same one `kaizen-refactor` uses for inspections), prefer it for
+the **scoped run inside the loop**. The IDE has already compiled and
+indexed the project, so it returns a structured result — test name, status,
+and on failure the assertion message and line — instead of a build log. A
+bounded build run still costs ~20-30 lines of banner, reactor summary and
+timing; an IDE result costs a handful. Since this loop runs a build every
+cycle, that difference multiplies by cycle count, which makes it the
+single largest saving available in this skill.
+
+Two things gate it, and both are one-time checks per project:
+
+1. **Does the server actually expose a test runner?** The inspection tools
+   are not enough — you need a run-configuration or test-execution tool.
+   If it only does inspections, stay on the build tool.
+2. **Does the IDE runner agree with the build?** This matters more. An IDE
+   run may not apply surefire's configuration — `argLine` (JaCoCo,
+   `--add-opens`), system properties, active profiles, resource filtering.
+   If the IDE passes where `mvn test` fails, every red and green in the
+   cycle is unreliable and this skill's core guarantee is gone. Run one
+   test both ways once per project and confirm they agree. If they
+   diverge, the build tool wins — correctness of the red is not
+   negotiable for a token saving.
+
+**This replaces the scoped run only.** Rule 7's single full build at the
+end still goes through the build tool, and so does `chottomatte-archi`'s
+full build after a structural change — the IDE run proves a test passes,
+not that the reactor, packaging and composition root still build. Keep the
+build commands (SKILL.md and above) as the fallback: they are what runs
+when no IDE is attached, in CI, and on a fresh machine.
+

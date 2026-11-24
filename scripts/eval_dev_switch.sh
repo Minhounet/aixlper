@@ -5,26 +5,28 @@
 # the dev spawns after red 2 passes on arrival. The prompt never mentions the
 # dev. Costs real money: bound it with --budget-usd.
 # usage: eval_dev_switch.sh [--runs 2] [--model sonnet] [--budget-usd 1.5]
-#          [--skill-rev <git rev>] [--out <dir>]
+#          [--skill-rev <git rev>] [--effort <level>] [--out <dir>]
 #   --skill-rev  take saiban-orchestrator's SKILL.md from this revision (the
 #                control arm: a revision before the reactive rule); default
 #                the working tree
+#   --effort     passed to claude --effort (default: the client's)
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
-runs=2 model=sonnet budget=1.5 rev= out=${TMPDIR:-/tmp}/eval-dev-switch
+runs=2 model=sonnet budget=1.5 rev= effort= out=${TMPDIR:-/tmp}/eval-dev-switch
 while [ $# -gt 0 ]; do
   case $1 in
     --runs) runs=$2; shift 2;;
     --model) model=$2; shift 2;;
     --budget-usd) budget=$2; shift 2;;
     --skill-rev) rev=$2; shift 2;;
+    --effort) effort=$2; shift 2;;
     --out) out=$2; shift 2;;
-    -h|--help) sed -n 2,11p "$0"; exit 0;;
+    -h|--help) sed -n 2,12p "$0"; exit 0;;
     *) echo "unknown option $1" >&2; exit 2;;
   esac
 done
 
-arm=${rev:+rev-$rev}; arm=${arm:-current}
+arm=${rev:+rev-$rev}; arm=${arm:-current}${effort:+-$effort}
 plugin="$out/plugin-$arm"
 rm -rf "$plugin"
 mkdir -p "$plugin/.claude-plugin" "$plugin/skills"
@@ -47,7 +49,7 @@ for i in $(seq 1 "$runs"); do
   rm -rf "$dir"; mkdir -p "$dir"
   bash "$repo/evals/agents/shonin-dev-switch/make-fixture.sh" "$dir/work"
   (cd "$dir/work" &&
-    claude -p "$prompt" --plugin-dir "$plugin" --agents "$out/agents.json" --model "$model" \
+    claude -p "$prompt" --plugin-dir "$plugin" --agents "$out/agents.json" --model "$model" ${effort:+--effort "$effort"} \
       --allowedTools "Bash Edit Write Read Glob Grep Skill Agent Task SendMessage" \
       --max-turns 80 --max-budget-usd "$budget" \
       --output-format json > "$dir/result.json" 2> "$dir/stderr.txt") || true

@@ -63,6 +63,21 @@ quand ce fichier existe, pour que le skill soit dans le contexte dès le
 départ : le préchargement `skills:` de l'agent est ignoré quand l'agent est
 la session principale (vérifié).
 
+Deux réglages de coût, optionnels, lus par `ci` lui-même :
+
+- `AIXLPER_CI_EFFORT=high` (ou un autre niveau) ajoute `--effort` à chaque
+  session `ci`. Sans cette variable, le défaut du client s'applique. Pas une
+  économie mesurée : sur deux exécutions d'éval avec Sonnet, `high` a coûté
+  plus, pas moins.
+- `~/.claude/ci-mcp.json`, s'il existe, limite les sessions `ci` aux serveurs
+  MCP qu'il liste (`--strict-mcp-config`). Les outils de chaque serveur sont
+  renvoyés à chaque appel : n'y mettez que ceux dont l'orchestrateur se sert
+  (un IDE, un gestionnaire de tickets). `claude` tout court les garde tous.
+
+Pour voir où est passé l'argent d'un vrai ticket, lancez
+`~/.claude/cycle-cost.py` dans le projet après la session (ou `--all` pour
+toute la session).
+
 Ça ne vaut que pour cette session : `claude` tout court reste l'assistant
 normal, même si son mode direct couvre aussi les questions et petites modifs. Astuce : `alias
 ci='claude --agent saiban-orchestrator --permission-mode acceptEdits'` le laisse

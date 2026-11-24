@@ -210,31 +210,9 @@ the `green N` → `refactor N` diffs show whether the number is honest.
 The end-of-task audit checks it for you (see "The cycle").
 
 **Turn each miss into a proposed example — never edit this file
-yourself.** For every miss, add this to the end-of-task report:
-
-```
-## Calibration example proposal
-- Skill: igiari-tdd
-- Cycle: green N / refactor N
-- Missed item: <the "green owns" item>
-- Bad (as committed in green N): <the lines>
-- Good (as fixed in refactor N): <the lines>
-- Boundary it shows: <why the ladder above didn't already prevent it>
-```
-
-The author decides what happens to it: a new ladder rung (it shows a new
-boundary), an eval case (it's a repeat), or nothing. Don't add it to the
-ladder yourself. The agent that missed is the weakest judge of the fix,
-and an unreviewed example quietly becomes a rule.
-
-**Keep the proposals in a file, not only in the report.** At the end of
-the task, after the audit, append every calibration example proposal and
-every "Skill improvement proposal" (see the last section) to
-`.skill-proposals/igiari-tdd.md` at the project root. Create the file if
-needed, never overwrite it, and head each entry with the date and the
-task. Leave it out of every step commit: whether it's committed, ignored
-or deleted is the author's call. A report scrolls away; the file is what
-the author reviews later. Nothing to propose → append nothing.
+yourself.** When a miss is counted, read `references/proposals.md`: it
+holds the proposal's shape and where every proposal is kept (calibration
+examples and "Skill improvement proposal"s alike).
 
 ## Plan the tests before the first cycle
 
@@ -577,19 +555,9 @@ per cycle.
 
 ### Delegated run — opt-in
 
-Off by default. Use it when the author asks for it and the client can spawn
-a subagent; otherwise run the cycle inline as above. It starts only **after**
-the plan is approved: hand one agent the path to this file and the approved
-plan verbatim, and it runs every cycle and the final build. Run it in the
-**foreground** (the author waits, your context stays clean) or the
-**background** (the author keeps working meanwhile).
-
-- **Same commits as inline:** one per step, as in "The cycle" above.
-- **A deviation stops the run:** the agent returns `DEVIATION: <cycle, what,
-  proposal>`, you put it to the author, and you resume the same agent.
-- **You run the audit yourself before reporting done**, because the
-  report is never the evidence: `scripts/audit-tdd-history.sh` as above,
-  then read each green diff against rule 5.
+Off by default. Only when the author asks for it and the client can spawn a
+subagent: read `references/delegated-run.md` then, after the plan is
+approved.
 
 ## Build commands — scoped during the cycle, full only at the end
 
@@ -597,41 +565,11 @@ Rule 7: scoped builds during the loop, exactly one full build at the end.
 **Prefer `mvnd` over `mvn` whenever `command -v mvnd` resolves** — drop-in,
 identical flags, keeps the JVM warm. Check once per task.
 
-### Prefer the IDE's test runner over the build tool, when you have one
-
-*Unverified — confirm the two checks below against your own setup before
-relying on it.*
-
-If your client exposes an IDE integration (Claude Code: the JetBrains MCP
-server, the same one `kaizen-refactor` uses for inspections), prefer it for
-the **scoped run inside the loop**. The IDE has already compiled and
-indexed the project, so it returns a structured result — test name, status,
-and on failure the assertion message and line — instead of a build log. A
-bounded build run still costs ~20-30 lines of banner, reactor summary and
-timing; an IDE result costs a handful. Since this loop runs a build every
-cycle, that difference multiplies by cycle count, which makes it the
-single largest saving available in this skill.
-
-Two things gate it, and both are one-time checks per project:
-
-1. **Does the server actually expose a test runner?** The inspection tools
-   are not enough — you need a run-configuration or test-execution tool.
-   If it only does inspections, stay on the build tool.
-2. **Does the IDE runner agree with the build?** This matters more. An IDE
-   run may not apply surefire's configuration — `argLine` (JaCoCo,
-   `--add-opens`), system properties, active profiles, resource filtering.
-   If the IDE passes where `mvn test` fails, every red and green in the
-   cycle is unreliable and this skill's core guarantee is gone. Run one
-   test both ways once per project and confirm they agree. If they
-   diverge, the build tool wins — correctness of the red is not
-   negotiable for a token saving.
-
-**This replaces the scoped run only.** Rule 7's single full build at the
-end still goes through the build tool, and so does `chottomatte-archi`'s
-full build after a structural change — the IDE run proves a test passes,
-not that the reactor, packaging and composition root still build. Keep the
-commands below as the fallback: they are what runs when no IDE is
-attached, in CI, and on a fresh machine.
+**When your client exposes an IDE integration with a test runner**
+(Claude Code: the JetBrains MCP server), read "IDE test runner" in
+`references/build-commands.md` before the first scoped run: it can replace
+the scoped run, after two one-time checks. The commands below stay the
+fallback.
 
 **Every line the build prints is tokens.** Build output enters the
 conversation and stays there for the rest of the session, and this loop
@@ -687,6 +625,9 @@ test depends on something Gradle doesn't track (the clock, a container, an
 env var). Use `--rerun` there.
 
 Read `references/build-commands.md` only in these cases — not routinely:
+
+- **Your client has an IDE test runner** (see above): its "IDE test runner"
+  section.
 
 - **A scoped run reports zero tests executed**, or the test report files
   are gitignored and unreadable. The reference holds the escalation ladder;
@@ -846,3 +787,5 @@ format, so it can be reviewed and folded back into this file later:
 - Proposed rule: <the addition, worded as a rule, ready to paste in>
 - Suggested location: <the section of this file it belongs in>
 ```
+
+Keep it as `references/proposals.md` says, with the calibration examples.
