@@ -30,12 +30,19 @@
 # Renamed agents (scripts/retired-names.txt) are removed from
 # ~/.claude/agents/: a link is deleted, a real file is backed up first.
 #
-# The `ci` command (claude --agent saiban-orchestrator --permission-mode acceptEdits,
-# plus --append-system-prompt-file with the saiban-orchestrator skill when it is
-# installed, since the agent's `skills:` preload is ignored for a main
-# session) lives in a block between "# >>> aixlper >>>" and "# <<< aixlper <<<": re-running
-# replaces that block in place, so it is never duplicated, and nothing else in
-# the file is touched.
+# The `ci` command is claude --agent saiban-orchestrator --permission-mode
+# acceptEdits, plus:
+#   - --append-system-prompt-file with the saiban-orchestrator skill when it
+#     is installed, since the agent's `skills:` preload is ignored for a main
+#     session;
+#   - --effort $AIXLPER_CI_EFFORT when that is set (unset: the client's
+#     default);
+#   - only the MCP servers in ~/.claude/ci-mcp.json when that file exists
+#     (--strict-mcp-config), since every server's tools are re-sent on every
+#     call.
+# It lives in a block between "# >>> aixlper >>>" and "# <<< aixlper <<<":
+# re-running replaces that block in place, so it is never duplicated, and
+# nothing else in the file is touched.
 
 set -euo pipefail
 
@@ -268,6 +275,9 @@ function ci {
   local skill=\"\$HOME/.claude/skills/saiban-orchestrator/SKILL.md\"
   local extra=()
   [ -f \"\$skill\" ] && extra=(--append-system-prompt-file \"\$skill\")
+  [ -n \"\${AIXLPER_CI_EFFORT:-}\" ] && extra+=(--effort \"\$AIXLPER_CI_EFFORT\")
+  local mcp=\"\$HOME/.claude/ci-mcp.json\"
+  [ -f \"\$mcp\" ] && extra+=(--strict-mcp-config --mcp-config \"\$mcp\")
   claude --agent saiban-orchestrator --permission-mode acceptEdits \"\${extra[@]}\" \"\$@\"
 }
 $RC_END"
