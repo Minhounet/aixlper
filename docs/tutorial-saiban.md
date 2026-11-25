@@ -129,6 +129,33 @@ message:
 | `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
 | `with dev` / `no dev` | Force `shonin-dev` on or off. Without either, the orchestrator turns it on by itself: for a build ticket with two or more ACs or a plan of four or more tests (said in the plan you approve), and for every later green as soon as one of its own greens is caught building ahead of its test (a planned test passing on arrival, the audit's `ahead` count, or the reviewer). Off otherwise. With it, the code is written by one agent per run that only sees the failing tests, not the plan; it costs about 1.9× on katas, benefit not yet measured. |
 
+### Which mode?
+
+Pick it before you write the first message, by asking these in order; the
+first "yes" is the mode. Name it at the start of the message ("fix: ...",
+"build: ...") or let it propose one and confirm.
+
+1. **Is it about the aixlper skills or agents themselves?** → improve.
+2. **Do you want analysis or a design, no code yet?** → think.
+3. **Is it proven in a browser (a screen, a web front end)?** → ui.
+4. **Does it need new structure: a new class, interface, collaborator or
+   boundary?** Or a ticket whose ACs must be traced and proven? → build.
+5. **Does it fit inside the existing classes** (a bug, a missing branch, a
+   small behaviour change)? → fix. If you don't know yet *where* the bug
+   is, say so: fix mode starts with `tantei-debug` to find it.
+6. **Anything else** (a question, a one-line edit, a command) → direct.
+
+Bug or feature does not decide fix vs build; structure does. A missing
+behaviour that is one more branch in an existing method is a fix; a bug
+whose real cure is a new retry component is a build. Rule of thumb: if you
+need to draw a new box on the architecture, it's build.
+
+Wrong guess? Say the new mode at any time ("now build it", "think mode"):
+it switches at once, records it in the `Resume` block and loads the new
+mode's skills. If it sees the mode is wrong itself (a fix that needs
+something new), it stops and proposes the switch; it never switches
+silently.
+
 ### Agent or plain session?
 
 - **You know the process** (a ticket, a fix, a UI change, a design): start

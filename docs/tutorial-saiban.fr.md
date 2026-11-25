@@ -140,6 +140,37 @@ message :
 | `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
 | `with dev` / `no dev` | Force `shonin-dev` activé ou désactivé. Sans l'un ni l'autre, l'orchestrateur l'active de lui-même : pour un ticket build à deux CA ou plus, ou un plan de quatre tests ou plus (annoncé dans le plan que vous approuvez), et pour tous les green suivants dès qu'un de ses propres green est pris à coder en avance sur son test (un test prévu qui passe dès son écriture, le compteur `ahead` de l'audit, ou le reviewer). Désactivé sinon. Activé, le code est écrit par un seul agent par exécution, qui ne voit que les tests en échec, pas le plan ; environ 1,9× le coût sur les katas, bénéfice pas encore mesuré. |
 
+### Quel mode ?
+
+Choisis-le avant d'écrire le premier message, en te posant ces questions
+dans l'ordre ; le premier « oui » donne le mode. Nomme-le en tête du message
+(« fix: ... », « build: ... ») ou laisse-le en proposer un et confirme.
+
+1. **Ça porte sur les skills ou agents aixlper eux-mêmes ?** → improve.
+2. **Tu veux une analyse ou une conception, pas encore de code ?** → think.
+3. **Ça se prouve dans un navigateur (un écran, un front web) ?** → ui.
+4. **Il faut une nouvelle structure : nouvelle classe, interface,
+   collaborateur ou frontière ?** Ou un ticket dont les CA doivent être
+   tracées et prouvées ? → build.
+5. **Ça tient dans les classes existantes** (un bug, une branche manquante,
+   un petit changement de comportement) ? → fix. Si tu ne sais pas encore
+   *où* est le bug, dis-le : le mode fix commence par `tantei-debug` pour le
+   trouver.
+6. **Tout le reste** (une question, une modif d'une ligne, une commande) →
+   direct.
+
+Ce n'est pas bug ou fonctionnalité qui décide entre fix et build, c'est la
+structure. Un comportement manquant qui est une branche de plus dans une
+méthode existante est un fix ; un bug dont le vrai remède est un nouveau
+composant de retry est un build. Règle simple : s'il faut dessiner une
+nouvelle boîte sur l'architecture, c'est build.
+
+Mauvais choix ? Dis le nouveau mode à tout moment (« now build it »,
+« think mode ») : il bascule tout de suite, le note dans le bloc `Resume` et
+charge les skills du nouveau mode. S'il voit lui-même que le mode est faux
+(un fix qui demande du nouveau), il s'arrête et propose de basculer ; il ne
+bascule jamais en silence.
+
 ### Agent ou session normale ?
 
 - **Tu connais le processus** (un ticket, un fix, une modif UI, une
