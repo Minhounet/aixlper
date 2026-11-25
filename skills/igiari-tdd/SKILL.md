@@ -217,16 +217,41 @@ examples and "Skill improvement proposal"s alike).
 ## Plan the tests before the first cycle
 
 Before writing the first test, list every planned test for the current task
-as **names + one-line intent only** — no test code, no implementation
-detail:
+as **names + one-line intent**, each with the minimal green it predicts
+(below) — no test code:
 
 ```
 Planned tests — StringCalculator.add:
 1. shouldReturnZero_whenEmptyString — add("") == 0
+   → green: return 0
 2. shouldReturnNumber_whenSingleNumber — add("5") == 5
+   → breaks "return 0"; green: parse the input
 3. shouldReturnSum_whenTwoCommaSeparatedNumbers — add("1,2") == 3
+   → breaks the single parse; green: split on "," and add both parts
 4. shouldReturnSum_whenUnknownAmountOfNumbers — add("1,2,3,4") == 10
+   → breaks the two-part sum; green: sum every part
 ```
+
+**Build the list by contradiction.** A test earns its place by breaking
+the code the previous minimal green leaves behind: it fails against that
+code, so its green has to change it. Build the plan one entry at a time:
+predict the least code that passes every test so far (rule 5, constants
+and fakes included), then pick as the next test the smallest case the task
+needs that this code gets wrong. Prefer the case whose green is the
+smallest change to that code (a constant becomes a computed value, a
+condition gains a branch, a fixed case becomes a loop) over one that forces
+a rewrite, and break a fake with a second case before generalizing it
+(triangulation). Stop when no case the task needs is still wrong. Write the
+prediction under each entry, as above, so the author approves the
+contradictions, not only the names.
+
+The predictions are the planner's, never a hint to whoever writes the
+code: when greens are written in a fresh context (`saiban-orchestrator`'s
+`shonin-dev`), they stay out of its message, and its green is judged
+against the failing test, not against the prediction. A green that does
+more than its prediction may have built ahead (rule 5); one that does less
+means the plan's later contradictions may not hold — re-check the next red
+before writing it.
 
 Present this list and wait for a single go-ahead (approve as-is, or the
 author edits/reorders/adds/removes entries) before touching test 1's RED.
@@ -256,9 +281,10 @@ criterion it serves, flag criteria with no test or only helper-level tests,
 and update that file once after the end-of-task audit — the exact rules
 live in `objection-conception`, not here.
 
-**Order the plan so every test can fail.** Before presenting it, walk the
-plan in order and ask of each test: would the minimal greens before it
-already make it pass? A test that passes the moment it is written was never
+**Order the plan so every test can fail.** Building by contradiction makes
+this hold by construction; still, before presenting the plan, walk it in
+order and ask of each test: would the minimal greens before it already
+make it pass? A test that passes the moment it is written was never
 red, so it drives nothing and proves nothing. Fix that in this order:
 
 1. **Reorder.** Move the test earlier, or the test that forces its behavior
@@ -307,14 +333,14 @@ turns out to differ from what you predicted (a different separator, an
 overflow rule, a cap on operand count), you're unwinding code no test ever
 asked for.
 
-Good — minimal for test 1, plan or no plan:
+Good — minimal for test 1, plan or no plan, exactly its predicted green:
 ```java
 public int add(String numbers) {
-    return numbers.isEmpty() ? 0 : Integer.parseInt(numbers);
+    return 0;
 }
 ```
-Test 3 is what should force the split; a later triangulating case is what
-should force it to generalize past two numbers. The plan tells you the
+Test 2 is what should force the parse, test 3 the split, and test 4 the
+generalization past two numbers — each one breaking the green before it. The plan tells you the
 destination — it never moves up when you're allowed to build the road.
 
 ## The rules (absolute — no exceptions, no judgment calls)

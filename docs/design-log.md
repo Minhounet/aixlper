@@ -4353,3 +4353,39 @@ turns, cost within the noise of two runs. One run finished without the
   call. Not measured on the author's setup.
 - Next: measure a real `ci` ticket with `global/cycle-cost.py`, the evals
   being a toy kata at $0.50 a run against a reported ~$100 a day.
+
+## `igiari-tdd`: build the test list by contradiction
+
+The author asked who proposes the test list (the plan step of `igiari-tdd`,
+followed inline by the session or `saiban-orchestrator`) and whether it
+could be done smarter: each test chosen to *contradict* the code so far,
+so it forces a change in the code. Agreed definition: a contradicting test
+fails against the code the previous minimal green leaves behind, so its
+green has to change that code; a test that breaks nothing is redundant at
+that point.
+
+Kept a rule of the plan step, not a new skill or agent: by the five
+criteria it needs no other tools, model, isolation or addressability, and
+a separate planner skill would split the plan rule from `igiari-tdd`. The
+existing "every test can fail" walk only *checked* a finished list; the
+new paragraph *builds* it: predict the least code passing the tests so
+far, pick the smallest needed case it gets wrong, prefer the smallest code
+change, triangulate a fake before generalizing, stop when nothing needed
+is still wrong. Each plan entry now carries its predicted green
+(`→ breaks <previous green>; green: ...`) so the author approves the
+contradictions, not only the names. Inline, not a reference: it applies on
+every plan, so a reference would be opened on almost every trigger.
+
+The planner/implementer split already exists (`shonin-dev`, criterion 5).
+The predictions must not reach it, or the split gives the dev the answer:
+said in `igiari-tdd` and in `saiban-orchestrator`'s hand-over rule. A
+"plan only" mode was considered and dropped: the plan step already stops
+for approval.
+
+The worked example's "Good" green for test 1 was
+`isEmpty() ? 0 : parseInt(...)`, more than test 1 asks for and
+inconsistent with the predicted `return 0`; now `return 0`.
+
+Not measured. The kata plans in `katas/igiari-tdd/` keep the old format
+(no predictions), so `scripts/kata_super_green.sh` runs are unchanged; a
+comparison of lists built with and without the method was not run.
