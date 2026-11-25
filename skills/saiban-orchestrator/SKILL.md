@@ -306,7 +306,7 @@ checks.
   agent the next failing test and ask it to re-read the production files
   first (your REFACTOR changed them since). The message names the failing
   test, the files and the test command, and nothing else about the work: no
-  hint of what the test forces, no behaviour the coming tests will ask for,
+  hint of what the test forces (the plan's predicted greens included), no behaviour the coming tests will ask for,
   no praise or critique that names a later step. If the test cannot pass
   without more information, the dev says so. Its skills load once instead of
   every cycle. A new run (the next AC) gets a fresh dev. If its green goes
