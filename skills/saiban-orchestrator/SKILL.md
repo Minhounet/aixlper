@@ -335,7 +335,9 @@ Ask only when the decision is one of:
 - **Hard to reverse:** schema or public API change, deleting files, pushing,
   anything outward-facing.
 - **A real fork:** two or more reasonable options with no clear winner.
-- **A deviation** from a plan the user already approved.
+- **A deviation** from a plan the user already approved, when the skill
+  says it stops (a TDD deviation that only changes the steps is decided
+  and logged, not asked).
 - **Out of scope:** work beyond the boundary agreed at the start.
 - **A skill's own approval gate** (for example a TDD plan): relay it, do not
   skip it.

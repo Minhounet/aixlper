@@ -4389,3 +4389,30 @@ inconsistent with the predicted `return 0`; now `return 0`.
 Not measured. The kata plans in `katas/igiari-tdd/` keep the old format
 (no predictions), so `scripts/kata_super_green.sh` runs are unchanged; a
 comparison of lists built with and without the method was not run.
+
+## `igiari-tdd`: decided deviations vs. stop deviations
+
+**Friction (author, real use).** Runs stopped too often on plan
+deviations. Most were step-level: a planned test already green, a test
+naming two behaviors, a fake left unbroken. The author asked whether the
+check could happen at plan time, or whether Claude could decide.
+
+**Plan time** is already covered by the previous entry (the list built by
+contradiction, each entry with its predicted green). It cuts these cases
+but can't remove them: a prediction is a guess about the minimal green.
+
+**Decided.** One question sorts a mid-run deviation: does it change *what
+is specified*, or only *the steps that get there*? Steps only (reorder,
+guard, drop a test already green, split a two-behavior test, add a
+triangulating test, drop a redundant one) → decided alone, one
+`deviation (decided):` line per cycle, listed under "Decided deviations"
+in the end-of-task report so the author can undo any. What is specified
+(expected value, new behavior, failure shape, signature, AC coverage,
+scope) → still the one pause. In doubt, stop. A test already green that is
+the only proof of an AC is a stop (it was "always stop" before; now only
+that case). `delegated-run.md` and `saiban-orchestrator`'s deviation gate
+follow the same split; `chottomatte-archi`'s structural deviations
+(signatures) are unchanged, they are always "what is specified".
+
+Rejected: deciding every deviation (that is yolo, `saiban-orchestrator`'s
+switch, which already does it with a log). Not measured.
