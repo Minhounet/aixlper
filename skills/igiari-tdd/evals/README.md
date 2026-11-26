@@ -20,6 +20,8 @@ Cases are discovered by `prompt.md`, so this file is not a case.
 | `fix-forward` | **Strong.** 5/5 vs 0/5 (Δ 1.00, Sonnet, 2026-10-08). Without the skill the answer is always "nothing is pushed, amend/rebase". First version scored 0.2: the skill didn't load on a git-only question (prompt now names it), and the grader wrongly failed a working-tree `git revert --no-commit`. |
 | `refactor-sees-duplication` | **Not discriminating.** 5/5 on both arms (Sonnet, 2026-10-09): with or without the skill, the refactor finds the VAT formula repeated across cycles and extracts it, behavior intact. Regression check for "nothing applies" honesty. |
 | `refactor-no-premature-pattern` | **Not discriminating.** 5/5 on both arms: with 2 branches and a third type announced for the next test, nobody applies a Strategy; the no-skill answer turns the `if` into an exhaustive `switch`. Regression check for trigger-gated patterns. |
+| `deviation-decided` | **Strong against the previous skill, not against no skill.** New skill 3/3; the skill before the decided/stop split (`718462d`) 0/3, each run ending "drop test 3 or keep it as a guard?" (Δ 1.00); no skill 3/3 (Sonnet, 2026-11-26). The old rule caused the stop. Regression check for the split. |
+| `deviation-stop` | **False-positive check, passing.** 3/3 on both arms (Sonnet): with the split, a deviation that changes an expected value still stops. Not discriminating. |
 
 ## `one-test-per-step` — weak discriminator
 

@@ -4428,3 +4428,13 @@ other yells: chat only, banner copied verbatim from `references/yells.md`,
 none in think or direct mode, off with "no yell". Letters in the same
 figlet "small" font as the others, assembled by hand. A plain
 `igiari-tdd` session has no yells (the portable skill stays plain).
+
+**Measured (Sonnet, `--runs 3`, 2026-11-26, about $1.25).** Two new cases.
+`deviation-decided` (a planned test already green, no AC): new skill 3/3,
+no skill 3/3, and the skill as it was before the split (`718462d`, run
+from a `git archive` copy with `--ablation none`) 0/3: every run stopped
+with "drop test 3 or keep it as a guard?". So the stops came from the
+skill's own rule; the split removes them. `deviation-stop` (planned
+expected value contradicts the ticket): 3/3 with and without the skill,
+so the split did not make the agent decide a spec change alone; a
+false-positive check, not a measurement.
