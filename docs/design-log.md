@@ -4416,3 +4416,15 @@ follow the same split; `chottomatte-archi`'s structural deviations
 
 Rejected: deciding every deviation (that is yolo, `saiban-orchestrator`'s
 switch, which already does it with a log). Not measured.
+
+## `saiban-orchestrator`: NOT SO FAST! at every gate
+
+**Asked by the author.** Stops were easy to miss in the scroll. A fourth
+yell, **NOT SO FAST!**, opens every message that stops at a gate (a relayed
+skill gate included, e.g. a TDD stop deviation), with a case line naming
+the gate kind and where, then the question as usual. The hedgehog raises a
+palm instead of pointing: it halts, it doesn't accuse. Same rules as the
+other yells: chat only, banner copied verbatim from `references/yells.md`,
+none in think or direct mode, off with "no yell". Letters in the same
+figlet "small" font as the others, assembled by hand. A plain
+`igiari-tdd` session has no yells (the portable skill stays plain).

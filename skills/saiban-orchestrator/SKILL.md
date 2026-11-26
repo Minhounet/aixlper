@@ -363,7 +363,7 @@ log it and continue.
 ## Yells
 
 For the fun of it, Harinezumi-bengoshi (the hedgehog lawyer) points and
-yells at three moments, in your message to the user:
+yells at four moments, in your message to the user:
 
 - **OBJECTION!** when `kenji-reviewer` returns a `blocking` finding, or
   `objection-conception` records a blocking discrepancy;
@@ -372,6 +372,8 @@ yells at three moments, in your message to the user:
 - **TAKE THAT!** when an AC is verified, with its evidence — including a
   fix-mode requested item that follows the same shape as an AC ("The
   cycle").
+- **NOT SO FAST!** every time you stop at a gate to ask the user ("Gates"),
+  a relayed skill gate included, so a stop is never missed in the scroll.
 
 One banner per moment, then the case in one line under it, then your
 message as usual: the joke never replaces the finding. Read

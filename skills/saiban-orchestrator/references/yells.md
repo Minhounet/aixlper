@@ -94,3 +94,35 @@ An AC verified, with its evidence.
 
   AC<n> · verified · <evidence: test name, check, or screenshot path>
 ```
+
+## NOT SO FAST!
+
+A gate: you stop and ask the user (`SKILL.md`, "Gates"), including a
+skill's own stop relayed (a TDD deviation that changes what is specified).
+The palm is up: it halts, it does not accuse.
+
+```
+         /\/\/\/\/\                       _  _  _
+      /\/\/\/\/\/\/\__                   | || || |_
+     <\/\/\/\/\/\/    `\                 | || || | |
+    <\/\/\/\/\/\/   (o)  \___            |         |  ))
+    <\/\/\/\/\/\/           __@)          \       /  )))
+    <\/\/\/\/\/\/\______.--'               |     |  ))
+    <\/\/\/\/\/\/\  ______________________/     /
+     <\/\/\/\/\/\/ (_______________________,---'
+       <\/\/\/\/\/|    |
+                  |    |
+                  |____|
+                 (__)(__)
+
+  _  _   ___   _____     ___   ___      ___    _    ___  _____  _
+ | \| | / _ \ |_   _|   / __| / _ \    | __|  /_\  / __||_   _|| |
+ | .` || (_) |  | |     \__ \| (_) |   | _|  / _ \ \__ \  | |  |_|
+ |_|\_| \___/   |_|     |___/ \___/    |_|  /_/ \_\|___/  |_|  (_)
+
+  gate · <deviation | fork | hard to reverse | out of scope | plan | user-only> · <where>
+  <what you need decided, one line>
+```
+
+Then the question as `SKILL.md` says: options, your recommendation and why.
+One banner per stop, even when it asks several questions.
