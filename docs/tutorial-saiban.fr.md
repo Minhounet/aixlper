@@ -104,7 +104,7 @@ Puis décris le travail dans ton premier message. Deux exemples :
   redéployée avec Podman. Déjà vert : la CA est remplie. En échec : il
   modifie le code jusqu'à ce qu'il passe, ou, pour un changement que toi
   seul peux faire (Nuxeo Studio Modeler), te dit quoi changer et attend ton
-  hot reload. Un écran à la fois, avec une pause entre les écrans. Pas de
+  hot reload. Un écran à la fois, chaque écran fini étant un point de sauvegarde. Pas de
   TDD unitaire ici.
   Deux onglets peuvent travailler deux écrans différents en même temps, dans
   le même dossier (pas un worktree : le serveur ne voit que le dossier que son
@@ -133,8 +133,8 @@ message :
 | Dire | Effet |
 |---|---|
 | `pre-approve TDD plans` | Pas d'approbation par plan de CA. |
-| `yolo` | L'orchestrateur prend les décisions lui-même (plans, choix, déviations, corrections de revue) avec les mêmes skills et agents, journalise chacune, pousse sur une branche de fonctionnalité (jamais la branche par défaut, jamais en force, pas de pull request) garde le résultat lançable en une commande à chaque push (application mobile comprise, avec une section `Run` dans le README) et vous les liste à la fin. Les autres push, supprimer et toute action difficile à défaire restent demandés, tous ensemble à la fin. Pas de pause sauf avec `with pauses`. `yolo off` l'arrête. |
-| `no pauses` | Pas d'arrêt après chaque CA. |
+| `yolo` | L'orchestrateur prend les décisions lui-même (plans, choix, déviations, corrections de revue) avec les mêmes skills et agents, journalise chacune, pousse sur une branche de fonctionnalité (jamais la branche par défaut, jamais en force, pas de pull request) garde le résultat lançable en une commande à chaque push (application mobile comprise, avec une section `Run` dans le README) et vous les liste à la fin. Les autres push, supprimer et toute action difficile à défaire restent demandés, tous ensemble à la fin. Comme tous les modes, il ne s'arrête pas aux points de sauvegarde sauf avec `with pauses`. `yolo off` l'arrête. |
+| `with pauses` | Arrêt après chaque CA, écran et changement de mode (par défaut il continue et marque seulement les points de sauvegarde). |
 | `no review` | Pas d'`kenji-reviewer` après chaque CA (mode build). |
 | `no tester` | En mode UI, l'orchestrateur écrit et lance les checks lui-même au lieu de `mokugeki-tester` (activé par défaut ; environ 1,6× le coût sur un petit écran, bénéfice pas encore démontré). |
 | `with review` | En mode fix, une revue `kenji-reviewer` du correctif (désactivée par défaut ; environ 0,30 $). |
@@ -201,8 +201,9 @@ bascule jamais en silence.
    jamais : la CA est-elle vraiment prouvée, la structure tient-elle, rien
    de plus que demandé ?
 4. **Le suivi de la CA est mis à jour** dans
-   `docs/ticket/<id>/acceptance.md`, puis commité.
-5. **Une pause** : *« AC1 done. Continue, or /clear and resume? »*
+   `docs/ticket/<id>/acceptance.md` (dès trois CA, un index plus un
+   `ac/AC<n>.md` par CA), puis commité.
+5. **Un point de sauvegarde** : il continue, mais tu peux faire `/clear` là.
 
 Il ne te demande ton avis que pour une action difficile à annuler, un vrai
 choix, un écart par rapport à un plan approuvé, du hors-périmètre ou une CA
@@ -214,8 +215,12 @@ floue. Le reste, il le décide et l'écrit.
   écarté. Son bloc `Resume` dit toujours où en est le travail.
 - `docs/ticket/<id>/` : conception, CA avec leurs preuves, difficultés
   rencontrées.
-- Le contexte coûte de plus en plus cher en grossissant. À une pause, tape
-  `/clear`, puis `claude --agent saiban-orchestrator` et *« resume PROJ-8 »* : il
+- Le contexte coûte de plus en plus cher en grossissant. Chaque tour finit
+  par *« 💾 Save point: /clear is safe »* ou *« ⛔ Don't /clear now: <pourquoi> »*.
+  Les points de sauvegarde sont fréquents (chaque étape TDD commitée, chaque
+  CA, chaque écran, même une question ouverte une fois écrite), et demander
+  *« je peux clear ? »* en crée un tout de suite quand c'est possible.
+  Interromps, tape `/clear`, puis `claude --agent saiban-orchestrator` et *« resume PROJ-8 »* : il
   reprend depuis le bloc `Resume` au lieu de tout relire.
 - Sujet oublié ? Lancez `ci` sans sujet (ou demandez *« où en étions-nous ? »*) :
   il liste les journaux de décision ouverts, une ligne chacun avec le mode et
