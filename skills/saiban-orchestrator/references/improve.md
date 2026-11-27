@@ -2,7 +2,8 @@
 
 Read this when `saiban-orchestrator` runs in improve mode: the user asks to improve the
 skills or agents, to act on the "Improvements" of earlier reports, or to
-look back at a run and fix what rubbed.
+look back at a run and fix what rubbed, or to feed the skills from code
+worth learning from (`Seen:` entries, or code the user points to).
 
 Improve mode is the only mode that edits the aixlper skills and agents. It
 turns the proposals other modes only write down (the final report's
@@ -36,7 +37,10 @@ removed), not the current project's.
 
 Ask once, with a recommendation: all skills and agents, or named ones; which
 evidence (this session only, or the project's history too). Skip what the
-first message already says.
+first message already says. For exemplar code: which `Seen:` entries
+(all not yet harvested, by default) and any file or snippet the user points
+to; for code outside the project, ask where it comes from and whether it may
+be read.
 
 ## 3. Inspect: spawn `tantei-inspector`
 
@@ -58,6 +62,9 @@ paths that exist (check each before listing it):
 - the session transcripts, `~/.claude/projects/<project dir>/*.jsonl` (the
   newest first, the current one included when the user asks about this
   session). `global/cycle-cost.py` in the clone shows how they are laid out.
+- exemplar code: the `Seen:` lines in those decision logs and in
+  `process-notes.md`, and the files the user pointed to. Give the paths and
+  line ranges, not your opinion of the code.
 
 Do not tell it what you think went wrong. That is the point of a fresh
 context.
@@ -86,6 +93,19 @@ not a memory of them). Then look in the evidence for:
    skill it loads (an agent restating a rule in its own words counts).
 5. **Token waste**: output not bounded, a reference opened on almost every
    trigger, a `SKILL.md` past ~20KB. Use each skill's own "Token self-audit".
+6. **Exemplar code** (only when given): read the code, then state the
+   pattern apart from it, in a skill's own terms. Then one of: a skill that
+   should hold it (a missing rule, example or reference); a rule it
+   contradicts, quoted verbatim on both sides (the author decides, never you);
+   or no skill covers it (a new skill, by the repo's skill-vs-agent check).
+   Already said by a skill, or good only for that codebase: drop it and say
+   so. Two guards on every proposal from code:
+   - **The shape, never the code.** The clone is public: the proposed wording
+     is written fresh, with `com.example.*` / `PROJ-1234` placeholders, no
+     internal name, host or ticket ID, no copied block.
+   - **Observed, not proven.** Mark it as seen in one codebase. A change to a
+     core rule of `igiari-tdd` or `chottomatte-archi` says which kata or eval
+     would prove it before it counts as settled.
 
 Only what the evidence shows. No style opinions, no rewrite of a skill that
 worked, and never a proposal to delete a section: name the problem and let
@@ -95,7 +115,7 @@ Report each proposal in this shape, most useful first, at most 7:
 
 ```
 P<n>: <file in the clone> - <clarify | move | add | new skill | new mode | new agent (criterion)>
-Evidence: <file> "<short verbatim quote>"; a transcript quote also names the session and date
+Evidence: <file> "<short verbatim quote>"; a transcript quote also names the session and date; exemplar code gives <path>:<lines> instead of a quote
 Problem: <one or two lines>
 Change: <the exact old wording> -> <the exact new wording>
 Log: <one line for docs/design-log.md>
@@ -121,7 +141,9 @@ For each accepted proposal, in the clone:
 1. Make the change exactly as approved. If it no longer fits the file (it
    moved since), show the new placement and ask again; never improvise.
 2. Add the design-log entry the clone's `CLAUDE.md` asks for: what changed,
-   the evidence, and the reasoning.
+   the evidence, and the reasoning. For exemplar code, the evidence is
+   genericized like the change ("a Nuxeo listener in a client project"), and
+   the entry says "observed, not proven".
 3. Run its checks (`make validate`).
 4. Commit in the clone with its commit format, one commit per proposal or
    one for the batch, as the user prefers; report each message. Never push

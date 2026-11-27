@@ -107,7 +107,8 @@ to start build or UI mode on it.
 
 **Improve mode.** Change the aixlper skills and agents themselves, from
 evidence of how they were used: earlier reports' "Improvements", decision
-logs, retros, process notes, session transcripts. The inspection goes to
+logs, retros, process notes, session transcripts; or from code worth
+learning from (`Seen:` entries, or code the user points to). The inspection goes to
 `tantei-inspector`; the user approves each change; you apply it in the author's
 aixlper clone (found through the install links), never in the current
 project. Read `references/improve.md` before the first step: it holds the
@@ -191,6 +192,11 @@ The structural plan comes first and the test plan is written against it, not
 re-derived. If no skill fits, do the step directly and log it as
 `No skill: <kind of work>` (for example `No skill: Nuxeo listener`), so it
 can be found again.
+
+In any mode, when you meet code worth learning from (a pattern a skill
+lacks, or does better than a skill says), log one line and move on:
+`Seen: <path>:<lines> - <the pattern, in one line>`. Don't stop to study
+it; improve mode harvests these.
 
 Non-Java code: igiari-tdd and chottomatte-archi apply whole (they are not
 Java-bound beyond syntax). kanpeki-fp and kaizen-refactor's mechanical list
@@ -526,7 +532,7 @@ and commit it, so the start recap stops listing this work; on GUILTY keep it
    improve mode, with the reason, when an improvement you list repeats one
    already in the project's decision logs, retros or `process-notes.md`, or
    a `No skill:` entry repeats. A repeat is the signal; one run's friction
-   is not. Never start it yourself.
+   is not. A `Seen:` entry needs no repeat: say how many are waiting. Never start it yourself.
 
    Also propose **something new** when it is earned, never create it:
 

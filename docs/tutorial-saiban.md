@@ -109,7 +109,10 @@ Then describe the work in your first message. Two examples:
 - **Improve mode** (the skills and agents themselves): *"improve the skills
   from my last runs"*. `tantei-inspector`, read-only and fresh, reads your
   decision logs, retros, process notes and session transcripts, and proposes
-  exact wording changes with the evidence. You accept or reject each one;
+  exact wording changes with the evidence. It can also feed the skills from
+  good code: any mode logs a `Seen:` line when it meets some (or point to a
+  file yourself), and improve mode turns it into a genericized proposal
+  marked "observed, not proven". You accept or reject each one;
   accepted ones are applied and committed in your aixlper clone, never in the
   project. Needs the skills installed with `./scripts/install.sh --link`,
   otherwise it only prints the patch.

@@ -4483,3 +4483,33 @@ other yells: chat only, banner copied verbatim from `references/yells.md`,
 none in think or direct mode, off with "no yell". Letters in the same
 figlet "small" font as the others, assembled by hand. A plain
 `igiari-tdd` session has no yells (the portable skill stays plain).
+
+## `saiban-orchestrator`: improve mode fed by code worth learning from
+
+**Asked by the author.** Sometimes a session meets code that shows a better
+pattern than the skills hold. Should that be a new skill or agent? Neither.
+The process is improve mode's (clone, scope, inspect, gate, apply); only the
+evidence differs: code that is good, rather than evidence of how the skills
+were used. The isolated step is the same reading, read-only, with fresh
+eyes, kept out of the main context (criteria 1, 3, 5), which
+`tantei-inspector` already meets; a second inspector would mostly repeat it.
+
+**Decided.**
+- Capture inline, harvest later: any mode logs
+  `Seen: <path>:<lines> - <pattern>` and moves on, like `No skill:`. The
+  final report's improve-mode reminder counts waiting `Seen:` entries; one
+  is enough (unlike friction, which needs a repeat).
+- `improve.md`: scope asks which `Seen:` entries and pointed-to files (and,
+  for code outside the project, whether it may be read); the evidence list
+  adds them; checklist item 6, "Exemplar code": state the pattern apart from
+  the code, then map it to a skill, a contradicted rule (quoted both sides,
+  the author decides), or a gap (new skill, by the skill-vs-agent check).
+- Two guards: the shape, never the code (the clone is public, wording
+  written fresh with `com.example.*` placeholders, evidence genericized in
+  the log); observed, not proven (a change to a core `igiari-tdd` or
+  `chottomatte-archi` rule names the kata or eval that would prove it).
+- `tantei-inspector` (and its Gemini description) only learns that exemplar
+  code may be among its evidence; the rule stays in `improve.md`.
+
+Rejected: a new skill (same process, so a copy of improve mode) and a new
+agent (same isolation as `tantei-inspector`). Not run yet.
