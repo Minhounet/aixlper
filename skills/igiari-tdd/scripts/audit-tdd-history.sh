@@ -3,10 +3,12 @@
 #
 # Each step is one commit whose subject contains "red N", "green N",
 # "refactor N" or "guard N" (any prefix the project's convention needs is
-# fine). A guard is a test that could not be red, kept after green N with a
-# mutation check named in its subject.
+# fine). A guard is a test that could not be red, kept right after green
+# N-1 and numbered N (continuing the step sequence, never repeating the
+# green it follows), with a mutation check named in its subject.
 # Checks, without touching the current checkout (uses a temporary worktree):
-#   - steps come in order: red N, green N, optional refactor N, then N+1
+#   - steps come in order: red N, green N, optional refactor N or guard N,
+#     then N+1
 #   - each red commit adds exactly one test and changes only test files
 #   - a "<step> (fix)" commit is a fix-forward of that step, listed to read
 #     (a stub in production code is allowed and flagged for reading)
@@ -78,6 +80,7 @@ head=$(git rev-parse HEAD)
 fail=0
 flag() { fail=1; }
 expect_red=$first_n last_green=0 green_sha= misses=
+total_test_hits=0 total_main_hits=0
 
 # Production lines that refactor commit $1 removes or rewrites and that
 # green commit $2 wrote, counted with blame on the refactor's parent.
@@ -100,6 +103,8 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
   files=$(git diff-tree --no-commit-id --name-only -r "$c")
   tests=$(printf '%s\n' "$files" | grep -c "^$test_path")
   mains=$(printf '%s\n' "$files" | grep -c "^$main_path")
+  total_test_hits=$((total_test_hits + tests))
+  total_main_hits=$((total_main_hits + mains))
   step=$(printf '%s' "$subject" | grep -oE '(red|green|refactor|guard) [0-9]+' | head -1)
   kind=${step% *} n=${step#* }
   verdict=ok
@@ -140,16 +145,24 @@ for c in $(git rev-list --reverse "$base..HEAD"); do
       ;;
     guard)
       problems=
-      [ "$n" -eq "$last_green" ] || problems="OUT OF ORDER (guard $n after green $last_green); "
+      [ "$n" -eq "$((last_green + 1))" ] || problems="OUT OF ORDER (guard $n after green $last_green); "
       [ "$mains" -eq 0 ] || problems="${problems}GUARD TOUCHES PRODUCTION; "
       printf '%s' "$subject" | grep -qi 'mutation' || problems="${problems}NO MUTATION CHECK NAMED; "
       if [ -n "$problems" ]; then verdict=${problems%; }; flag
       else verdict="ok; guard, not a red (read its mutation check)"; fi
+      expect_red=$((n + 1))
       ;;
     *) verdict="NOT A STEP COMMIT"; flag;;
   esac
   printf '%-14s prod:%-2s test:%-2s %s\n' "${step:-?}" "$mains" "$tests" "$verdict"
 done
+
+if [ "$total_test_hits" -eq 0 ] && [ "$total_main_hits" -eq 0 ]; then
+  echo "WARNING: --test-path '$test_path' and --main-path '$main_path' matched zero files across" >&2
+  echo "the whole range - every rule-9/prod-line check above silently no-op'd. On a Maven/Gradle" >&2
+  echo "multi-module project pass --test-path '<module-glob>/src/test/' --main-path '<module-glob>/src/main/'." >&2
+  flag
+fi
 
 echo "--- possible super-green misses (read each: green owns it, or make-room?) ---"
 echo "${misses:- none}" | sed 's/,$//'

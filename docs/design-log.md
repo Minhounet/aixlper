@@ -4483,3 +4483,32 @@ other yells: chat only, banner copied verbatim from `references/yells.md`,
 none in think or direct mode, off with "no yell". Letters in the same
 figlet "small" font as the others, assembled by hand. A plain
 `igiari-tdd` session has no yells (the portable skill stays plain).
+
+## `igiari-tdd`: guard numbering mismatch and multi-module audit paths (improve mode, found via `tantei-inspector`)
+
+**The skill's own guard example and its own audit script disagreed.**
+`SKILL.md`'s worked example numbers a guard as the *next* step in sequence
+(`guard 2` right after `green 1`, for a small utility class whose second
+planned test couldn't go red honestly). `audit-tdd-history.sh` instead
+checked `n == last_green` - expecting the guard to *repeat* the prior
+green's own number - so every legitimate guard got a false "OUT OF ORDER"
+flag. Reproduced twice on a real project (the original `guard 2` case, and
+a later `guard 17` right after `green 16`). Fixed both sides to agree: the
+wording now says explicitly "N continues the step sequence... never
+repeating the green it follows", and the script now checks
+`n == last_green + 1` and advances `expect_red` past the guard so the next
+red is checked against the right number too. Verified by re-running the
+fixed script against both historical commit pairs in a disposable
+worktree: both now report `ok` instead of the false flag.
+
+**Separately, the same script's single-module path defaults silently
+no-op on a multi-module project.** `--test-path src/test/` / `--main-path
+src/main/` match zero files when real paths look like
+`<module>/src/test/...` (any Maven or Gradle multi-module layout), so
+rule-9 and prod-line checks pass on every commit without checking
+anything - not a loud failure, a silent one. Flagged twice on the same
+project before being raised here. Documented the override in `SKILL.md`,
+and made the script itself print a loud warning (and flag a violation) when
+both `--test-path`/`--main-path` match zero files across the whole audited
+range, so the silent-no-op mode can't happen unnoticed again regardless of
+whether the caller remembers the override.
