@@ -4512,3 +4512,25 @@ and made the script itself print a loud warning (and flag a violation) when
 both `--test-path`/`--main-path` match zero files across the whole audited
 range, so the silent-no-op mode can't happen unnoticed again regardless of
 whether the caller remembers the override.
+
+## `saiban-orchestrator`: the save-point line and NOT SO FAST! banner, stated to hold on every turn, rendered on none (improve mode, found via `tantei-inspector`)
+
+A real multi-day, multi-gate session's own transcript showed zero
+occurrences of the save-point markers (💾/⛔) and zero occurrences of
+"NOT SO FAST!" across every gate question it asked - not a missed edge
+case, the entire applicable surface of both rules in that run. Both rules
+already existed, stated as holding on literally every turn/gate, but both
+live in sections physically distant from the moment they must fire: the
+save-point line in a standalone "Context: save points" section, the
+NOT SO FAST! banner behind a "read `references/yells.md` at the first
+yell" pointer that a long, resumed session (especially one crossing a
+`/clear` boundary, which resets the "first yell" framing) never
+re-visits. Added a reminder at the point of use instead of only at the
+point of definition: the gate-asking instruction itself now says to
+render NOT SO FAST! "every time - not only at the first gate of the
+session", and the save-point instruction now says to check it "before
+sending, it is not optional polish". Neither changes what the rule *is* -
+both were already correct - this only moves (duplicates) the reminder to
+where it's needed at the moment it applies, since stating a rule once at
+its definition clearly wasn't enough to make a long session actually
+follow it.
