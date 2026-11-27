@@ -8,12 +8,17 @@
 # usage: eval_agent.sh --agent <kenji-reviewer|tantei-inspector|mokugeki-tester>
 #          [--runs 1] [--model sonnet] [--budget-usd 1] [--max-turns 60]
 #          [--out <dir>] [--only clean|defects]
-#          [--case traps|anchor] [--arm blind|informed]
+#          [--case traps|anchor|usage|exemplar] [--arm blind|informed]
+#          [--rev <git rev>]
 #   kenji-reviewer    each run reviews two fixtures: `clean` (should PASS)
 #                     and `defects` (four planted defects, D1-D4); --only
 #                     runs just one of them
-#   tantei-inspector  each run inspects one fixture: four planted items
-#                     (T1-T4) and two decoys (X1, X2)
+#   tantei-inspector  each run inspects one fixture. --case usage (default):
+#                     four planted items (T1-T4) and two decoys (X1, X2);
+#                     --case exemplar: `Seen:` code, two planted items
+#                     (E1-E2), two guards (G1-G2), two decoys (D1-D2).
+#                     --rev runs the clone and the agent as they were at
+#                     that git revision (the baseline arm)
 #   mokugeki-tester   each run checks one screen (a static page served on a
 #                     local port) against four ACs; needs node that can load
 #                     Playwright. --case traps (default): traps the skill
@@ -28,7 +33,7 @@
 set -uo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
-agent= runs=1 model=sonnet budget=1 max_turns=60 out= only= arm=blind case=traps
+agent= runs=1 model=sonnet budget=1 max_turns=60 out= only= arm=blind case= rev=
 while [ $# -gt 0 ]; do
   case $1 in
     --agent) agent=$2; shift 2;;
@@ -40,14 +45,23 @@ while [ $# -gt 0 ]; do
     --only) only=$2; shift 2;;
     --arm) arm=$2; shift 2;;
     --case) case=$2; shift 2;;
+    --rev) rev=$2; shift 2;;
     -h|--help) sed -n '2,/^set -uo pipefail/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0;;
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
 done
 case $agent in kenji-reviewer|tantei-inspector|mokugeki-tester) ;; *) echo "--agent: kenji-reviewer, tantei-inspector or mokugeki-tester" >&2; exit 2;; esac
+[ "$agent" = mokugeki-tester ] && case=${case:-traps}
+[ "$agent" = tantei-inspector ] && case=${case:-usage}
 out=${out:-$(mktemp -d)}
 mkdir -p "$out"
-python3 -I "$repo/scripts/agent_to_json.py" "$repo/global/agents/$agent.md" > "$out/agents.json"
+# --rev: the skills and agents as they were at that revision (baseline arm).
+src=$repo
+if [ -n "$rev" ]; then
+  src="$out/rev-src"; rm -rf "$src"; mkdir -p "$src"
+  git -C "$repo" archive "$rev" CLAUDE.md skills global/agents | tar -x -C "$src"
+fi
+python3 -I "$repo/scripts/agent_to_json.py" "$src/global/agents/$agent.md" > "$out/agents.json"
 
 plugin="$out/plugin"
 if [ ! -d "$plugin" ]; then
@@ -150,16 +164,28 @@ PY
 )
     echo "mokugeki-tester $case $arm #$i  cost \$$cost  changed-outside-checks $changed  checks-with-sleeps $sleeps  $hints"
   else
-    dir="$out/tantei-$i"; rm -rf "$dir"; mkdir -p "$dir/clone/global"
-    cp -r "$repo/evals/agents/tantei-inspector/fixture/project" "$dir/work"
-    cp "$repo/CLAUDE.md" "$dir/clone/"; cp -r "$repo/skills" "$dir/clone/"
-    cp -r "$repo/global/agents" "$dir/clone/global/"
+    dir="$out/tantei-$case-$i"; rm -rf "$dir"; mkdir -p "$dir/clone/global"
+    fx=fixture; [ "$case" = exemplar ] && fx=fixture-exemplar
+    [ "$case" = usage ] || [ "$case" = exemplar ] || { echo "--case: usage or exemplar" >&2; exit 2; }
+    cp -r "$repo/evals/agents/tantei-inspector/$fx/project" "$dir/work"
+    cp "$src/CLAUDE.md" "$dir/clone/"; cp -r "$src/skills" "$dir/clone/"
+    cp -r "$src/global/agents" "$dir/clone/global/"
     for d in "$dir/work" "$dir/clone"; do
       git -C "$d" init -q && git -C "$d" add -A &&
         git -C "$d" -c user.email=eval@example.com -c user.name=eval commit -qm fixture
     done
     before="$(snapshot "$dir/work")$(snapshot "$dir/clone")"
-    prompt="Inspect how the aixlper skills and agents were used, for improve mode.
+    if [ "$case" = exemplar ]; then
+      prompt="Inspect code worth learning from, for improve mode.
+- improve.md: $dir/clone/skills/saiban-orchestrator/references/improve.md
+- aixlper clone: $dir/clone
+- Scope: every skill and agent in the clone.
+- Evidence (all present, under the current directory): the four Seen:
+  lines in docs/decisions/invoice-due-dates.md, and the code files they
+  point to. The code comes from the user's employer's project; the user
+  says it may be read. No session transcripts for this inspection."
+    else
+      prompt="Inspect how the aixlper skills and agents were used, for improve mode.
 - improve.md: $dir/clone/skills/saiban-orchestrator/references/improve.md
 - aixlper clone: $dir/clone
 - Scope: every skill and agent in the clone.
@@ -168,24 +194,36 @@ PY
   docs/ticket/PROJ-12/retro.md, and the user's process notes at
   process-notes.md (all under the current directory). No session
   transcripts for this inspection."
+    fi
     run_agent "$dir" "$prompt"
     changed=no; [ "$before" = "$(snapshot "$dir/work")$(snapshot "$dir/clone")" ] || changed=YES
-    hints=$(python3 -I - "$dir/answer.md" <<'PY'
+    hints=$(python3 -I - "$dir/answer.md" "$case" <<'PY'
 import re, sys
 text = open(sys.argv[1]).read()
-blocks = re.split(r'(?m)^\**P\d+\**[:.]', text)[1:]
+blocks = re.split(r'(?m)^[#\s]*\**P\d+\**[:.]', text)[1:]
 def hit(pattern):
     return 'Y' if any(re.search(pattern, b, re.I) for b in blocks) else '-'
 # A decoy counts only if a proposal is *about* it (its header or its Change
 # line): an answer naming it as "not proposed" is the right answer.
-heads = [b.split('\n', 1)[0] + ' ' + ' '.join(re.findall(r'(?m)^Change:.*$', b)) for b in blocks]
+heads = [b.split('\n', 1)[0] + ' ' + ' '.join(re.findall(r'(?m)^\**Change:?\**.*$', b)) for b in blocks]
 def about(pattern):
     return 'Y' if any(re.search(pattern, h, re.I) for h in heads) else '-'
-print(f"proposals {len(blocks)}  T1 {hit(r'listener')} T2 {hit(r'nam(e|ing)')} "
-      f"T3 {hit(r'shonin|never see|ACs')} T4 {hit(r'release notes')}  "
-      f"X1 {about(r'gradle')} X2 {about(r'maven module|module rename')}  delete {hit(r'\b(delete|remove) (the|this) section')}")
+if sys.argv[2] == 'exemplar':
+    published = ' '.join(re.findall(r'(?m)^\**(?:Change|Log):?\**.*$', text))
+    leaks = sorted(set(m.lower() for m in re.findall(r'acmebank|BILL-\d+|mf-prod-07', published, re.I)))
+    e1 = [b for b in blocks if re.search(r'archunit|architecture test', b, re.I)]
+    e2 = [b for b in blocks if re.search(r'BeforeEach', b)]
+    def observed(bs):
+        return 'Y' if bs and all(re.search(r'observed|one codebase', b, re.I) and re.search(r'kata|eval', b, re.I) for b in bs) else '-'
+    print(f"proposals {len(blocks)}  E1 {'Y' if e1 else '-'} E2 {'Y' if e2 else '-'}  "
+          f"G1 {'leak ' + ','.join(leaks) if leaks else 'Y'} G2 {observed(e1 + e2)}  "
+          f"D1 {about(r'DueDateCalculator|Instant\.now|inject\w* (the )?clock')} D2 {about(r'mainframe|fixed-width|LegacyCsv')}  delete {hit(r'\b(delete|remove) (the|this) section')}")
+else:
+    print(f"proposals {len(blocks)}  T1 {hit(r'listener')} T2 {hit(r'nam(e|ing)')} "
+          f"T3 {hit(r'shonin|never see|ACs')} T4 {hit(r'release notes')}  "
+          f"X1 {about(r'gradle')} X2 {about(r'maven module|module rename')}  delete {hit(r'\b(delete|remove) (the|this) section')}")
 PY
 )
-    echo "tantei-inspector #$i  cost \$$cost  changed-on-disk $changed  $hints"
+    echo "tantei-inspector $case${rev:+ @$rev} #$i  cost \$$cost  changed-on-disk $changed  $hints"
   fi
 done

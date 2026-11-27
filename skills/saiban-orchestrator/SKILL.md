@@ -502,6 +502,7 @@ Then one entry per decision:
 - Rejected: ...
 - Asked user: yes/no
 - Carry forward: ... (after an AC's run only)
+- Seen: <path>:<lines> - <pattern> (code worth learning from; omit when none)
 ```
 
 Create the file on the first decision. Commit it with the work so it is

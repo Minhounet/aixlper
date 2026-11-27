@@ -4513,3 +4513,15 @@ eyes, kept out of the main context (criteria 1, 3, 5), which
 
 Rejected: a new skill (same process, so a copy of improve mode) and a new
 agent (same isolation as `tantei-inspector`). Not run yet.
+
+**Measured (Sonnet, 2026-11-27, about $1.05).** New agent-eval case
+`tantei-inspector --case exemplar` (`evals/agents/tantei-inspector/fixture-exemplar/`):
+four `Seen:` lines over code written as from a private codebase (an
+ArchUnit test, a factory instead of `@BeforeEach`, and two decoys). New
+`improve.md`: 4/4 on 4 runs: both patterns proposed, the contradiction left
+to the author, no internal name in the proposed wording, each marked
+observed with its kata or eval, both decoys dropped. Previous `improve.md`
+(`--rev 74f156a`): 1/4 on 2 runs; it treated the lines as process
+evidence and proposed defining `Seen:` instead. That point was right: the
+decision-entry template now shows the optional `Seen:` line. Details in
+`evals/agents/README.md`.
