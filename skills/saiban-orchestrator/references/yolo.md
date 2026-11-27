@@ -144,7 +144,7 @@ park.
   finding as wrong on your own: if you think it is, log it as open and
   leave the AC unverified.
 - **A discrepancy** between ticket, ACs and design: choose the reading
-  closest to the ticket's own words, record it in `acceptance.md` as the
+  closest to the ticket's own words, record it in the acceptance ledger as the
   skill says, and carry it as open for the user.
 
 ## Gates you never answer yourself
@@ -166,9 +166,9 @@ at Finish.
 
 ## Pauses
 
-Yolo implies "no pauses": you do not stop at break points. The user can say
-"with pauses" to keep them. Still update and commit the `Resume` block at
-each break point, so a crash or a `/clear` loses nothing.
+Yolo never stops at save points (nor does any mode, unless the user said
+"with pauses"). Still commit and update the `Resume` block at each one, so a
+crash or a `/clear` loses nothing.
 
 ## Log and report
 

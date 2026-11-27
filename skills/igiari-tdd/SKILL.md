@@ -294,7 +294,7 @@ first (its classes/interfaces/signatures), write this test plan against
 that already-approved structure rather than re-deriving or re-presenting
 it — one plan per concern, not two overlapping ones.
 
-If the task is a ticket whose folder has an `acceptance.md`
+If the task is a ticket whose folder has an `acceptance.md` (an index over `ac/AC<n>.md` files when split)
 (`objection-conception`), tag each planned test with the acceptance
 criterion it serves, flag criteria with no test or only helper-level tests,
 and update that file once after the end-of-task audit — the exact rules

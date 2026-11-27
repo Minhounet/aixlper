@@ -30,7 +30,8 @@ when not zero. Then ask: resume one, or start something new
 just ask the start questions. Never read past the `Resume` blocks for this.
 
 If `docs/decisions/<topic>.md` already exists for this work, read its
-`Resume` block first and continue from there instead of starting over. In
+`Resume` block first and continue from there instead of starting over (a
+`Waiting on` line: ask that question again first, as written). In
 UI mode, before touching anything new, re-verify every previously-committed
 fix against the running app, not only the files this resumed session means
 to touch: a redeploy or container recreate can silently revert one nobody
@@ -87,7 +88,7 @@ a rebuild per change.
 Work **one screen at a time**: the scope of a run is one screen (one page or
 view) and the ACs about it. When the ticket spans several screens, agree the
 order with the user at the start, finish and commit one screen before
-touching the next, and pause between them (see "Context: where to cut").
+touching the next: each finished screen is a save point (see "Context: save points").
 
 Another session may be working another screen against the same running
 server: read `references/ui-mode.md` before the first screen, for the rules
@@ -218,7 +219,7 @@ Then each AC is its own TDD run:
    note `minor` ones in the decision log. Re-review after a fix.
 4. Do `objection-conception`'s end-of-run update for that AC: evidence,
    `verified` or not, any discrepancy. This is the per-AC update; nothing
-   touches `acceptance.md` during the cycles. Commit it before the first red
+   touches the acceptance files during the cycles. Commit it before the first red
    of the next AC: never fold two ACs' updates into one commit.
    Log any difficulty hit during the run (a blocked tool, a plan change, a
    surprise) in `retro.md`, as `objection-conception` asks.
@@ -390,8 +391,8 @@ The judge opens and closes the session, in chat only, like the yells:
   the open logs as the charges and ends "How do you plead?". If your context
   says the `court-session.sh` hook already showed the cases, don't list them
   again: just ask.
-- **Adjourned.** The pause line begins "⚖️ Court adjourned." A pause is not
-  a verdict.
+- **Adjourned.** With "with pauses", the pause line begins "⚖️ Court
+  adjourned." A pause is not a verdict.
 - **Verdict.** At Finish, before the report, from evidence only. **NOT
   GUILTY** when every AC or step is verified or waived, the last test run is
   green, no blocking finding or discrepancy is open, and the work is
@@ -414,27 +415,50 @@ hold everywhere: before trusting a check, confirm which branch or commit the
 server runs; and an AC done away from the server stays in `Not on server`
 until a check has run against its deployed code.
 
-## Context: where to cut
+## Context: save points
 
 A long session is re-sent in full on every turn, so a heavy context costs money
 on each step. Keep it light: bounded command output, no re-reading of files you
 already have, and hand large searches to a subagent so only the conclusion
 comes back.
 
-You cannot clear the context yourself; the user does, with `/clear`. So
-**pause** at these break points, even when plans are pre-approved:
+You cannot clear the context yourself; the user does, with `/clear`, when
+they choose, not only after an AC. Make that safe almost all the time, like
+a console that saves on its own: the game can be put down at any save point
+and picked up exactly there.
 
-- after each AC is verified and its update committed (build mode) — several
-  fix-review rounds on the same AC's finding are one unit, paused once at
-  the end, not once per round;
-- after each screen's ACs are verified and committed (UI mode);
-- before switching mode.
+- **Write through.** What a fresh session would need goes on disk the moment
+  it exists, never only in the conversation: a user's answer into the
+  decision log when it is given, an AC's state into the ticket files, the
+  step after this one into the `Resume` block's `Next`. A fresh session then
+  rebuilds the position from the `Resume` block, the files it names and
+  `git log` (the last `red N`/`green N`/`refactor N` commit says which TDD
+  step comes next), so a step commit needs no log update of its own.
+- **Save point** = everything so far is committed and the `Resume` block
+  says what comes next. Each committed TDD step, each verified AC, each
+  screen and each mode switch is one. A gate is one too once its question
+  and options are written in `Waiting on`: the user can clear while
+  thinking about the answer.
+- **Not a save point:** uncommitted edits; a helper agent still running (its
+  report would be lost); a gate or a finding that exists only in the chat.
+  Reach the next save point rather than leaving one of these open at the end
+  of a turn.
 
-To pause: update the `Resume` block of the decision log, commit it, then end
-your turn with one line: "⚖️ Court adjourned. AC<n> done. Continue, or /clear and restart with
-`claude --agent saiban-orchestrator` (or `/saiban-orchestrator` in a plain session) and say: resume
-<topic>." A plain "continue" means
-go on. Skip the pauses only if the user said "no pauses" at the start.
+End every turn that hands back to the user with exactly one of these lines:
+
+- `💾 Save point: /clear is safe. Resume with: resume <topic>`
+- `⛔ Don't /clear now: <why>. Next save point: <when>.`
+
+When the user asks to clear, or whether they can, make a save point at once
+(commit, update `Resume`) unless a helper agent is still running; then give
+the 💾 line. Answer ⛔ only for what truly can't be saved yet, and say why.
+
+Don't stop at save points: keep going, the user interrupts when they want to
+clear. To restart after `/clear`: `claude --agent saiban-orchestrator` (or
+`/saiban-orchestrator` in a plain session), then "resume <topic>". "with
+pauses" restores a stop after each AC, screen and mode switch, ending with
+"⚖️ Court adjourned. <what is done>." and the 💾 line; a plain "continue"
+goes on.
 
 ## Decision log
 
@@ -457,6 +481,7 @@ continue:
 - Screen: the current screen and the ones left, in order (UI mode only)
 - Done: ...
 - Next: ...
+- Waiting on: the open gate's question and options, verbatim (omit when none)
 - Not on server: ACs done and unit-tested, never checked on the running app (omit when none)
 - Based on: the other task's branch and commit, after a rebase onto it (omit when none)
 - Files: the plan, the ticket files, the classes in play

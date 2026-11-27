@@ -97,7 +97,7 @@ Then describe the work in your first message. Two examples:
   with Podman. Already passing: the AC is met. Failing: it changes the code
   until it passes, or, for a change only you can make (Nuxeo Studio
   Modeler), tells you what to change and waits for your hot reload. One
-  screen at a time, with a pause between screens. No unit-test TDD here.
+  screen at a time, each finished screen a save point. No unit-test TDD here.
   Two tabs can work two different screens at once, in the same folder (not
   a worktree: the server only sees the folder its volume syncs). Each tab
   touches and commits only its own screen's files, and asks you before
@@ -122,8 +122,8 @@ message:
 | Say | Effect |
 |---|---|
 | `pre-approve TDD plans` | No approval per AC plan. |
-| `yolo` | The orchestrator takes the decisions itself (plans, forks, deviations, review fixes) with the same skills and agents, logs each one, pushes to a feature branch (never the default branch, never force, no pull request), keeps the result launchable with one command at every push (a mobile app included, with a `Run` section in the README), and lists them for you at the end. Other pushes, deleting and other hard-to-reverse steps are still asked, all together at the end. No pauses unless you add `with pauses`. `yolo off` ends it. |
-| `no pauses` | No stop after each AC. |
+| `yolo` | The orchestrator takes the decisions itself (plans, forks, deviations, review fixes) with the same skills and agents, logs each one, pushes to a feature branch (never the default branch, never force, no pull request), keeps the result launchable with one command at every push (a mobile app included, with a `Run` section in the README), and lists them for you at the end. Other pushes, deleting and other hard-to-reverse steps are still asked, all together at the end. Like every mode, it does not stop at save points unless you add `with pauses`. `yolo off` ends it. |
+| `with pauses` | Stop after each AC, screen and mode switch (by default it keeps going and only marks save points). |
 | `no review` | No `kenji-reviewer` after each AC (build mode). |
 | `no tester` | In UI mode, the orchestrator writes and runs the checks itself instead of `mokugeki-tester` (on by default; about 1.6× the cost on a small screen, benefit not yet shown). |
 | `with review` | In fix mode, a `kenji-reviewer` pass on the fix (off by default; about $0.30). |
@@ -179,9 +179,9 @@ silently.
    and an audit of the git history that proves each test was red first.
 3. **A review per AC** by `kenji-reviewer`, which can read but never edit:
    is the AC really proven, does the structure hold, nothing extra?
-4. **The AC record is updated** in `docs/ticket/<id>/acceptance.md`, then
-   committed.
-5. **A pause**: *"AC1 done. Continue, or /clear and resume?"*
+4. **The AC record is updated** in `docs/ticket/<id>/acceptance.md` (from
+   three ACs on, an index plus one `ac/AC<n>.md` per AC), then committed.
+5. **A save point**: it keeps going, but you may `/clear` there.
 
 It asks you only for hard-to-reverse actions, real forks, deviations from
 an approved plan, out-of-scope work, or an unclear AC. Everything else, it
@@ -192,7 +192,11 @@ decides and writes down.
 - `docs/decisions/<topic>.md`: every decision, why, and what was rejected.
   Its `Resume` block always says where the work stands.
 - `docs/ticket/<id>/`: design, ACs with their evidence, difficulties met.
-- Context gets expensive as it grows. At a pause, type `/clear`, then
+- Context gets expensive as it grows. Every turn ends with either
+  *"💾 Save point: /clear is safe"* or *"⛔ Don't /clear now: <why>"*. Save
+  points come often (each committed TDD step, each AC, each screen, even an
+  open question once it is written down), and asking *"can I clear?"* makes
+  one at once when it can. Interrupt, type `/clear`, then
   `claude --agent saiban-orchestrator` and *"resume PROJ-8"*: it continues from the
   `Resume` block instead of re-reading everything.
 - Forgot the topic? Start `ci` with no topic (or ask *"where were we?"*): it

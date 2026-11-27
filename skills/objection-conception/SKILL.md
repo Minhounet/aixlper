@@ -44,12 +44,17 @@ What to look for:
 - **`conception.md`** - if it exists, it's prior design work on this exact
   ticket, possibly from an earlier session. Read it in full and treat it as
   the current state of the design to build on, never as a stale draft to
-  discard or silently overwrite.
+  discard or silently overwrite. If it points to theme files
+  (`design/<theme>.md`, see below), read those the current work touches: all
+  of them while designing, only the ones an AC's `Covered by` names while
+  building or proving that AC.
 - **`retro.md`** - if it exists, read it too; a difficulty logged earlier
   may already be relevant to what you're about to discuss.
 - **`acceptance.md`** - if it exists, it's the current state of every
   acceptance criterion (see below). Read it in full; a criterion still
-  `unclear` there blocks design work that depends on it.
+  `unclear` there blocks design work that depends on it. If it is an index
+  over `ac/AC<n>.md` files, read those the current work touches: all while
+  checking or designing, only the current AC's while building or proving it.
 
 None of these files existing yet just means this is a fresh start for the ticket -
 you'll create them as the conversation produces something worth recording.
@@ -151,6 +156,17 @@ status: in-progress
 - <approach considered>: <why it was rejected>
 ```
 
+**Split by theme when it grows.** When the decisions fall into distinct
+themes (persistence, security, the API, a migration) and `conception.md`
+passes about 8KB, move each theme's decisions to `design/<theme>.md` and
+keep in `conception.md` the frontmatter, Context, Constraints, Open
+questions, Ruled out, and under Decisions one line per theme file: the
+theme, its file, and its decisions' short names. Name decisions so an AC
+can point at one (`design/security.md#D3`). Never split a decision from
+its reason or its ruled-out alternatives, and never split a short design:
+reading three small files costs more than one. Say so before splitting an
+existing file.
+
 ## Write retro.md incrementally
 
 `retro.md` lives alongside `conception.md` in the same folder and captures
@@ -182,7 +198,19 @@ it proven. Create it on the first trigger for a ticket that has ACs - or
 that should have them - and update it as each AC's state changes, like
 the other two files.
 
-**Shape to follow:**
+**One file per AC from three ACs on.** Building or proving one AC, and
+resuming after a `/clear`, then needs the index and that AC's file only,
+not every other AC's evidence. `acceptance.md` becomes the index: the
+`Order` line, one line per AC with its **status** (the status lives there
+only, so the done gate reads one file), and the `Discrepancies` ledger,
+which stays whole because an open entry constrains every AC. Each
+`ac/AC<n>.md` holds the rest of that AC's block. With one or two ACs, keep
+everything in `acceptance.md`. An existing single file passing two ACs:
+offer the split, don't do it silently.
+
+**Shape to follow** (single file; with the split, each `## ACn` block
+minus its `Status` moves to `ac/ACn.md`, and the index lists
+`- AC1: <short name> - <status> - ac/AC1.md`):
 
 ```markdown
 # TICKET-123: acceptance criteria
@@ -193,7 +221,7 @@ Order: AC2, AC1, AC3 (AC1 needs AC2's <type/endpoint/data>; AC3 independent)
 - Source: "<the ticket's own wording, verbatim>"
 - Interpretation: <the observable outcome that means it's met>
 - Questions: <ambiguity, who must answer it, the answer once given>
-- Covered by: <decision(s) in conception.md>
+- Covered by: <decision(s) in conception.md or design/<theme>.md>
 - Evidence: <test name and result / command and result / manual check, by whom>
 - Status: unclear | ready | designed | verified | failed | waived (<reason, decided by>)
 
@@ -206,6 +234,9 @@ Order: AC2, AC1, AC3 (AC1 needs AC2's <type/endpoint/data>; AC3 independent)
 - Owner: <who must decide: user, PO, other team>
 - Resolution: open | A wins | B wins | ticket amended (<by whom, when>)
 ```
+
+Below, "`acceptance.md`" means the index and its AC files together when
+split.
 
 The `Discrepancies` section is the ledger of every place where two sources
 disagree. Each entry quotes **both sides verbatim with their location** -

@@ -4390,6 +4390,51 @@ Not measured. The kata plans in `katas/igiari-tdd/` keep the old format
 (no predictions), so `scripts/kata_super_green.sh` runs are unchanged; a
 comparison of lists built with and without the method was not run.
 
+## `saiban-orchestrator` / `objection-conception`: save points, and acceptance split per AC
+
+Asked by the author, still looking for token savings: clearing helps only if
+resuming truly works, and the time to clear is when the author judges it
+(the work is committed), not forcibly after each AC. "Most of the time we
+should be able to clear, like with the Nintendo Switch"; when not, say so
+clearly.
+
+- **Save points replace break points.** "Context: where to cut" became
+  "Context: save points". A save point is: everything committed, and the
+  `Resume` block says what comes next. Because `igiari-tdd` already commits
+  every red/green/refactor, each step commit is one with no extra write: a
+  fresh session rebuilds the position from `Resume`, the files it names and
+  `git log`. A gate becomes one too, through a new `Resume` line
+  `Waiting on` (question and options verbatim), re-asked first on resume.
+  Not a save point: uncommitted edits, a helper agent still running, a gate
+  or finding only in chat.
+- **Write-through** stated as the rule that makes this hold: a user's answer
+  goes into the decision log when given, not at the next break.
+- **One line at the end of every turn** that hands back: `💾 Save point:
+  /clear is safe. Resume with: resume <topic>` or `⛔ Don't /clear now:
+  <why>. Next save point: <when>.` Asked "can I clear?", the orchestrator
+  makes a save point at once (commit, update `Resume`) unless a helper is
+  running.
+- **No stops by default.** The per-AC / per-screen / mode-switch pause is now
+  opt-in ("with pauses", which keeps the "⚖️ Court adjourned" line). The old
+  opt-out "no pauses" is gone; yolo's own "no pauses" note now just says it
+  never stops either. The user interrupts to clear.
+- **`objection-conception`: split by AC, and by theme.** From three ACs on,
+  `acceptance.md` becomes an index (`Order`, one line per AC with its status,
+  the whole `Discrepancies` ledger) over `ac/AC<n>.md` files, so building,
+  proving or resuming one AC reads the index and that AC only. The status
+  lives in the index only (no drift, and the done gate reads one file); the
+  ledger stays whole because an open entry constrains every AC. One or two
+  ACs keep the single file: three small reads cost more than one. A
+  `conception.md` past ~8KB with distinct themes moves each theme's
+  decisions to `design/<theme>.md`, keeping an index line per theme; ACs
+  point at a decision there (`Covered by: design/security.md#D3`). Existing
+  files are never split silently.
+- Not run. The eval fixtures (`done-gate`, `ac-test-red-first`, the
+  `kenji-reviewer` fixture) use one or two ACs, so the single-file shape
+  they rely on is unchanged. First real use should check that the end-of-turn
+  line stays one line and that a resume from a mid-TDD save point lands on
+  the right step.
+
 ## `igiari-tdd`: decided deviations vs. stop deviations
 
 **Friction (author, real use).** Runs stopped too often on plan
