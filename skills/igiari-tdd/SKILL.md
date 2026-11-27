@@ -263,12 +263,31 @@ next test?" between cycles; that defeats the point of planning up front.
 The plan is a checklist, not a contract with the code: rule 1 (one test per
 step) and rule 5 (minimal implementation, triangulate before generalizing)
 still govern exactly how each planned test gets implemented once you reach
-it. If implementing the plan surfaces a reason to deviate — a planned test
-turns out to be redundant, impossible as worded, or the actual code reveals
-a test the plan missed — stop, show the deviation and why (in the same
-"Skill improvement proposal"-adjacent spirit as an unlisted gap: state it,
-don't silently substitute), get a quick go-ahead, then resume running
-straight through. This is the only other pause besides the initial one.
+it. If implementing the plan surfaces a reason to deviate, sort it with one
+question: **does it change what is specified, or only the steps that get
+there?**
+
+- **Only the steps → decide it yourself, don't stop.** A planned test that
+  passes on write (fix it by the order below: reorder, guard, drop); one
+  that names two behaviors (split it into two cycles); a fake the plan
+  forgot to break (add the triangulating test); a test made redundant by
+  an earlier one (drop it). Each test still fails when written, and the
+  expected behavior, signatures and failure shapes stay exactly as
+  approved. Write one line in the cycle's commit body or summary,
+  `deviation (decided): <what>, <why>`, and list them all under
+  "Decided deviations" in the end-of-task report so the author can undo
+  any of them.
+- **What is specified → stop.** A test impossible as worded, or whose
+  expected value looks wrong (rule 9); a new expected behavior the plan
+  doesn't state; a failure shape swapped (throw ↔ `Either`, below); a
+  signature or public surface changed; a test dropped, merged or added
+  that changes what an acceptance criterion is proven by; anything outside
+  the task. Show the deviation, why, and the option you recommend (state
+  it, never silently substitute), get a quick go-ahead, then resume
+  straight through. This is the only other pause besides the initial one.
+
+In doubt, it's a stop: deciding is for changes the author would approve
+without reading.
 
 If `chottomatte-archi` is also loaded and produced a structural plan
 first (its classes/interfaces/signatures), write this test plan against
@@ -300,8 +319,9 @@ red, so it drives nothing and proves nothing. Fix that in this order:
    is never a red step and never evidence for an acceptance criterion.
 3. **Otherwise drop it**, and say so in the plan.
 
-Found only mid-run, a test that would pass on write is a plan deviation
-like any other: stop and show it, with the option you recommend.
+Found only mid-run, a test that would pass on write is a decided deviation:
+apply the same order and log it, unless it is the only test proving an
+acceptance criterion, which is a stop.
 
 **Failures are shaped at plan time, not mid-cycle.** Write a planned
 failure case the "Code style" way below: a known business failure is
@@ -533,8 +553,8 @@ commit.
 When there are no more behaviors left for the current task, run the full
 project build once as the final step, then print the "Deferred refinement
 notes" list accumulated during the task (see the Advanced refinement rule
-above) — explicitly say "none" if nothing was logged — and the
-"Super-green misses" count with its list ("0" if none). Then **audit the
+above) — explicitly say "none" if nothing was logged — the "Decided
+deviations" list ("none" if empty), and the "Super-green misses" count with its list ("0" if none). Then **audit the
 task's history** with `scripts/audit-tdd-history.sh` (in this skill's
 directory), passing `--base <the commit the task started from>`, the scoped
 test command as `--test-cmd`, and the full-build command as `--full-cmd`.

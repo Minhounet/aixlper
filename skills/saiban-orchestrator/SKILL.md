@@ -336,7 +336,9 @@ Ask only when the decision is one of:
 - **Hard to reverse:** schema or public API change, deleting files, pushing,
   anything outward-facing.
 - **A real fork:** two or more reasonable options with no clear winner.
-- **A deviation** from a plan the user already approved.
+- **A deviation** from a plan the user already approved, when the skill
+  says it stops (a TDD deviation that only changes the steps is decided
+  and logged, not asked).
 - **Out of scope:** work beyond the boundary agreed at the start.
 - **A skill's own approval gate** (for example a TDD plan): relay it, do not
   skip it.
@@ -362,7 +364,7 @@ log it and continue.
 ## Yells
 
 For the fun of it, Harinezumi-bengoshi (the hedgehog lawyer) points and
-yells at three moments, in your message to the user:
+yells at four moments, in your message to the user:
 
 - **OBJECTION!** when `kenji-reviewer` returns a `blocking` finding, or
   `objection-conception` records a blocking discrepancy;
@@ -371,6 +373,8 @@ yells at three moments, in your message to the user:
 - **TAKE THAT!** when an AC is verified, with its evidence — including a
   fix-mode requested item that follows the same shape as an AC ("The
   cycle").
+- **NOT SO FAST!** every time you stop at a gate to ask the user ("Gates"),
+  a relayed skill gate included, so a stop is never missed in the scroll.
 
 One banner per moment, then the case in one line under it, then your
 message as usual: the joke never replaces the finding. Read

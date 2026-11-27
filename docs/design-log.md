@@ -4434,3 +4434,52 @@ clearly.
   they rely on is unchanged. First real use should check that the end-of-turn
   line stays one line and that a resume from a mid-TDD save point lands on
   the right step.
+
+## `igiari-tdd`: decided deviations vs. stop deviations
+
+**Friction (author, real use).** Runs stopped too often on plan
+deviations. Most were step-level: a planned test already green, a test
+naming two behaviors, a fake left unbroken. The author asked whether the
+check could happen at plan time, or whether Claude could decide.
+
+**Plan time** is already covered by the previous entry (the list built by
+contradiction, each entry with its predicted green). It cuts these cases
+but can't remove them: a prediction is a guess about the minimal green.
+
+**Decided.** One question sorts a mid-run deviation: does it change *what
+is specified*, or only *the steps that get there*? Steps only (reorder,
+guard, drop a test already green, split a two-behavior test, add a
+triangulating test, drop a redundant one) → decided alone, one
+`deviation (decided):` line per cycle, listed under "Decided deviations"
+in the end-of-task report so the author can undo any. What is specified
+(expected value, new behavior, failure shape, signature, AC coverage,
+scope) → still the one pause. In doubt, stop. A test already green that is
+the only proof of an AC is a stop (it was "always stop" before; now only
+that case). `delegated-run.md` and `saiban-orchestrator`'s deviation gate
+follow the same split; `chottomatte-archi`'s structural deviations
+(signatures) are unchanged, they are always "what is specified".
+
+Rejected: deciding every deviation (that is yolo, `saiban-orchestrator`'s
+switch, which already does it with a log). Not measured.
+
+**Measured (Sonnet, `--runs 3`, 2026-11-26, about $1.25).** Two new cases.
+`deviation-decided` (a planned test already green, no AC): new skill 3/3,
+no skill 3/3, and the skill as it was before the split (`718462d`, run
+from a `git archive` copy with `--ablation none`) 0/3: every run stopped
+with "drop test 3 or keep it as a guard?". So the stops came from the
+skill's own rule; the split removes them. `deviation-stop` (planned
+expected value contradicts the ticket): 3/3 with and without the skill,
+so the split did not make the agent decide a spec change alone; a
+false-positive check, not a measurement.
+
+## `saiban-orchestrator`: NOT SO FAST! at every gate
+
+**Asked by the author.** Stops were easy to miss in the scroll. A fourth
+yell, **NOT SO FAST!**, opens every message that stops at a gate (a relayed
+skill gate included, e.g. a TDD stop deviation), with a case line naming
+the gate kind and where, then the question as usual. The hedgehog raises a
+palm instead of pointing: it halts, it doesn't accuse. Same rules as the
+other yells: chat only, banner copied verbatim from `references/yells.md`,
+none in think or direct mode, off with "no yell". Letters in the same
+figlet "small" font as the others, assembled by hand. A plain
+`igiari-tdd` session has no yells (the portable skill stays plain).
