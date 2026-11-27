@@ -4549,3 +4549,19 @@ thing the checklist exists to catch the first time. Added an explicit
 null-check bullet to the checklist, cross-referencing `kanpeki-fp`'s rule
 directly so the checklist doesn't silently drift from the style rule it's
 supposed to enforce.
+
+## `chottomatte-archi`: structural plan didn't check a new field against an existing sibling guard (improve mode, found via `tantei-inspector`)
+
+A structural plan added a third field to a class whose constructor already
+fail-fast-validated two sibling fields for the same mode — the plan listed
+the new field's type and nothing else, so the same validation silently
+didn't carry over to it. Caught only by `kenji-reviewer`'s review pass, not
+the plan itself, even though the precedent was sitting in the very same
+method the plan was extending. The orchestrator's own reasoning at plan
+time (treating it as "not explicitly asked for") was too literal a reading
+of the approved design, which already implied the same guard should apply.
+Added a check to the structural-plan step itself: when a new field joins
+existing constructor fields on the same class, the plan must say whether
+any validation rule already enforced on the siblings applies to the new
+one too — moving the catch from review time, where it costs a round trip,
+to plan time, where it costs nothing.
