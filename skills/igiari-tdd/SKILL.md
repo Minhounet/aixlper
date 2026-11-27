@@ -415,6 +415,10 @@ destination — it never moves up when you're allowed to build the road.
    - Did this step introduce duplication with existing code?
    - Is there a name (variable, method) that doesn't say what it means?
    - Did this step leave a magic literal that should be a constant?
+   - Did this step leave, or newly introduce, a `null` anywhere in the code
+     it touched? `kanpeki-fp` treats any `null` as a refactor candidate on
+     sight — don't wait for a trigger (note it as a deferred item if
+     removing it is itself a signature change out of scope for this step).
    - Is there now a guard clause / early return that would remove nesting?
    - Is the method you touched getting long or nested — a loop filling a
      mutable list, a multi-line lambda, a local assigned in branches? Apply

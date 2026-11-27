@@ -4534,3 +4534,18 @@ both were already correct - this only moves (duplicates) the reminder to
 where it's needed at the moment it applies, since stating a rule once at
 its definition clearly wasn't enough to make a long session actually
 follow it.
+
+## `igiari-tdd`: a `null` left by a refactor went unflagged through the mandatory checklist (improve mode, found via `tantei-inspector`)
+
+`kanpeki-fp`'s own rule is unambiguous: any `null` appearing in
+implementation code is a refactor candidate on sight, no trigger needed.
+But rule 6's mandatory REFACTOR checklist — the list actually walked every
+cycle — never mentioned nulls at all; it only pointed to `kanpeki-fp`'s
+"Clarity patterns" for an unrelated long-method bullet. A structural
+change that made a now-dead parameter's remaining call sites all pass
+`null` went through its own REFACTOR step unflagged, caught only later by
+`kenji-reviewer`, costing an extra review round for exactly the kind of
+thing the checklist exists to catch the first time. Added an explicit
+null-check bullet to the checklist, cross-referencing `kanpeki-fp`'s rule
+directly so the checklist doesn't silently drift from the style rule it's
+supposed to enforce.
