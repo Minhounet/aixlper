@@ -12,8 +12,10 @@ plan verbatim, and it runs every cycle and the final build. Run it in the
 **background** (the author keeps working meanwhile).
 
 - **Same commits as inline:** one per step, as in SKILL.md's "The cycle".
-- **A deviation stops the run:** the agent returns `DEVIATION: <cycle, what,
-  proposal>`, you put it to the author, and you resume the same agent.
+- **Only a stop deviation stops the run** (SKILL.md sorts them): the agent
+  returns `DEVIATION: <cycle, what, proposal>`, you put it to the author,
+  and you resume the same agent. A decided one it logs and keeps going;
+  its report lists them under "Decided deviations".
 - **You run the audit yourself before reporting done**, because the
   report is never the evidence: `scripts/audit-tdd-history.sh` (see SKILL.md's "The cycle"),
   then read each green diff against rule 5.
