@@ -4565,3 +4565,20 @@ existing constructor fields on the same class, the plan must say whether
 any validation rule already enforced on the siblings applies to the new
 one too — moving the catch from review time, where it costs a round trip,
 to plan time, where it costs nothing.
+
+## `objection-conception`: a fixed Resolution/Note text doesn't get swept across sibling entries (improve mode, found via `tantei-inspector`)
+
+The same "stale `Resolution` text" gap recurred three times in a row on
+one real ticket: a `Discrepancies` entry's `Resolution` (or an AC's own
+`Note`), phrased before a fix landed ("out of scope," "not implemented"),
+kept that wording after the fix shipped, because nothing prompted
+re-checking *other* entries that referenced the same underlying issue —
+only the one entry actively being edited got updated. One occurrence
+produced a blocking finding: two screens touched by the same discrepancy
+had no per-AC note at all, just a single blanket note under the first AC.
+Every one of the three was caught only by the reviewer agent, never by the
+skill's own process. Added an explicit sweep step: after a fix lands,
+re-read every other AC and `Discrepancies` entry referencing the same
+discrepancy, screen or component, not only the one being edited, and give
+each AC touched by a shared discrepancy its own note rather than one
+blanket note for the group.

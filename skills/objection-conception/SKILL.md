@@ -255,6 +255,14 @@ fine, as long as no number is attached to it. If the user asks for a
 default anyway, say it settles D1 and record that as the resolution, with
 who decided.
 
+**When a fix lands, sweep for siblings.** Before moving on, re-read every
+other AC entry and `Discrepancies` entry that references the same
+discrepancy, screen, or component just fixed - not only the one entry
+being edited. A `Resolution`/`Note` phrased before the fix (e.g. "out of
+scope," "not implemented") is stale the moment the fix commits, and a
+screen with several ACs touched by one discrepancy needs a note under
+*each* AC, not one blanket note under the first.
+
 ### With an architecture skill: structure first
 
 When `chottomatte-archi` (or another architecture skill) is loaded, its
