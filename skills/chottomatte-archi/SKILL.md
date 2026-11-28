@@ -58,9 +58,12 @@ List every class/interface to be created or changed, each one's
 constructor dependencies (typed as interfaces per the rule below), and the
 signature of each public method — name, parameters, return type, never a
 body. Include composition-root wiring (what gets bound to what) when the
-plan introduces a new interface or bean. Present this and wait for one
-go-ahead — approve as-is, or the author edits the shape — before writing
-any implementation.
+plan introduces a new interface or bean. When a new field joins existing
+constructor fields on the same class, check it against any
+validation/fail-fast rule already enforced on those siblings and say in the
+plan whether the same rule applies — don't leave it for review to notice.
+Present this and wait for one go-ahead — approve as-is, or the author edits
+the shape — before writing any implementation.
 
 This is the single pause for the structural shape of the task. Once
 approved, implement straight through without re-presenting the plan,

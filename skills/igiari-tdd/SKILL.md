@@ -314,8 +314,11 @@ red, so it drives nothing and proves nothing. Fix that in this order:
    failures don't lock yet"), keep it as a **guard**: mark it `(guard)` in
    the plan, prove it can fail with a mutation check (break the code
    briefly, see the guard fail, revert), and commit it on its own as
-   `guard N: <name> (mutation: <what you broke>)` right after green N - not
-   in a refactor, which reshapes existing tests and never adds one. A guard
+   `guard N: <name> (mutation: <what you broke>)` right after green N-1,
+   where N continues the step sequence (the guard stands in for the next
+   test, never repeating the green it follows) - not in a refactor, which
+   reshapes existing tests and never adds one. `audit-tdd-history.sh`
+   checks it this way; keep the two in agreement if either changes. A guard
    is never a red step and never evidence for an acceptance criterion.
 3. **Otherwise drop it**, and say so in the plan.
 
@@ -412,6 +415,10 @@ destination — it never moves up when you're allowed to build the road.
    - Did this step introduce duplication with existing code?
    - Is there a name (variable, method) that doesn't say what it means?
    - Did this step leave a magic literal that should be a constant?
+   - Did this step leave, or newly introduce, a `null` anywhere in the code
+     it touched? `kanpeki-fp` treats any `null` as a refactor candidate on
+     sight — don't wait for a trigger (note it as a deferred item if
+     removing it is itself a signature change out of scope for this step).
    - Is there now a guard clause / early return that would remove nesting?
    - Is the method you touched getting long or nested — a loop filling a
      mutable list, a multi-line lambda, a local assigned in branches? Apply
@@ -564,6 +571,13 @@ build. It prints about one line per commit and exits non-zero on a
 violation. If the task is one of several runs that keep numbering steps
 (one run per acceptance criterion), also pass `--first-n <the run's first
 step number>`. Rule 5 stays your judgment: read the green diffs.
+
+**On a Maven or Gradle multi-module project, also pass
+`--test-path '<module-glob>/src/test/' --main-path '<module-glob>/src/main/'`**
+— the script's single-module defaults (`src/test/`, `src/main/`) match
+nothing there, since real paths look like `<module>/src/test/...`, and a
+path that matches nothing makes rule-9 and prod-line checks silently no-op
+instead of failing loud.
 
 A RED that renames and re-asserts an existing, wrongly-pinned
 characterization test in place, rather than adding a new `@Test` method, is

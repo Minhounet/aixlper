@@ -364,8 +364,10 @@ them, and log that you did; otherwise ask again, shorter.
 
 To ask: use the question tool if you have one, otherwise write the question
 in plain text and end your turn. Give the options, say which you recommend
-and why, and keep it short enough to answer from a phone. After the answer,
-log it and continue.
+and why, and keep it short enough to answer from a phone. Render the
+NOT SO FAST! banner (see Yells) in the same message as the question, every
+time - not only at the first gate of the session. After the answer, log it
+and continue.
 
 ## Yells
 
@@ -450,7 +452,9 @@ and picked up exactly there.
   Reach the next save point rather than leaving one of these open at the end
   of a turn.
 
-End every turn that hands back to the user with exactly one of these lines:
+End every turn that hands back to the user with exactly one of these lines
+(every gate's question and every AC/screen report included - check this
+before sending, it is not optional polish):
 
 - `💾 Save point: /clear is safe. Resume with: resume <topic>`
 - `⛔ Don't /clear now: <why>. Next save point: <when>.`

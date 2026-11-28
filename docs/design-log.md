@@ -4484,6 +4484,105 @@ none in think or direct mode, off with "no yell". Letters in the same
 figlet "small" font as the others, assembled by hand. A plain
 `igiari-tdd` session has no yells (the portable skill stays plain).
 
+## `igiari-tdd`: guard numbering mismatch and multi-module audit paths (improve mode, found via `tantei-inspector`)
+
+**The skill's own guard example and its own audit script disagreed.**
+`SKILL.md`'s worked example numbers a guard as the *next* step in sequence
+(`guard 2` right after `green 1`, for a small utility class whose second
+planned test couldn't go red honestly). `audit-tdd-history.sh` instead
+checked `n == last_green` - expecting the guard to *repeat* the prior
+green's own number - so every legitimate guard got a false "OUT OF ORDER"
+flag. Reproduced twice on a real project (the original `guard 2` case, and
+a later `guard 17` right after `green 16`). Fixed both sides to agree: the
+wording now says explicitly "N continues the step sequence... never
+repeating the green it follows", and the script now checks
+`n == last_green + 1` and advances `expect_red` past the guard so the next
+red is checked against the right number too. Verified by re-running the
+fixed script against both historical commit pairs in a disposable
+worktree: both now report `ok` instead of the false flag.
+
+**Separately, the same script's single-module path defaults silently
+no-op on a multi-module project.** `--test-path src/test/` / `--main-path
+src/main/` match zero files when real paths look like
+`<module>/src/test/...` (any Maven or Gradle multi-module layout), so
+rule-9 and prod-line checks pass on every commit without checking
+anything - not a loud failure, a silent one. Flagged twice on the same
+project before being raised here. Documented the override in `SKILL.md`,
+and made the script itself print a loud warning (and flag a violation) when
+both `--test-path`/`--main-path` match zero files across the whole audited
+range, so the silent-no-op mode can't happen unnoticed again regardless of
+whether the caller remembers the override.
+
+## `saiban-orchestrator`: the save-point line and NOT SO FAST! banner, stated to hold on every turn, rendered on none (improve mode, found via `tantei-inspector`)
+
+A real multi-day, multi-gate session's own transcript showed zero
+occurrences of the save-point markers (💾/⛔) and zero occurrences of
+"NOT SO FAST!" across every gate question it asked - not a missed edge
+case, the entire applicable surface of both rules in that run. Both rules
+already existed, stated as holding on literally every turn/gate, but both
+live in sections physically distant from the moment they must fire: the
+save-point line in a standalone "Context: save points" section, the
+NOT SO FAST! banner behind a "read `references/yells.md` at the first
+yell" pointer that a long, resumed session (especially one crossing a
+`/clear` boundary, which resets the "first yell" framing) never
+re-visits. Added a reminder at the point of use instead of only at the
+point of definition: the gate-asking instruction itself now says to
+render NOT SO FAST! "every time - not only at the first gate of the
+session", and the save-point instruction now says to check it "before
+sending, it is not optional polish". Neither changes what the rule *is* -
+both were already correct - this only moves (duplicates) the reminder to
+where it's needed at the moment it applies, since stating a rule once at
+its definition clearly wasn't enough to make a long session actually
+follow it.
+
+## `igiari-tdd`: a `null` left by a refactor went unflagged through the mandatory checklist (improve mode, found via `tantei-inspector`)
+
+`kanpeki-fp`'s own rule is unambiguous: any `null` appearing in
+implementation code is a refactor candidate on sight, no trigger needed.
+But rule 6's mandatory REFACTOR checklist — the list actually walked every
+cycle — never mentioned nulls at all; it only pointed to `kanpeki-fp`'s
+"Clarity patterns" for an unrelated long-method bullet. A structural
+change that made a now-dead parameter's remaining call sites all pass
+`null` went through its own REFACTOR step unflagged, caught only later by
+`kenji-reviewer`, costing an extra review round for exactly the kind of
+thing the checklist exists to catch the first time. Added an explicit
+null-check bullet to the checklist, cross-referencing `kanpeki-fp`'s rule
+directly so the checklist doesn't silently drift from the style rule it's
+supposed to enforce.
+
+## `chottomatte-archi`: structural plan didn't check a new field against an existing sibling guard (improve mode, found via `tantei-inspector`)
+
+A structural plan added a third field to a class whose constructor already
+fail-fast-validated two sibling fields for the same mode — the plan listed
+the new field's type and nothing else, so the same validation silently
+didn't carry over to it. Caught only by `kenji-reviewer`'s review pass, not
+the plan itself, even though the precedent was sitting in the very same
+method the plan was extending. The orchestrator's own reasoning at plan
+time (treating it as "not explicitly asked for") was too literal a reading
+of the approved design, which already implied the same guard should apply.
+Added a check to the structural-plan step itself: when a new field joins
+existing constructor fields on the same class, the plan must say whether
+any validation rule already enforced on the siblings applies to the new
+one too — moving the catch from review time, where it costs a round trip,
+to plan time, where it costs nothing.
+
+## `objection-conception`: a fixed Resolution/Note text doesn't get swept across sibling entries (improve mode, found via `tantei-inspector`)
+
+The same "stale `Resolution` text" gap recurred three times in a row on
+one real ticket: a `Discrepancies` entry's `Resolution` (or an AC's own
+`Note`), phrased before a fix landed ("out of scope," "not implemented"),
+kept that wording after the fix shipped, because nothing prompted
+re-checking *other* entries that referenced the same underlying issue —
+only the one entry actively being edited got updated. One occurrence
+produced a blocking finding: two screens touched by the same discrepancy
+had no per-AC note at all, just a single blanket note under the first AC.
+Every one of the three was caught only by the reviewer agent, never by the
+skill's own process. Added an explicit sweep step: after a fix lands,
+re-read every other AC and `Discrepancies` entry referencing the same
+discrepancy, screen or component, not only the one being edited, and give
+each AC touched by a shared discrepancy its own note rather than one
+blanket note for the group.
+
 ## `saiban-orchestrator`: improve mode fed by code worth learning from
 
 **Asked by the author.** Sometimes a session meets code that shows a better
