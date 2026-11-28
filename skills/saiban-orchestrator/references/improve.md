@@ -3,7 +3,8 @@
 Read this when `saiban-orchestrator` runs in improve mode: the user asks to improve the
 skills or agents, to act on the "Improvements" of earlier reports, or to
 look back at a run and fix what rubbed, or to feed the skills from code
-worth learning from (`Seen:` entries, or code the user points to).
+worth learning from (`Seen:` entries, or code the user points to), or from
+another team's skills (external skills).
 
 Improve mode is the only mode that edits the aixlper skills and agents. It
 turns the proposals other modes only write down (the final report's
@@ -40,7 +41,9 @@ evidence (this session only, or the project's history too). Skip what the
 first message already says. For exemplar code: which `Seen:` entries
 (all not yet harvested, by default) and any file or snippet the user points
 to; for code outside the project, ask where it comes from and whether it may
-be read.
+be read. For external skills: which ones (the entries of
+`~/.claude/external-skills.md`, or a path the user gives), and whether they
+may be read.
 
 ## 3. Inspect: spawn `tantei-inspector`
 
@@ -65,6 +68,8 @@ paths that exist (check each before listing it):
 - exemplar code: the `Seen:` lines in those decision logs and in
   `process-notes.md`, and the files the user pointed to. Give the paths and
   line ranges, not your opinion of the code.
+- external skills: the path of each one's `SKILL.md` (and its references),
+  and the aixlper skill it overlaps, if any.
 
 Do not tell it what you think went wrong. That is the point of a fresh
 context.
@@ -106,6 +111,15 @@ not a memory of them). Then look in the evidence for:
    - **Observed, not proven.** Mark it as seen in one codebase. A change to a
      core rule of `igiari-tdd` or `chottomatte-archi` says which kata or eval
      would prove it before it counts as settled.
+7. **External skills** (only when given): compare each with the aixlper
+   skill covering the same work, rule by rule. Propose only what the
+   aixlper skill lacks and that holds beyond that team (a practice, not
+   their convention), in the aixlper skill's own terms; or a contradiction,
+   quoted verbatim on both sides, for the author to decide. What aixlper
+   already says, or a company convention: drop it and say so. Item 6's two
+   guards apply, and more strictly: another team's skill is usually not
+   public, so its name, wording and examples never reach the clone; the
+   evidence line names it only as "an external skill".
 
 Only what the evidence shows. No style opinions, no rewrite of a skill that
 worked, and never a proposal to delete a section: name the problem and let

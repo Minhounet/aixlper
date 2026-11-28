@@ -1,6 +1,6 @@
 ---
 name: saiban-orchestrator
-description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev, mokugeki-tester and tantei-inspector agents). Runs a known development process for the user, in six modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used) and direct (anything else) - choosing which aixlper skills each step needs, in a fixed order, logging every decision, and stopping only at real decisions (or, on "yolo", taking them itself and stopping only for the hard-to-reverse ones). Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
+description: Orchestrator (saiban = the trial). Claude Code only (it spawns the kenji-reviewer, shonin-dev, mokugeki-tester and tantei-inspector agents). Runs a known development process for the user, in seven modes - fix (clear change to existing Java code), build (something new), ui (web front end proven with Playwright), think (design only), improve (change the aixlper skills and agents from how they were used, good code or other teams' skills), contribute (a neutral version of an aixlper skill for another team's skill repo) and direct (anything else) - choosing which aixlper skills (and registered external skills) each step needs, in a fixed order, logging every decision, and stopping only at real decisions (or, on "yolo", taking them itself and stopping only for the hard-to-reverse ones). Use when the user says "saiban" or "iterate" (its former names), hands over a ticket or a bug to carry through, or asks to resume work from a decision log's Resume block.
 ---
 
 # Saiban orchestrator: run a known process for the user
@@ -112,7 +112,16 @@ learning from (`Seen:` entries, or code the user points to). The inspection goes
 `tantei-inspector`; the user approves each change; you apply it in the author's
 aixlper clone (found through the install links), never in the current
 project. Read `references/improve.md` before the first step: it holds the
-whole process. No other skill by default.
+whole process. No other skill by default. It can also learn from another
+team's skills (external skills), under the same guards.
+
+**Contribute mode.** Write a neutral version of an aixlper skill or agent
+for another skill repository (a team's or company's): practice kept,
+the author's own design opinions left out or offered as options, theme
+dropped. `tantei-inspector` sorts each rule (practice, opinion,
+aixlper-only, project-specific, already there); the user approves the
+sorting; you write in the target repository on a branch, in its format,
+never in the clone. Read `references/contribute.md` before the first step.
 
 **Direct mode.** Anything else: a question, an explanation, a small edit, a
 command to run. Do it directly, the way a plain assistant would: no gates
@@ -129,7 +138,7 @@ The user can switch mode at any time by saying so ("think mode", "direct:
 load the new mode's skills before its first step.
 
 **Yolo** (the user says "yolo"; "yolo off" ends it): not a mode, a switch on
-any mode but improve. Same skills, same helpers, same proof; you answer the
+any mode but improve and contribute. Same skills, same helpers, same proof; you answer the
 gates yourself with your own recommendation and log each one, and push to a
 feature branch; the other hard-to-reverse ones you park and ask at the end. The result
 must launch with one command at every push (a mobile app included), the user
@@ -187,9 +196,10 @@ condition holds, in this order, within that mode.
 | UI mode, or any mode where an AC is proven by a browser check (a screen built inside build mode counts), loaded before the first check is written | `shoko-playwright` | The check per AC, its evidence |
 | Documentum DQL or API work | `mujitsu-documentum` (unverified, say so) | DQL patterns |
 | A technical question needs a sourced answer before deciding (Java, Spring, Gradle, Documentum, Nuxeo, devops, Linux) | `dev-research-doc-officielle` (from the user's account, not this repo; may show as `anthropic-skills:dev-research-doc-officielle`) | Answers backed by official docs |
+| An entry's `When` holds in `~/.claude/external-skills.md` (private; read `references/external-skills.md` the first time one applies) | That external skill, in its `Role` (reinforces, fills, replaces in a project) | What its entry says; never a gate, review or proof |
 
 The structural plan comes first and the test plan is written against it, not
-re-derived. If no skill fits, do the step directly and log it as
+re-derived. If no skill fits (external ones included), do the step directly and log it as
 `No skill: <kind of work>` (for example `No skill: Nuxeo listener`), so it
 can be found again.
 
@@ -326,10 +336,11 @@ checks.
   seeing the change, so a check can't follow the code instead of the AC.
   What to give it, what it never gets, and how its answers are handled:
   `references/ui-mode.md`.
-- **`tantei-inspector`, improve mode only, always.** A read-only inspection of
-  how the skills and agents were used, with a fresh context that does not
-  know this session's reasons. What to give it and what it returns:
-  `references/improve.md`.
+- **`tantei-inspector`, improve and contribute modes only, always.** A
+  read-only inspection of how the skills and agents were used (or, in
+  contribute mode, which of their rules are shared practice), with a fresh
+  context that does not know this session's reasons. What to give it and
+  what it returns: `references/improve.md`, `references/contribute.md`.
 
 If a subagent fails or returns nothing usable, do the step yourself and say
 so in the log; except `tantei-inspector`, whose step you never take over

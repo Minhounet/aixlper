@@ -67,7 +67,8 @@ it does not strike.
   <what is wrong, one line>
 ```
 
-In improve mode, the case line is `proposal <n> · <skill> · <what changes>`.
+In improve mode, the case line is `proposal <n> · <skill> · <what changes>`;
+in contribute mode, `<skill> · <target> · <rows moved>`.
 
 ## TAKE THAT!
 

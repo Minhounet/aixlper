@@ -4624,3 +4624,46 @@ observed with its kata or eval, both decoys dropped. Previous `improve.md`
 evidence and proposed defining `Seen:` instead. That point was right: the
 decision-entry template now shows the optional `Seen:` line. Details in
 `evals/agents/README.md`.
+
+## `saiban-orchestrator`: contribute mode, external skills, and improve mode fed by other teams' skills
+
+**Asked by the author.** Their company is starting team skills, which will
+partly overlap aixlper's. Three needs: (1) act as a skill creator for the
+team, offering the generic parts of the skills and agents without pushing
+the author's own way of developing (no theme, no personal design patterns);
+(2) inspect the team's skills and take what is good back into aixlper, as
+improve mode does with code; (3) let saiban use external skills as
+reinforcement, described in a reference.
+
+**Decided.**
+- **Contribute mode** (`references/contribute.md`), a seventh mode: a new,
+  repeated, known process, so a mode, not a new agent. The target repo's own
+  format and rules govern; overlap with a target skill is checked first (an
+  addition to that skill rather than a competing one); every rule is sorted
+  into practice, opinion, aixlper-only, project-specific or already there;
+  only practice is kept, opinion only as an option the project turns on; the
+  body starts with "project conventions first"; written on a branch in the
+  target, never pushed. Excluded from yolo.
+- The sorting goes to `tantei-inspector` (criteria 1 and 5): the author's own
+  session shares the reasons behind the author's opinions, so it would rate
+  them as common practice, which is exactly the bias the author wants to
+  avoid. Same isolation as improve mode, so no second inspector.
+- **External skills** (`references/external-skills.md`): a private registry,
+  `~/.claude/external-skills.md`, never in the clone, since team skills and
+  their names can be internal. Each entry gives `For`, `When`, `Role`
+  (reinforces / fills / replaces in a project path) and `On conflict`
+  (default: ask). One pipeline row loads them; they never remove a gate,
+  review or proof. A conflict is quoted on both sides; a project rule
+  usually beats an aixlper style rule, a process rule doesn't give way
+  unless the user says so.
+- **Improve mode, item 7:** external skills as evidence, compared rule by
+  rule with the overlapping aixlper skill; only what holds beyond that team
+  is proposed. Item 6's guards apply more strictly (the evidence names it
+  only as "an external skill").
+- The loop closes: contribute mode ends by proposing a registry entry for
+  each contributed skill, so the team's version can reinforce the pipeline
+  in the team's projects.
+
+Rejected: a separate "export" skill (same clone, inspect, gate, apply shape
+as improve mode, so a copy) and a registry committed to aixlper (public).
+Not run yet; no eval case.

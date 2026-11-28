@@ -61,8 +61,10 @@ GEMINI_DESCRIPTIONS = {
         "skills/saiban-orchestrator/references/improve.md in the aixlper clone (its checklist; that "
         "skill itself is not installed for Gemini), the aixlper clone path, the "
         "scope and the evidence paths (decision logs, retros, process notes, and any code worth learning from, "
-        "with paths and line ranges). It proposes exact wording "
-        "changes with the evidence; it never edits."
+        "with paths and line ranges, and any external skills to learn from). It proposes exact wording "
+        "changes with the evidence; it never edits. To sort an aixlper skill's rules into shared practice "
+        "vs. the author's opinion before contributing it to another team's repo, give it "
+        "references/contribute.md instead, with the skills in scope and the target repository path."
     ),
 }
 # Skills are not a tool in Gemini CLI; they are loaded by name, so the Skill

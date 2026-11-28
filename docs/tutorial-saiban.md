@@ -115,7 +115,22 @@ Then describe the work in your first message. Two examples:
   marked "observed, not proven". You accept or reject each one;
   accepted ones are applied and committed in your aixlper clone, never in the
   project. Needs the skills installed with `./scripts/install.sh --link`,
-  otherwise it only prints the patch.
+  otherwise it only prints the patch. It can also learn from another team's
+  skills (*"compare our team's review skill with mine"*): only what holds
+  beyond that team, rewritten, never copied.
+- **Contribute mode** (give a skill to another team's skill repo):
+  *"contribute tantei-debug to the team skills in ~/work/team-skills"*.
+  It checks the target for an overlapping skill first, has
+  `tantei-inspector` sort each rule into shared practice or your own
+  opinion, asks you to confirm the sorting, then writes a neutral version
+  (no theme, the project's conventions first, opinions only as options) on
+  a branch in the target, in its format. Never pushes.
+- **External skills** (any mode): list a team's skills in
+  `~/.claude/external-skills.md` (private, never in this repo), each with
+  what it is for, when it applies and its role (reinforces an aixlper
+  skill, fills a gap, or replaces one in a given project), and the
+  orchestrator loads it at that step. Format:
+  `skills/saiban-orchestrator/references/external-skills.md`.
 - **Direct mode** (anything else): a question, a small edit, a command. It
   just does it, with no ceremony, so you never need plain `claude`.
 
