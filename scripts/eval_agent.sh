@@ -8,7 +8,8 @@
 # usage: eval_agent.sh --agent <kenji-reviewer|tantei-inspector|mokugeki-tester>
 #          [--runs 1] [--model sonnet] [--budget-usd 1] [--max-turns 60]
 #          [--out <dir>] [--only clean|defects]
-#          [--case traps|anchor|usage|exemplar] [--arm blind|informed]
+#          [--case traps|anchor|usage|exemplar|contribute|external]
+#          [--arm blind|informed|plain]
 #          [--rev <git rev>]
 #   kenji-reviewer    each run reviews two fixtures: `clean` (should PASS)
 #                     and `defects` (four planted defects, D1-D4); --only
@@ -17,6 +18,12 @@
 #                     four planted items (T1-T4) and two decoys (X1, X2);
 #                     --case exemplar: `Seen:` code, two planted items
 #                     (E1-E2), two guards (G1-G2), two decoys (D1-D2).
+#                     --case contribute: sort yusaburi-mutation's rules for
+#                     a company team-skills repo (C1-C6); --arm plain is
+#                     the comparison (no agent, no contribute.md, the
+#                     author's own framing). --case external: learn from a
+#                     company skill overlapping yusaburi-mutation (X1-X2,
+#                     G1, D1-D2).
 #                     --rev runs the clone and the agent as they were at
 #                     that git revision (the baseline arm)
 #   mokugeki-tester   each run checks one screen (a static page served on a
@@ -87,7 +94,7 @@ fi
 run_agent() {
   local dir=$1 prompt=$2
   local as_agent=(--agents "$out/agents.json" --agent "$agent")
-  [ "$arm" = informed ] && as_agent=()
+  [ "$arm" = informed ] || [ "$arm" = plain ] && as_agent=()
   (cd "$dir/work" && claude -p "$prompt" "${as_agent[@]}" \
       --plugin-dir "$plugin" --model "$model" \
       --allowedTools "$allowed" --disallowedTools "$disallowed" \
@@ -165,9 +172,12 @@ PY
     echo "mokugeki-tester $case $arm #$i  cost \$$cost  changed-outside-checks $changed  checks-with-sleeps $sleeps  $hints"
   else
     dir="$out/tantei-$case-$i"; rm -rf "$dir"; mkdir -p "$dir/clone/global"
-    fx=fixture; [ "$case" = exemplar ] && fx=fixture-exemplar
-    [ "$case" = usage ] || [ "$case" = exemplar ] || { echo "--case: usage or exemplar" >&2; exit 2; }
-    cp -r "$repo/evals/agents/tantei-inspector/$fx/project" "$dir/work"
+    case $case in
+      usage) fx=fixture/project;; exemplar) fx=fixture-exemplar/project;;
+      contribute) fx=fixture-contribute/target;; external) fx=fixture-external/project;;
+      *) echo "--case: usage, exemplar, contribute or external" >&2; exit 2;;
+    esac
+    cp -r "$repo/evals/agents/tantei-inspector/$fx" "$dir/work"
     cp "$src/CLAUDE.md" "$dir/clone/"; cp -r "$src/skills" "$dir/clone/"
     cp -r "$src/global/agents" "$dir/clone/global/"
     for d in "$dir/work" "$dir/clone"; do
@@ -175,7 +185,33 @@ PY
         git -C "$d" -c user.email=eval@example.com -c user.name=eval commit -qm fixture
     done
     before="$(snapshot "$dir/work")$(snapshot "$dir/clone")"
-    if [ "$case" = exemplar ]; then
+    if [ "$case" = contribute ] && [ "$arm" = plain ]; then
+      prompt="I wrote the aixlper skill $dir/clone/skills/yusaburi-mutation/SKILL.md
+(and its references); it is how I think mutation testing should be done.
+My company has started a team-skills repository: the current directory. I
+want to contribute this skill there without pushing my own way of
+developing. Read both, then sort every rule of my skill: what should go
+into the team's repo, what is only my opinion, what should be dropped, and
+say whether it should be a new skill or go into an existing one. Do not
+write any file: report only."
+    elif [ "$case" = contribute ]; then
+      prompt="Classify for contribute mode.
+- contribute.md: $dir/clone/skills/saiban-orchestrator/references/contribute.md
+- aixlper clone: $dir/clone
+- Skills in scope: yusaburi-mutation.
+- Target repository: the current directory (a company team-skills repo).
+- Overlapping target skills: skills/java-testing/SKILL.md."
+    elif [ "$case" = external ]; then
+      prompt="Inspect an external skill to learn from, for improve mode.
+- improve.md: $dir/clone/skills/saiban-orchestrator/references/improve.md
+- aixlper clone: $dir/clone
+- Scope: yusaburi-mutation.
+- Evidence (all present, under the current directory): the external skill
+  team-skills/skills/acme-mutation/SKILL.md (the user's company's team
+  skill; the user says it may be read), its registry entry in
+  external-skills.md, and docs/decisions/late-fees.md. It overlaps
+  yusaburi-mutation. No session transcripts for this inspection."
+    elif [ "$case" = exemplar ]; then
       prompt="Inspect code worth learning from, for improve mode.
 - improve.md: $dir/clone/skills/saiban-orchestrator/references/improve.md
 - aixlper clone: $dir/clone
@@ -208,7 +244,24 @@ def hit(pattern):
 heads = [b.split('\n', 1)[0] + ' ' + ' '.join(re.findall(r'(?m)^\**Change:?\**.*$', b)) for b in blocks]
 def about(pattern):
     return 'Y' if any(re.search(pattern, h, re.I) for h in heads) else '-'
-if sys.argv[2] == 'exemplar':
+if sys.argv[2] == 'contribute':
+    t = text
+    def near(pat, cls):
+        # the class word within 300 characters after the rule's mention
+        return 'Y' if re.search(pat + r'[\s\S]{0,300}?' + cls, t, re.I) else '-'
+    print(f"C1 {'Y' if re.search(r'addition to `?java-testing|into `?java-testing|extend `?java-testing', t, re.I) else '-'} "
+          f"C2 {near(r'percentage|score to reach|threshold', r'opinion')} "
+          f"C3 {near(r'press the witness|theme|igiari|guard', r'aixlper-only|drop')} "
+          f"C4 {near(r'green suite', r'practice')} "
+          f"C5 {near(r'touch|whole codebase|across the codebase|changed classes', r'already')} "
+          f"C6 {near(r'by hand|invent', r'practice')}")
+elif sys.argv[2] == 'external':
+    published = ' '.join(re.findall(r'(?m)^\**(?:Change|Log):?\**.*$', text))
+    leaks = sorted(set(m.lower() for m in re.findall(r'acme\w*|BILL-\w*|sonar\.\S+', published, re.I)))
+    print(f"proposals {len(blocks)}  X1 {hit(r'generated|lombok|mapstruct|excludedClasses')} "
+          f"X2 {hit(r'80|threshold')}  G1 {'leak ' + ','.join(leaks) if leaks else 'Y'}  "
+          f"D1 {about(r'withHistory|changed classes')} D2 {about(r'sonar|commit message')}  delete {hit(r'\b(delete|remove) (the|this) section')}")
+elif sys.argv[2] == 'exemplar':
     published = ' '.join(re.findall(r'(?m)^\**(?:Change|Log):?\**.*$', text))
     leaks = sorted(set(m.lower() for m in re.findall(r'acmebank|BILL-\d+|mf-prod-07', published, re.I)))
     e1 = [b for b in blocks if re.search(r'archunit|architecture test', b, re.I)]
