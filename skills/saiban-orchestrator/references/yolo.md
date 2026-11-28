@@ -10,7 +10,7 @@ recommended, log it, and go on. The user reviews the decisions afterwards,
 in the report, instead of one by one during the run.
 
 It applies to fix, build and UI modes, and to think mode (you approve the
-design yourself). Not to improve mode: a change to the skills is always the
+design yourself). Not to improve or contribute mode: a change to the skills, or to another team's repo, is always the
 user's. Direct mode has no gates, so it changes nothing there.
 
 ## What stays exactly the same
