@@ -1,8 +1,9 @@
 # External skills: use skills from outside aixlper as reinforcement
 
-Read this when `~/.claude/external-skills.md` exists (check at the start of
-every mode but direct), or when the user names a skill that isn't an aixlper
-skill and asks for it to be used in the pipeline.
+Read this when a skill that isn't an aixlper skill is about to be used in
+the pipeline: one from the skill list fits a step, or the user names one.
+Never at startup: the skill list already shows installed skills and their
+descriptions, so nothing needs reading until one is about to be used.
 
 An external skill is any skill not in this repo that the user wants
 in the pipeline: a team or company skill, a marketplace skill, or a skill
@@ -10,16 +11,17 @@ from the user's own account (`dev-research-doc-officielle` was the first). It
 reinforces the aixlper pipeline: it adds to a step or fills a gap. It never
 removes a gate, a review or a proof.
 
-## The registry is private
+## The registry is private, and read only now
 
-The registry is `~/.claude/external-skills.md`, on the user's machine, never
+Read `~/.claude/external-skills.md` now, not before: it says the skill's
+role and what to do on a conflict. No entry, or no file: use the skill as
+**reinforces** with **ask**, and offer the user an entry at the end.
+
+The registry is on the user's machine, never
 in the aixlper clone: this repo is public, and a company skill's name,
 purpose or rules can be internal. Never copy an entry, a name or a rule from
 it into the clone; improve mode learns from external skills only through its
 guards (`improve.md`, item 7).
-
-If the registry doesn't exist and the user asks you to use an external skill,
-offer to create it with one entry, in the shape below.
 
 ## Entry shape
 
@@ -36,8 +38,9 @@ On conflict: external | aixlper | ask   (default: ask)
 
 - **reinforces**: loaded together with that aixlper skill, at the same
   point in the pipeline.
-- **fills**: loaded for a kind of work no aixlper skill covers. Check the
-  registry before logging `No skill:`; a match means no `No skill:` line.
+- **fills**: loaded for a kind of work no aixlper skill covers. Before
+  logging `No skill:`, look at the skill list (not the registry): a skill
+  that fits means no `No skill:` line.
 - **replaces ... in ...**: in that project only, the external skill takes
   the aixlper skill's row (a team mandates its own skill on its own code).
   The mode's gates, reviews and proofs stay; only the rules for that step

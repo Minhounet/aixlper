@@ -4667,3 +4667,19 @@ reinforcement, described in a reference.
 Rejected: a separate "export" skill (same clone, inspect, gate, apply shape
 as improve mode, so a copy) and a registry committed to aixlper (public).
 Not run yet; no eval case.
+
+**Token audit, same day (asked by the author: "not what we use every
+day").** Daily cost, not cost per use, is what counts. Both new references
+cost nothing until used. The first version still added +1157 B to the
+always-loaded `SKILL.md` (~290 tokens, every saiban session, since `ci` puts
+it in the system prompt) and +264 B to `tantei-inspector`'s description
+(agent list, every session). It also had `external-skills.md` read the
+registry "at the start of every mode": a file read every session for
+something rarely used, and not needed, since installed skills are already
+in the skill list. Fixed: the contribute paragraph cut to a pointer (the
+process is in the reference), the pipeline row now fires on the skill list
+and points to the reference, the registry is read only when an external
+skill is about to be used (no entry: reinforces + ask), the inspector
+bullet and description cut back. Net always-loaded cost of the feature:
++401 B in `SKILL.md`, +86 B in the agent description. `improve.md` item 7
+(+942 B) stays: improve mode only.
