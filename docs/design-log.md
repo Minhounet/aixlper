@@ -4582,3 +4582,45 @@ re-read every other AC and `Discrepancies` entry referencing the same
 discrepancy, screen or component, not only the one being edited, and give
 each AC touched by a shared discrepancy its own note rather than one
 blanket note for the group.
+
+## `saiban-orchestrator`: improve mode fed by code worth learning from
+
+**Asked by the author.** Sometimes a session meets code that shows a better
+pattern than the skills hold. Should that be a new skill or agent? Neither.
+The process is improve mode's (clone, scope, inspect, gate, apply); only the
+evidence differs: code that is good, rather than evidence of how the skills
+were used. The isolated step is the same reading, read-only, with fresh
+eyes, kept out of the main context (criteria 1, 3, 5), which
+`tantei-inspector` already meets; a second inspector would mostly repeat it.
+
+**Decided.**
+- Capture inline, harvest later: any mode logs
+  `Seen: <path>:<lines> - <pattern>` and moves on, like `No skill:`. The
+  final report's improve-mode reminder counts waiting `Seen:` entries; one
+  is enough (unlike friction, which needs a repeat).
+- `improve.md`: scope asks which `Seen:` entries and pointed-to files (and,
+  for code outside the project, whether it may be read); the evidence list
+  adds them; checklist item 6, "Exemplar code": state the pattern apart from
+  the code, then map it to a skill, a contradicted rule (quoted both sides,
+  the author decides), or a gap (new skill, by the skill-vs-agent check).
+- Two guards: the shape, never the code (the clone is public, wording
+  written fresh with `com.example.*` placeholders, evidence genericized in
+  the log); observed, not proven (a change to a core `igiari-tdd` or
+  `chottomatte-archi` rule names the kata or eval that would prove it).
+- `tantei-inspector` (and its Gemini description) only learns that exemplar
+  code may be among its evidence; the rule stays in `improve.md`.
+
+Rejected: a new skill (same process, so a copy of improve mode) and a new
+agent (same isolation as `tantei-inspector`). Not run yet.
+
+**Measured (Sonnet, 2026-11-27, about $1.05).** New agent-eval case
+`tantei-inspector --case exemplar` (`evals/agents/tantei-inspector/fixture-exemplar/`):
+four `Seen:` lines over code written as from a private codebase (an
+ArchUnit test, a factory instead of `@BeforeEach`, and two decoys). New
+`improve.md`: 4/4 on 4 runs: both patterns proposed, the contradiction left
+to the author, no internal name in the proposed wording, each marked
+observed with its kata or eval, both decoys dropped. Previous `improve.md`
+(`--rev 74f156a`): 1/4 on 2 runs; it treated the lines as process
+evidence and proposed defining `Seen:` instead. That point was right: the
+decision-entry template now shows the optional `Seen:` line. Details in
+`evals/agents/README.md`.

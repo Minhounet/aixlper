@@ -60,7 +60,8 @@ GEMINI_DESCRIPTIONS = {
         "how the aixlper skills and agents were used. Give it the path of "
         "skills/saiban-orchestrator/references/improve.md in the aixlper clone (its checklist; that "
         "skill itself is not installed for Gemini), the aixlper clone path, the "
-        "scope and the evidence paths (decision logs, retros, process notes). It proposes exact wording "
+        "scope and the evidence paths (decision logs, retros, process notes, and any code worth learning from, "
+        "with paths and line ranges). It proposes exact wording "
         "changes with the evidence; it never edits."
     ),
 }

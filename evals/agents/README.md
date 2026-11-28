@@ -13,6 +13,7 @@ gives keyword hints, and the score comes from reading `answer.md` against
 | `mokugeki-tester` | `traps/` and `anchor/`: a static Documents screen served on a local port, four ACs each (three traps, one control) | The verdicts in each case's `verdicts.txt`; no fixed sleeps; nothing changed outside `checks/`. `--arm informed` is the comparison (a plain session told the change) |
 | `mokugeki-tester`, end to end | `mokugeki-tester/e2e/` (one file) and `e2e-split/` (13 modules): the page before any fix, a hidden oracle; run with `scripts/eval_ui_e2e.sh --arm inline\|tester --case single\|split` | The arm implements the four ACs and proves them; scored by the oracle on the page left behind: defects shipped, false proofs |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
+| `tantei-inspector`, exemplar code | `fixture-exemplar/project/` (`--case exemplar`): four `Seen:` lines and the code, written as from a private codebase (E1–E2 planted, D1–D2 decoys); answer key `expected-exemplar.md`; `--rev` runs the baseline arm | E1 an architecture-test proposal to `chottomatte-archi`; E2 the `@BeforeEach` contradiction left to the author; no internal name in a `Change:`/`Log:` line (G1); each marked observed, with the kata or eval that would prove it (G2); no proposal from a decoy |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
 `scripts/kata_super_green.sh --orchestrator dev|nodev` (results in
@@ -24,6 +25,36 @@ can turn the dev on). `--skill-rev` runs the control arm on an older
 `SKILL.md`.
 
 ## Results
+
+### 2026-11-27, tantei-inspector exemplar code, Sonnet
+
+**New `improve.md` (item 6, "Exemplar code"): 4/4 on all 4 runs** (2 before
+the fixture fix below, 2 after; about $0.16 a run). Every run proposed E1
+(an architecture test that fails the build, as an `add` to
+`chottomatte-archi`; one run put it in a new reference because the
+`SKILL.md` is ~33KB) and E2 (the `@BeforeEach` contradiction, both sides
+quoted, wording offered "for the author to accept, reject or reword").
+Neither internal name nor ticket reached a `Change:` or `Log:` line; one run
+used `PROJ-1234` and `com.example.app` in its wording. Each proposal said
+"observed, not proven" and named a kata or eval. Both decoys were dropped
+with the right reason (the `Clock` rule already quoted from
+`chottomatte-archi`; the mainframe bridge good only there). Nothing changed
+on disk.
+
+**Baseline (`--rev 74f156a`, `improve.md` before the change): 1/4 both
+runs** ($0.14–0.17). On the same evidence it read the `Seen:` lines as
+process evidence, not as patterns to harvest: both runs proposed defining
+`Seen:` in the decision-entry template, and checked the code's claims
+instead of learning from it. One run proposed that an architecture test
+must be seen to fail; it never proposed the pattern itself. E2 was missed
+both times. G1 held only because no wording came from the code.
+
+The baseline found two real fixture defects: every `Seen:` line range ran
+past the end of its file, and the Resume block had no `Status`. Both fixed
+before the last two new-rule runs, which scored the same. Following its
+other point, the entry template in `saiban-orchestrator` now shows the
+optional `Seen:` line. The D1 matcher first counted the word "clock" in any
+`Change:` line (a false hit); it now looks for the decoy itself.
 
 ### 2026-11-23, saiban-orchestrator dev switch, Sonnet, 2 runs per arm
 
