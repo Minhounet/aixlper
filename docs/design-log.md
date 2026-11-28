@@ -4683,3 +4683,14 @@ skill is about to be used (no entry: reinforces + ask), the inspector
 bullet and description cut back. Net always-loaded cost of the feature:
 +401 B in `SKILL.md`, +86 B in the agent description. `improve.md` item 7
 (+942 B) stays: improve mode only.
+
+**Evaluated, same day (asked by the author).** Two new `tantei-inspector`
+agent-eval cases, `--case contribute` and `--case external`, each with an
+ablation arm, one Sonnet run per arm, about $0.64 (details in
+`evals/agents/README.md`). Contribute 6/6, its plain-session arm 6/6 too;
+external 3/3, its baseline (before item 7) 3/3 too, plus one noisy
+proposal and the company skill's name in its preamble. Both work; neither
+is shown to be needed by these fixtures, which are too clear. The
+orchestrator's lazy use of the registry (an external skill picked up from
+the skill list, its entry read only then) was not run: it needs a full
+`saiban-orchestrator` session.

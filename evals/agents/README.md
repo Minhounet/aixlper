@@ -14,6 +14,8 @@ gives keyword hints, and the score comes from reading `answer.md` against
 | `mokugeki-tester`, end to end | `mokugeki-tester/e2e/` (one file) and `e2e-split/` (13 modules): the page before any fix, a hidden oracle; run with `scripts/eval_ui_e2e.sh --arm inline\|tester --case single\|split` | The arm implements the four ACs and proves them; scored by the oracle on the page left behind: defects shipped, false proofs |
 | `tantei-inspector` | `fixture/project/`: decision logs, a retro, process notes (T1–T4 planted, X1–X2 decoys) | A proposal per planted item, with quoted evidence; none from a decoy; no deletion; nothing changed on disk |
 | `tantei-inspector`, exemplar code | `fixture-exemplar/project/` (`--case exemplar`): four `Seen:` lines and the code, written as from a private codebase (E1–E2 planted, D1–D2 decoys); answer key `expected-exemplar.md`; `--rev` runs the baseline arm | E1 an architecture-test proposal to `chottomatte-archi`; E2 the `@BeforeEach` contradiction left to the author; no internal name in a `Change:`/`Log:` line (G1); each marked observed, with the kata or eval that would prove it (G2); no proposal from a decoy |
+| `tantei-inspector`, contribute | `fixture-contribute/target/` (`--case contribute`): a company team-skills repo with an overlapping `java-testing` skill; the real `yusaburi-mutation` to sort; key `expected-contribute.md`; `--arm plain` is a plain session with the author's framing | C1 an addition to `java-testing`; C2 "no percentage target" as opinion; C3 theme and aixlper couplings dropped; C4, C6 practice; C5 already there |
+| `tantei-inspector`, external skill | `fixture-external/project/` (`--case external`): a company PIT skill overlapping `yusaburi-mutation` (X1-X2 planted, D1-D2 decoys), key `expected-external.md`; `--rev 39a0222` is the baseline | X1 exclude generated code proposed; X2 the threshold contradiction left to the author; no company name in a `Change:`/`Log:` line (G1); no decoy proposed |
 
 `shonin-dev` is measured differently, by the kata it writes greens for:
 `scripts/kata_super_green.sh --orchestrator dev|nodev` (results in
@@ -25,6 +27,40 @@ can turn the dev on). `--skill-rev` runs the control arm on an older
 `SKILL.md`.
 
 ## Results
+
+### 2026-11-28, tantei-inspector contribute and external skill, Sonnet, 1 run per arm
+
+About $0.64 in all. **Both new cases pass, and neither ablation shows the
+new text is needed yet.**
+
+- **Contribute, new `contribute.md`: 6/6** ($0.14). It said "addition to
+  `java-testing`", put "no percentage target" in the opinion class against
+  the target's 60% gate, dropped the theme and every `igiari-tdd`,
+  `kaizen-refactor` and reviewer coupling (with neutral wording for the rules
+  underneath), kept the green suite and tool-made mutants as practice, and
+  quoted the target for the scope rule. Nothing changed on disk.
+- **Contribute, `--arm plain`: 6/6 on reading** ($0.22; the hints missed C4
+  and C6, which it listed under "Put in the team repo" without the word
+  "practice"). It made the same calls, and recommended raising the threshold
+  in the merge request instead of overruling the gate. The author's framing
+  ("how I think it should be done") did not bias it. This fixture holds only
+  the skill's text, not the author's reasons, so it can't show criterion 5;
+  a session that had argued for the rules first would be the real test.
+- **External, new `improve.md` (item 7): 3/3** ($0.13). It proposed X1 in
+  `pitest.md` and left X2 to the author, offering a registry `On conflict`
+  value as an alternative. It dropped both decoys with reasons, and named the
+  source only as "an external skill", everywhere.
+- **External, baseline `--rev 39a0222`: 3/3** ($0.14). The same two
+  proposals. It added a third, low-confidence one about the decision-log
+  format (noise, not a decoy). It wrote the company skill's name in its
+  preamble, though in no `Change:` or `Log:` line.
+
+Reading: Sonnet already does this sorting and harvesting well from the
+request alone, on fixtures this clear. What the two references add here is
+their process (find the target, the overlap, the gates, the registry) and the
+stricter anonymity, not better judgment. A harder fixture (an author session
+that argued for its rules; an external skill whose good rule is worded as a
+company convention) would be needed to show more.
 
 ### 2026-11-27, tantei-inspector exemplar code, Sonnet
 
