@@ -21,7 +21,7 @@ how the skills were used. They were `iterate`, `iterate-reviewer` and
 | `kenji-reviewer` | Reviewer: checks each AC's work against the skills, reports, never fixes | Fresh eyes and no write access: it can't fix what it reviews | `saiban-orchestrator`, after each AC | No |
 | `shonin-dev` | Implementer: writes one GREEN without seeing the test plan or the ACs | It must not know what tests come next, so its code can't be biased toward them | `saiban-orchestrator`, the GREENs of a large TDD run, one dev per run (fix, build) | Yes |
 | `mokugeki-tester` | UI tester: writes and runs each AC's Playwright check, reports what it saw | It must not know the change (diff, app source, design), so its check follows the AC, not the code | `saiban-orchestrator`, UI mode, one tester per screen | Check files only |
-| `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | Read-only, and must not know the working session's reasons; its long reading stays out of the main session | `saiban-orchestrator`, improve mode | No |
+| `tantei-inspector` | Inspector: reads how the skills were used, proposes changes to them | Read-only, and must not know the working session's reasons; its long reading stays out of the main session | `saiban-orchestrator`, improve and contribute modes | No |
 
 The four helpers run on Sonnet whatever model the main session uses
 (`model: sonnet` in their frontmatter): their work is following written

@@ -22,7 +22,7 @@ sur l'usage des skills. Ils s'appelaient `iterate`, `iterate-reviewer` et
 | `kenji-reviewer` | Relecteur : vérifie chaque CA par rapport aux skills, rapporte, ne corrige jamais | Un regard neuf et aucun droit d'écriture : il ne peut pas corriger ce qu'il relit | `saiban-orchestrator`, après chaque CA | Non |
 | `shonin-dev` | Implémenteur : écrit un GREEN sans voir le plan de tests ni les CA | Il ne doit pas savoir quels tests arrivent, pour que son code ne soit pas biaisé par eux | `saiban-orchestrator`, les GREEN d'une grosse exécution TDD, un dev par exécution (fix, build) | Oui |
 | `mokugeki-tester` | Testeur UI : écrit et lance le check Playwright de chaque CA, rapporte ce qu'il a vu | Il ne doit pas connaître le changement (diff, source de l'app, conception), pour que son check suive la CA et non le code | `saiban-orchestrator`, mode UI, un testeur par écran | Fichiers de check seulement |
-| `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, mode improve | Non |
+| `tantei-inspector` | Inspecteur : lit l'usage des skills, propose des changements | Lecture seule, et ne doit pas connaître les raisons de la session de travail ; sa longue lecture reste hors de la session principale | `saiban-orchestrator`, modes improve et contribute | Non |
 
 Les quatre agents d'aide tournent sur Sonnet quel que soit le modèle de la
 session principale (`model: sonnet` dans leur frontmatter) : leur travail
@@ -123,6 +123,22 @@ Puis décris le travail dans ton premier message. Deux exemples :
   appliqués et commités dans ton clone aixlper, jamais dans le projet. Il faut
   les skills installés avec `./scripts/install.sh --link`, sinon il affiche
   seulement le patch.
+  Il peut aussi apprendre des skills d'une autre équipe (*« compare le skill
+  de revue de l'équipe avec le mien »*) : seulement ce qui vaut au-delà de
+  cette équipe, réécrit, jamais copié.
+- **Mode contribute** (donner un skill au dépôt de skills d'une autre
+  équipe) : *« contribue tantei-debug aux skills de l'équipe dans
+  ~/work/team-skills »*. Il cherche d'abord un skill qui recoupe le tien dans
+  la cible, fait trier chaque règle par `tantei-inspector` (pratique partagée
+  ou ton opinion), te demande de valider ce tri, puis écrit une version
+  neutre (sans thème, conventions du projet d'abord, opinions seulement en
+  option) sur une branche de la cible, dans son format. Ne pousse jamais.
+- **Skills externes** (tous les modes) : liste les skills d'une équipe dans
+  `~/.claude/external-skills.md` (privé, jamais dans ce dépôt), chacun avec
+  à quoi il sert, quand il s'applique et son rôle (renforce un skill aixlper,
+  comble un manque, ou en remplace un dans un projet donné) ; l'orchestrateur
+  le charge à cette étape. Format :
+  `skills/saiban-orchestrator/references/external-skills.md`.
 - **Mode direct** (tout le reste) : une question, une petite modif, une
   commande. Il le fait, sans cérémonie, donc plus besoin de `claude` tout
   court.
